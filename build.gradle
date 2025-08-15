@@ -1,0 +1,61 @@
+plugins {
+    id("java")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+}
+
+group = 'ru.matveylegenda'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://libraries.minecraft.net"
+    }
+}
+
+dependencies {
+    compileOnly("net.md-5:bungeecord-api:1.21-R0.3")
+    implementation("org.bstats:bstats-bungeecord:3.0.2")
+    implementation("com.j256.ormlite:ormlite-core:6.1")
+    implementation("com.j256.ormlite:ormlite-jdbc:6.1")
+    //implementation("com.zaxxer:HikariCP:7.0.1")
+    compileOnly("org.projectlombok:lombok:1.18.38")
+    annotationProcessor("org.projectlombok:lombok:1.18.38")
+    implementation("at.favre.lib:bcrypt:0.10.2")
+}
+
+tasks.shadowJar {
+    relocate("org.bstats", "ru.matveylegenda.tiauth.thirdparty.org.bstats")
+    relocate("com.j256", "ru.matveylegenda.tiauth.thirdparty.com.j256")
+    //relocate("com.zaxxer", "ru.matveylegenda.tidiscord2fa.thirdparty.com.zaxxer")
+
+    minimize()
+}
+
+def targetJavaVersion = 17
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    expand props
+    filteringCharset 'UTF-8'
+    filesMatching('bungee.yml') {
+        expand props
+    }
+}
