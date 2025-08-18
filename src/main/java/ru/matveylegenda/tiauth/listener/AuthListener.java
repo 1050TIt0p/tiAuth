@@ -64,6 +64,7 @@ public class AuthListener implements Listener {
                     player.disconnect(
                             colorize(
                                     messagesConfig.kick.realname
+                                            .replace("{prefix}", messagesConfig.prefix)
                                             .replace("{realname}", user.getRealName())
                                             .replace("{name}", player.getName())
                             )
@@ -94,7 +95,10 @@ public class AuthListener implements Listener {
                     }
 
                     player.disconnect(
-                            colorize(messagesConfig.kick.timeout)
+                            colorize(
+                                    messagesConfig.kick.timeout
+                                            .replace("{prefix}", messagesConfig.prefix)
+                            )
                     );
                 }, mainConfig.auth.timeoutSeconds, TimeUnit.SECONDS);
 
@@ -119,7 +123,10 @@ public class AuthListener implements Listener {
 
         if (!authCache.isAuthenticated(player.getName()) && !event.getTarget().getName().equals("auth")) {
             player.disconnect(
-                    colorize(messagesConfig.kick.notAuth)
+                    colorize(
+                            messagesConfig.kick.notAuth
+                                    .replace("{prefix}", messagesConfig.prefix)
+                    )
             );
         }
     }
