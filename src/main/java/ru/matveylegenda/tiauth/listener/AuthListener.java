@@ -63,19 +63,27 @@ public class AuthListener implements Listener {
                 ServerInfo authServer = plugin.getProxy().getServerInfo("auth");
                 player.connect(authServer);
 
-                String message = (user != null)
-                        ? "Авторизируйтесь командой /login <пароль>"
-                        : "Зарегистрируйтесь командой /register <пароль> <пароль>";
-
-                ScheduledTask[] taskHolder = new ScheduledTask[1];
+                ScheduledTask[] taskHolder = new ScheduledTask[2];
                 taskHolder[0] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
                     if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
                         taskHolder[0].cancel();
                         return;
                     }
 
+                    player.disconnect("Вы не успели войти");
+                }, 30, TimeUnit.SECONDS);
+
+                String message = (user != null)
+                        ? "Авторизируйтесь командой /login <пароль>"
+                        : "Зарегистрируйтесь командой /register <пароль> <пароль>";
+                taskHolder[1] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
+                    if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
+                        taskHolder[1].cancel();
+                        return;
+                    }
+
                     player.sendMessage(message);
-                }, 0, 1, TimeUnit.SECONDS);
+                }, 0, 5, TimeUnit.SECONDS);
             });
 
             return;
