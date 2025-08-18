@@ -19,6 +19,9 @@ public class AuthUser {
     private String password;
 
     @DatabaseField
+    private boolean premium;
+
+    @DatabaseField
     private String lastIp;
 
     @DatabaseField
@@ -30,10 +33,11 @@ public class AuthUser {
     @DatabaseField
     private long regDate;
 
-    public AuthUser(String username, String realName, String password, String regIp) {
+    public AuthUser(String username, String realName, String password, boolean premium, String regIp) {
         this.username = username;
         this.realName = realName;
         this.password = password;
+        this.premium = premium;
         this.regIp = regIp;
         this.lastIp = regIp;
         long now = System.currentTimeMillis();

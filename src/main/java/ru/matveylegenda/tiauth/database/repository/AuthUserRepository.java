@@ -7,6 +7,8 @@ import com.j256.ormlite.table.TableUtils;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -36,8 +38,20 @@ public class AuthUserRepository {
     public void getUser(String username, Consumer<AuthUser> callback) {
         executor.submit(() -> {
             try {
-                AuthUser user = authUserDao.queryForId(username);
+                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 callback.accept(user);
+            } catch (SQLException e) {
+                callback.accept(null);
+                e.printStackTrace();
+            }
+        });
+    }
+
+    public void getAllUsers(Consumer<List<AuthUser>> callback) {
+        executor.submit(() -> {
+            try {
+                List<AuthUser> users = authUserDao.queryForAll();
+                callback.accept(users);
             } catch (SQLException e) {
                 callback.accept(null);
                 e.printStackTrace();
@@ -48,7 +62,7 @@ public class AuthUserRepository {
     public void updatePassword(String username, String newPassword, Runnable callback) {
         executor.submit(() -> {
             try {
-                AuthUser user = authUserDao.queryForId(username);
+                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
                     user.setPassword(newPassword);
                     authUserDao.update(user);
@@ -65,7 +79,7 @@ public class AuthUserRepository {
     public void updateLastLogin(String username) {
         executor.submit(() -> {
             try {
-                AuthUser user = authUserDao.queryForId(username);
+                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
                     user.setLastLogin(System.currentTimeMillis());
                     authUserDao.update(user);
@@ -79,7 +93,7 @@ public class AuthUserRepository {
     public void updateLastIp(String username, String ip) {
         executor.submit(() -> {
             try {
-                AuthUser user = authUserDao.queryForId(username);
+                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
                     user.setLastIp(ip);
                     authUserDao.update(user);

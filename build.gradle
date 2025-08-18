@@ -28,6 +28,7 @@ tasks.shadowJar {
     relocate("org.bstats", "ru.matveylegenda.tiauth.thirdparty.org.bstats")
     relocate("com.j256", "ru.matveylegenda.tiauth.thirdparty.com.j256")
     //relocate("com.zaxxer", "ru.matveylegenda.tidiscord2fa.thirdparty.com.zaxxer")
+    relocate("at.favre", "ru.matveylegenda.tiauth.thirdparty.at.favre")
 
     minimize()
 }
