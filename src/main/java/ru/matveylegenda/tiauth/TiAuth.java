@@ -49,7 +49,7 @@ public final class TiAuth extends Plugin {
 
     public void initializeDatabase() {
         try {
-            database = new Database(new File(getDataFolder(), "tiauth.db"));
+            database = new Database(new File(getDataFolder(), "auth.db"));
         } catch (SQLException e) {
             getLogger().warning("Error during database initialization: " + e.getMessage());
         }
