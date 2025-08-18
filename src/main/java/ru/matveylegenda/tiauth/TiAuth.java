@@ -5,6 +5,7 @@ import net.md_5.bungee.api.plugin.PluginManager;
 import org.bstats.bungeecord.Metrics;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
+import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.command.LoginCommand;
 import ru.matveylegenda.tiauth.command.PremiumCommand;
 import ru.matveylegenda.tiauth.command.RegisterCommand;
@@ -18,6 +19,7 @@ public final class TiAuth extends Plugin {
     public Database database;
     public final AuthCache authCache = new AuthCache();
     public final PremiumCache premiumCache = new PremiumCache();
+    public final SessionCache sessionCache = new SessionCache();
 
     @Override
     public void onEnable() {

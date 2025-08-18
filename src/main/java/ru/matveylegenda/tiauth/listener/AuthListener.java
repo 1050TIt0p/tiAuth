@@ -12,6 +12,7 @@ import net.md_5.bungee.event.EventHandler;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
+import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.database.Database;
 
 import java.util.concurrent.TimeUnit;
@@ -21,12 +22,14 @@ public class AuthListener implements Listener {
     private final Database database;
     private final AuthCache authCache;
     private final PremiumCache premiumCache;
+    private final SessionCache sessionCache;
 
     public AuthListener(TiAuth plugin) {
         this.plugin = plugin;
         this.database = plugin.database;
         this.authCache = plugin.authCache;
         this.premiumCache = plugin.premiumCache;
+        this.sessionCache = plugin.sessionCache;
     }
 
     @EventHandler
@@ -52,7 +55,10 @@ public class AuthListener implements Listener {
                     return;
                 }
 
-                if (premiumCache.isPremium(player.getName())) {
+                String sessionIP = sessionCache.getIP(player.getName());
+
+                if (premiumCache.isPremium(player.getName()) ||
+                        (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
                     ServerInfo backendServer = plugin.getProxy().getServerInfo("hub");
                     authCache.setAuthenticated(player.getName());
                     player.connect(backendServer);
