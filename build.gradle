@@ -24,6 +24,7 @@ dependencies {
     implementation("at.favre.lib:bcrypt:0.10.2")
     implementation("org.xerial:sqlite-jdbc:3.50.3.0")
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
+    implementation("net.elytrium:serializer:1.1.1")
 }
 
 tasks.shadowJar {
@@ -34,6 +35,7 @@ tasks.shadowJar {
     relocate("com.github", "ru.matveylegenda.tiauth.thirdparty.com.github")
     relocate("com.google", "ru.matveylegenda.tiauth.thirdparty.com.google")
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
+    relocate("net.elytrium", "ru.matveylegenda.tiauth.thirdparty.net.elytrium")
 }
 
 def targetJavaVersion = 17

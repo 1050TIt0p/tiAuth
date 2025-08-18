@@ -13,9 +13,14 @@ import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
+import ru.matveylegenda.tiauth.config.MainConfig;
+import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.util.ChatUtils;
 
 import java.util.concurrent.TimeUnit;
+
+import static ru.matveylegenda.tiauth.util.ChatUtils.colorize;
 
 public class AuthListener implements Listener {
     private final TiAuth plugin;
@@ -23,6 +28,9 @@ public class AuthListener implements Listener {
     private final AuthCache authCache;
     private final PremiumCache premiumCache;
     private final SessionCache sessionCache;
+    private final MainConfig mainConfig;
+    private final MessagesConfig messagesConfig;
+    private final ChatUtils chatUtils;
 
     public AuthListener(TiAuth plugin) {
         this.plugin = plugin;
@@ -30,6 +38,9 @@ public class AuthListener implements Listener {
         this.authCache = plugin.authCache;
         this.premiumCache = plugin.premiumCache;
         this.sessionCache = plugin.sessionCache;
+        this.mainConfig = plugin.mainConfig;
+        this.messagesConfig = plugin.messagesConfig;
+        this.chatUtils = plugin.chatUtils;
     }
 
     @EventHandler
@@ -50,7 +61,13 @@ public class AuthListener implements Listener {
 
             database.getAuthUserRepository().getUser(player.getName(), user -> {
                 if (user != null && !player.getName().equals(user.getRealName())) {
-                    player.disconnect("Правильный ник: " + user.getRealName());
+                    player.disconnect(
+                            colorize(
+                                    messagesConfig.kick.realname
+                                            .replace("{realname}", user.getRealName())
+                                            .replace("{name}", player.getName())
+                            )
+                    );
 
                     return;
                 }
@@ -59,14 +76,14 @@ public class AuthListener implements Listener {
 
                 if (premiumCache.isPremium(player.getName()) ||
                         (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
-                    ServerInfo backendServer = plugin.getProxy().getServerInfo("hub");
                     authCache.setAuthenticated(player.getName());
+                    ServerInfo backendServer = plugin.getProxy().getServerInfo(mainConfig.servers.backend);
                     player.connect(backendServer);
 
                     return;
                 }
 
-                ServerInfo authServer = plugin.getProxy().getServerInfo("auth");
+                ServerInfo authServer = plugin.getProxy().getServerInfo(mainConfig.servers.auth);
                 player.connect(authServer);
 
                 ScheduledTask[] taskHolder = new ScheduledTask[2];
@@ -76,27 +93,34 @@ public class AuthListener implements Listener {
                         return;
                     }
 
-                    player.disconnect("Вы не успели войти");
-                }, 30, TimeUnit.SECONDS);
+                    player.disconnect(
+                            colorize(messagesConfig.kick.timeout)
+                    );
+                }, mainConfig.auth.timeoutSeconds, TimeUnit.SECONDS);
 
-                String message = (user != null)
-                        ? "Авторизируйтесь командой /login <пароль>"
-                        : "Зарегистрируйтесь командой /register <пароль> <пароль>";
+                String reminderMessage = (user != null)
+                        ? messagesConfig.reminder.login
+                        : messagesConfig.reminder.register;
                 taskHolder[1] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
                     if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
                         taskHolder[1].cancel();
                         return;
                     }
 
-                    player.sendMessage(message);
-                }, 0, 5, TimeUnit.SECONDS);
+                    chatUtils.sendMessage(
+                            player,
+                            reminderMessage
+                    );
+                }, 0, mainConfig.auth.reminderInterval, TimeUnit.SECONDS);
             });
 
             return;
         }
 
         if (!authCache.isAuthenticated(player.getName()) && !event.getTarget().getName().equals("auth")) {
-            player.disconnect("Вы не авторизовались");
+            player.disconnect(
+                    colorize(messagesConfig.kick.notAuth)
+            );
         }
     }
 

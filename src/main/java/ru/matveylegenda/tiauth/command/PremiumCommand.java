@@ -5,24 +5,32 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
+import ru.matveylegenda.tiauth.config.MainConfig;
+import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.util.ChatUtils;
 
 public class PremiumCommand extends Command {
-    private final TiAuth plugin;
     private final Database database;
     private final PremiumCache premiumCache;
+    private final MessagesConfig messagesConfig;
+    private final ChatUtils chatUtils;
 
     public PremiumCommand(TiAuth plugin, String name) {
         super(name);
-        this.plugin = plugin;
         this.database = plugin.database;
         this.premiumCache = plugin.premiumCache;
+        this.messagesConfig = plugin.messagesConfig;
+        this.chatUtils = plugin.chatUtils;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (!(sender instanceof ProxiedPlayer player)) {
-           sender.sendMessage("Команду может использовать только игрок");
+            chatUtils.sendMessage(
+                    sender,
+                    messagesConfig.onlyPlayer
+            );
 
            return;
         }
@@ -31,12 +39,18 @@ public class PremiumCommand extends Command {
             database.getAuthUserRepository().setPremium(player.getName(), false);
             premiumCache.removePremium(player.getName());
 
-            player.sendMessage("Премиум режим выключен");
+            chatUtils.sendMessage(
+                    player,
+                    messagesConfig.premium.disabled
+            );
         } else {
             database.getAuthUserRepository().setPremium(player.getName(), true);
             premiumCache.addPremium(player.getName());
 
-            player.sendMessage("Премиум режим включен");
+            chatUtils.sendMessage(
+                    player,
+                    messagesConfig.premium.enabled
+            );
         }
     }
 }

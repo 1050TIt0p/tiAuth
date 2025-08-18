@@ -7,10 +7,13 @@ import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
+import ru.matveylegenda.tiauth.config.MainConfig;
+import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
+import ru.matveylegenda.tiauth.util.ChatUtils;
 
 import java.util.Locale;
 
@@ -19,6 +22,9 @@ public class RegisterCommand extends Command {
     private final Database database;
     private final AuthCache authCache;
     private final SessionCache sessionCache;
+    private final MainConfig mainConfig;
+    private final MessagesConfig messagesConfig;
+    private final ChatUtils chatUtils;
 
     public RegisterCommand(TiAuth plugin, String name, String... aliases) {
         super(name, null, aliases);
@@ -26,18 +32,27 @@ public class RegisterCommand extends Command {
         this.database = plugin.database;
         this.authCache = plugin.authCache;
         this.sessionCache = plugin.sessionCache;
+        this.mainConfig = plugin.mainConfig;
+        this.messagesConfig = plugin.messagesConfig;
+        this.chatUtils = plugin.chatUtils;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (!(sender instanceof ProxiedPlayer player)) {
-           sender.sendMessage("Команду может использовать только игрок");
+            chatUtils.sendMessage(
+                    sender,
+                    messagesConfig.onlyPlayer
+            );
 
            return;
         }
 
         if (args.length != 2) {
-            player.sendMessage("Использование: /register <пароль> <пароль>");
+            chatUtils.sendMessage(
+                    player,
+                    messagesConfig.register.usage
+            );
 
             return;
         }
@@ -46,18 +61,24 @@ public class RegisterCommand extends Command {
         String repeatPassword = args[1];
 
         if (!password.equals(repeatPassword)) {
-            player.sendMessage("Пароли не совпадают");
+            chatUtils.sendMessage(
+                    player,
+                    messagesConfig.register.mismatch
+            );
 
             return;
         }
 
         database.getAuthUserRepository().getUser(player.getName(), user -> {
             if (user != null) {
-                player.sendMessage("Вы уже зарегистрированы");
+                chatUtils.sendMessage(
+                        player,
+                        messagesConfig.register.alreadyRegistered
+                );
                 return;
             }
 
-            Hash hash = HashFactory.create("bcrypt");
+            Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
             database.getAuthUserRepository().registerUser(
                     new AuthUser(
                             player.getName().toLowerCase(Locale.ROOT),
@@ -66,11 +87,14 @@ public class RegisterCommand extends Command {
                             false,
                             player.getAddress().getAddress().getHostAddress()
                     ), () -> {
-                        player.sendMessage("Вы успешно зарегистрировались");
+                        chatUtils.sendMessage(
+                                player,
+                                messagesConfig.register.success
+                        );
                         authCache.setAuthenticated(player.getName());
 
                         sessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
-                        ServerInfo backendServer = plugin.getProxy().getServerInfo("hub");
+                        ServerInfo backendServer = plugin.getProxy().getServerInfo(mainConfig.servers.backend);
 
                         player.connect(backendServer);
                     }
