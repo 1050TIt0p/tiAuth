@@ -103,4 +103,18 @@ public class AuthUserRepository {
             }
         });
     }
+
+    public void setPremium(String username, boolean enabled) {
+        executor.submit(() -> {
+            try {
+                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
+                if (user != null) {
+                    user.setPremium(enabled);
+                    authUserDao.update(user);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
 }
