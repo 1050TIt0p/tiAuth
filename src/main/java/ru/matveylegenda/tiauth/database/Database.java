@@ -15,6 +15,13 @@ public class Database {
 
     public Database(File file) throws SQLException {
         connectionSource = new JdbcConnectionSource("jdbc:sqlite:" + file.getAbsolutePath());
+
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
         authUserRepository = new AuthUserRepository(connectionSource);
     }
 
