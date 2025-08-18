@@ -34,7 +34,7 @@ public class MessagesConfig extends YamlSerializable {
     @NewLine
     public static class Premium {
         public String enabled = "{prefix} &fПремиум режим &#8833ECвключен\n" +
-                "Если у вас нет лицензии Minecraft, выключите режим прописав /premium, иначе вы не сможете войти на сервер";
+                "&fЕсли у вас нет лицензии Minecraft, выключите режим прописав /premium, иначе вы не сможете войти на сервер";
         public String disabled = "{prefix} &fПремиум режим &#8833ECвыключен";
     }
 
@@ -44,7 +44,7 @@ public class MessagesConfig extends YamlSerializable {
     public static class Kick {
         public String notAuth = "{prefix} &fВы не авторизованы";
         public String timeout = "{prefix} &fВы не успели авторизоваться";
-        public String realname = "{prefix} &fПравильный ник: &#8833EC{realname}\nВаш ник: &#8833EC{name}";
+        public String realname = "{prefix} &fПравильный ник: &#8833EC{realname}\n&fВаш ник: &#8833EC{name}";
     }
 
     public Reminder reminder = new Reminder();
