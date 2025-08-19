@@ -77,7 +77,7 @@ public final class TiAuth extends Plugin {
         try {
             database = new Database(new File(getDataFolder(), "auth.db"));
         } catch (SQLException e) {
-                getLogger().log(Level.SEVERE, "Error during database initialization", e);
+            getLogger().log(Level.SEVERE, "Error during database initialization", e);
         }
     }
 
