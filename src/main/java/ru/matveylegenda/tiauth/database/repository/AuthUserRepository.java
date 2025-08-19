@@ -4,6 +4,7 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import lombok.Getter;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 
 import java.sql.SQLException;
@@ -14,6 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public class AuthUserRepository {
+    @Getter
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Dao<AuthUser, String> authUserDao;
 
