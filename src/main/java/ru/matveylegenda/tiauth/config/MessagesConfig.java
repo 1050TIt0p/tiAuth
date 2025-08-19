@@ -29,6 +29,13 @@ public class MessagesConfig extends YamlSerializable {
         public String success = "{prefix} &fВы успешно авторизовались";
     }
 
+    public Logout logout = new Logout();
+
+    @NewLine
+    public static class Logout {
+        public String logoutByPremium = "{prefix} &fВы не можете разлогиниться из-за &#8833ECпремиум режима";
+    }
+
     public Premium premium = new Premium();
 
     @NewLine

@@ -20,6 +20,10 @@ public class SessionCache {
         sessions.put(name.toLowerCase(Locale.ROOT), ip);
     }
 
+    public void removePlayer(String name) {
+        sessions.invalidate(name.toLowerCase(Locale.ROOT));
+    }
+
     public String getIP(String name) {
         return sessions.getIfPresent(name.toLowerCase(Locale.ROOT));
     }

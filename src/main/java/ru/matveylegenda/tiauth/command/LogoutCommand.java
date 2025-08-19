@@ -4,17 +4,26 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.TiAuth;
+import ru.matveylegenda.tiauth.cache.AuthCache;
+import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
+import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.ChatUtils;
 
-public class LoginCommand extends Command {
+public class LogoutCommand extends Command {
+    private final Database database;
+    private final AuthCache authCache;
+    private final PremiumCache premiumCache;
     private final MessagesConfig messagesConfig;
     private final ChatUtils chatUtils;
     private final AuthManager authManager;
 
-    public LoginCommand(TiAuth plugin, String name, String... aliases) {
+    public LogoutCommand(TiAuth plugin, String name, String... aliases) {
         super(name, null, aliases);
+        this.database = plugin.database;
+        this.authCache = plugin.authCache;
+        this.premiumCache = plugin.premiumCache;
         this.messagesConfig = plugin.messagesConfig;
         this.chatUtils = plugin.chatUtils;
         this.authManager = plugin.authManager;
@@ -28,19 +37,25 @@ public class LoginCommand extends Command {
                     messagesConfig.onlyPlayer
             );
 
-           return;
+            return;
         }
 
-        if (args.length != 1) {
+        if (!authCache.isAuthenticated(player.getName())) {
+            return;
+        }
+
+        if (premiumCache.isPremium(player.getName())) {
             chatUtils.sendMessage(
-                    player,
-                    messagesConfig.login.usage
+                    sender,
+                    messagesConfig.logout.logoutByPremium
             );
 
             return;
         }
 
-        String password = args[0];
-        authManager.loginPlayer(player, password);
+        database.getAuthUserRepository().getUser(player.getName(), user -> {
+            authManager.logoutPlayer(player);
+            authManager.forceAuth(player, user);
+        });
     }
 }

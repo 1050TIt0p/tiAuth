@@ -7,6 +7,7 @@ import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.command.LoginCommand;
+import ru.matveylegenda.tiauth.command.LogoutCommand;
 import ru.matveylegenda.tiauth.command.PremiumCommand;
 import ru.matveylegenda.tiauth.command.RegisterCommand;
 import ru.matveylegenda.tiauth.config.MainConfig;
@@ -14,6 +15,7 @@ import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.listener.AuthListener;
 import ru.matveylegenda.tiauth.listener.ChatListener;
+import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.ChatUtils;
 
 import java.io.File;
@@ -28,6 +30,7 @@ public final class TiAuth extends Plugin {
     public final PremiumCache premiumCache = new PremiumCache();
     public final SessionCache sessionCache = new SessionCache(mainConfig);
     public final ChatUtils chatUtils = new ChatUtils(messagesConfig);
+    public AuthManager authManager;
 
     @Override
     public void onEnable() {
@@ -37,13 +40,11 @@ public final class TiAuth extends Plugin {
         initializeDatabase();
         loadConfigs();
         premiumCache.load(database.getAuthUserRepository());
+        authManager = new AuthManager(this);
 
         PluginManager pluginManager = getProxy().getPluginManager();
-        pluginManager.registerListener(this, new AuthListener(this));
-        pluginManager.registerListener(this, new ChatListener(this));
-        pluginManager.registerCommand(this, new LoginCommand(this, "login", "log", "l"));
-        pluginManager.registerCommand(this, new RegisterCommand(this, "register", "reg"));
-        pluginManager.registerCommand(this, new PremiumCommand(this, "premium"));
+        registerListeners(pluginManager);
+        registerCommands(pluginManager);
 
         new Metrics(this, 26921);
     }
@@ -64,11 +65,23 @@ public final class TiAuth extends Plugin {
         messagesConfig.reload(Path.of(getDataFolder().getAbsolutePath(), "messages.yml"));
     }
 
-    public void initializeDatabase() {
+    private void initializeDatabase() {
         try {
             database = new Database(new File(getDataFolder(), "auth.db"));
         } catch (SQLException e) {
             getLogger().warning("Error during database initialization: " + e.getMessage());
         }
+    }
+
+    private void registerListeners(PluginManager pluginManager) {
+        pluginManager.registerListener(this, new AuthListener(this));
+        pluginManager.registerListener(this, new ChatListener(this));
+    }
+
+    private void registerCommands(PluginManager pluginManager) {
+        pluginManager.registerCommand(this, new LoginCommand(this, "login", "log", "l"));
+        pluginManager.registerCommand(this, new RegisterCommand(this, "register", "reg"));
+        pluginManager.registerCommand(this, new PremiumCommand(this, "premium"));
+        pluginManager.registerCommand(this, new LogoutCommand(this, "logout"));
     }
 }
