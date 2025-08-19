@@ -22,9 +22,13 @@ import ru.matveylegenda.tiauth.util.ChatUtils;
 import java.io.File;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Getter
 public final class TiAuth extends Plugin {
+    @Getter
+    private static Logger logger;
     private Database database;
     private final MainConfig mainConfig = new MainConfig();
     private final MessagesConfig messagesConfig = new MessagesConfig();
@@ -36,6 +40,7 @@ public final class TiAuth extends Plugin {
 
     @Override
     public void onEnable() {
+        logger = getLogger();
         if (!getDataFolder().exists()) {
             getDataFolder().mkdir();
         }
@@ -58,7 +63,7 @@ public final class TiAuth extends Plugin {
                 database.getAuthUserRepository().getExecutor().shutdown();
                 database.close();
             } catch (Exception e) {
-                getLogger().warning("Error during database closing: " + e.getMessage());
+                getLogger().log(Level.WARNING, "Error during database closing", e);
             }
         }
     }
@@ -72,7 +77,7 @@ public final class TiAuth extends Plugin {
         try {
             database = new Database(new File(getDataFolder(), "auth.db"));
         } catch (SQLException e) {
-            getLogger().warning("Error during database initialization: " + e.getMessage());
+                getLogger().log(Level.SEVERE, "Error during database initialization", e);
         }
     }
 
