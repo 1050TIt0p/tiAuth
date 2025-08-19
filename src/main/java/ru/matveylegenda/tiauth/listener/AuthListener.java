@@ -10,6 +10,7 @@ import net.md_5.bungee.event.EventHandler;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
+import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.manager.AuthManager;
@@ -20,6 +21,7 @@ public class AuthListener implements Listener {
     private final Database database;
     private final AuthCache authCache;
     private final PremiumCache premiumCache;
+    private final MainConfig mainConfig;
     private final MessagesConfig messagesConfig;
     private final AuthManager authManager;
 
@@ -27,6 +29,7 @@ public class AuthListener implements Listener {
         this.database = plugin.getDatabase();
         this.authCache = plugin.getAuthCache();
         this.premiumCache = plugin.getPremiumCache();
+        this.mainConfig = plugin.getMainConfig();
         this.messagesConfig = plugin.getMessagesConfig();
         this.authManager = plugin.getAuthManager();
     }
@@ -54,7 +57,8 @@ public class AuthListener implements Listener {
             return;
         }
 
-        if (!authCache.isAuthenticated(player.getName()) && !event.getTarget().getName().equals("auth")) {
+        if (!authCache.isAuthenticated(player.getName()) &&
+                !event.getTarget().getName().equals(mainConfig.servers.auth)) {
             player.disconnect(
                     colorize(
                             messagesConfig.kick.notAuth
