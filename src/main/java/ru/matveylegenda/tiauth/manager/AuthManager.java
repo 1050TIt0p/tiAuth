@@ -32,13 +32,13 @@ public class AuthManager {
 
     public AuthManager(TiAuth plugin) {
         this.plugin = plugin;
-        this.database = plugin.database;
-        this.authCache = plugin.authCache;
-        this.premiumCache = plugin.premiumCache;
-        this.sessionCache = plugin.sessionCache;
-        this.mainConfig = plugin.mainConfig;
-        this.messagesConfig = plugin.messagesConfig;
-        this.chatUtils = plugin.chatUtils;
+        this.database = plugin.getDatabase();
+        this.authCache = plugin.getAuthCache();
+        this.premiumCache = plugin.getPremiumCache();
+        this.sessionCache = plugin.getSessionCache();
+        this.mainConfig = plugin.getMainConfig();
+        this.messagesConfig = plugin.getMessagesConfig();
+        this.chatUtils = plugin.getChatUtils();
     }
 
     public void registerPlayer(ProxiedPlayer player, String password, String repeatPassword) {

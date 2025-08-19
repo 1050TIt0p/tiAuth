@@ -21,12 +21,12 @@ public class LogoutCommand extends Command {
 
     public LogoutCommand(TiAuth plugin, String name, String... aliases) {
         super(name, null, aliases);
-        this.database = plugin.database;
-        this.authCache = plugin.authCache;
-        this.premiumCache = plugin.premiumCache;
-        this.messagesConfig = plugin.messagesConfig;
-        this.chatUtils = plugin.chatUtils;
-        this.authManager = plugin.authManager;
+        this.database = plugin.getDatabase();
+        this.authCache = plugin.getAuthCache();
+        this.premiumCache = plugin.getPremiumCache();
+        this.messagesConfig = plugin.getMessagesConfig();
+        this.chatUtils = plugin.getChatUtils();
+        this.authManager = plugin.getAuthManager();
     }
 
     @Override

@@ -15,8 +15,8 @@ public class ChatListener implements Listener {
     private final MainConfig mainConfig;
 
     public ChatListener(TiAuth plugin) {
-        this.authCache = plugin.authCache;
-        this.mainConfig = plugin.mainConfig;
+        this.authCache = plugin.getAuthCache();
+        this.mainConfig = plugin.getMainConfig();
     }
 
     @EventHandler

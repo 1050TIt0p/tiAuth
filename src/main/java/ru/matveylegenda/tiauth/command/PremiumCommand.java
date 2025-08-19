@@ -15,9 +15,9 @@ public class PremiumCommand extends Command {
 
     public PremiumCommand(TiAuth plugin, String name) {
         super(name);
-        this.messagesConfig = plugin.messagesConfig;
-        this.chatUtils = plugin.chatUtils;
-        this.authManager = plugin.authManager;
+        this.messagesConfig = plugin.getMessagesConfig();
+        this.chatUtils = plugin.getChatUtils();
+        this.authManager = plugin.getAuthManager();
     }
 
     @Override

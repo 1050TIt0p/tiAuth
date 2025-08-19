@@ -1,5 +1,6 @@
 package ru.matveylegenda.tiauth;
 
+import lombok.Getter;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import org.bstats.bungeecord.Metrics;
@@ -22,15 +23,16 @@ import java.io.File;
 import java.nio.file.Path;
 import java.sql.SQLException;
 
+@Getter
 public final class TiAuth extends Plugin {
-    public Database database;
-    public MainConfig mainConfig = new MainConfig();
-    public MessagesConfig messagesConfig = new MessagesConfig();
-    public final AuthCache authCache = new AuthCache();
-    public final PremiumCache premiumCache = new PremiumCache();
-    public final SessionCache sessionCache = new SessionCache(mainConfig);
-    public final ChatUtils chatUtils = new ChatUtils(messagesConfig);
-    public AuthManager authManager;
+    private Database database;
+    private final MainConfig mainConfig = new MainConfig();
+    private final MessagesConfig messagesConfig = new MessagesConfig();
+    private final AuthCache authCache = new AuthCache();
+    private final PremiumCache premiumCache = new PremiumCache();
+    private final SessionCache sessionCache = new SessionCache(mainConfig);
+    private final ChatUtils chatUtils = new ChatUtils(messagesConfig);
+    private AuthManager authManager;
 
     @Override
     public void onEnable() {

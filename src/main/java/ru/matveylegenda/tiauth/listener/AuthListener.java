@@ -24,11 +24,11 @@ public class AuthListener implements Listener {
     private final AuthManager authManager;
 
     public AuthListener(TiAuth plugin) {
-        this.database = plugin.database;
-        this.authCache = plugin.authCache;
-        this.premiumCache = plugin.premiumCache;
-        this.messagesConfig = plugin.messagesConfig;
-        this.authManager = plugin.authManager;
+        this.database = plugin.getDatabase();
+        this.authCache = plugin.getAuthCache();
+        this.premiumCache = plugin.getPremiumCache();
+        this.messagesConfig = plugin.getMessagesConfig();
+        this.authManager = plugin.getAuthManager();
     }
 
     @EventHandler

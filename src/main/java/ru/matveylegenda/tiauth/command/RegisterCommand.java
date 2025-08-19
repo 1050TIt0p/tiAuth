@@ -15,9 +15,9 @@ public class RegisterCommand extends Command {
 
     public RegisterCommand(TiAuth plugin, String name, String... aliases) {
         super(name, null, aliases);
-        this.messagesConfig = plugin.messagesConfig;
-        this.chatUtils = plugin.chatUtils;
-        this.authManager = plugin.authManager;
+        this.messagesConfig = plugin.getMessagesConfig();
+        this.chatUtils = plugin.getChatUtils();
+        this.authManager = plugin.getAuthManager();
     }
 
     @Override
