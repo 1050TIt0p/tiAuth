@@ -122,8 +122,12 @@ public class AuthManager {
                 messagesConfig.login.success
         );
 
+        String ip = player.getAddress().getAddress().getHostAddress();
+
         authCache.setAuthenticated(player.getName());
-        sessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
+        database.getAuthUserRepository().updateLastLogin(player.getName());
+        database.getAuthUserRepository().updateLastIp(player.getName(), ip);
+        sessionCache.addPlayer(player.getName(), ip);
 
         connectToBackend(player);
     }
