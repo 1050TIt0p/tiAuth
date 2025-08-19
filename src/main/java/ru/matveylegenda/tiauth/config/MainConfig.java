@@ -5,6 +5,8 @@ import net.elytrium.serializer.annotations.CommentValue;
 import net.elytrium.serializer.annotations.NewLine;
 import net.elytrium.serializer.language.object.YamlSerializable;
 
+import java.util.List;
+
 public class MainConfig extends YamlSerializable {
 
     public Servers servers = new Servers();
@@ -25,7 +27,7 @@ public class MainConfig extends YamlSerializable {
     @NewLine
     public static class Auth {
         @Comment({
-                @CommentValue(" Раз в сколько секунд игроку отправляется сообщение о требовании в регистрации/авторизации")
+                @CommentValue(" Раз в сколько секунд игроку отправляется сообщение о требованием в регистрации/авторизации")
         })
         public int reminderInterval = 3;
 
@@ -46,5 +48,16 @@ public class MainConfig extends YamlSerializable {
                 @CommentValue(" sha256")
         })
         public String hashAlgorithm = "bcrypt";
+
+        @Comment({
+                @CommentValue(" Команды, которые можно использовать во время авторизации")
+        })
+        public List<String> allowedCommands = List.of(
+                "/login",
+                "/log",
+                "/l",
+                "/register",
+                "/reg"
+        );
     }
 }

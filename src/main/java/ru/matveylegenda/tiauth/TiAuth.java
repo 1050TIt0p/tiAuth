@@ -13,6 +13,7 @@ import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.listener.AuthListener;
+import ru.matveylegenda.tiauth.listener.ChatListener;
 import ru.matveylegenda.tiauth.util.ChatUtils;
 
 import java.io.File;
@@ -39,6 +40,7 @@ public final class TiAuth extends Plugin {
 
         PluginManager pluginManager = getProxy().getPluginManager();
         pluginManager.registerListener(this, new AuthListener(this));
+        pluginManager.registerListener(this, new ChatListener(this));
         pluginManager.registerCommand(this, new LoginCommand(this, "login", "log", "l"));
         pluginManager.registerCommand(this, new RegisterCommand(this, "register", "reg"));
         pluginManager.registerCommand(this, new PremiumCommand(this, "premium"));
