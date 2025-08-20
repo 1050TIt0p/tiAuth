@@ -27,8 +27,7 @@ import java.util.logging.Logger;
 
 @Getter
 public final class TiAuth extends Plugin {
-    @Getter
-    private static Logger logger;
+    public static Logger logger;
     private Database database;
     private final MainConfig mainConfig = new MainConfig();
     private final MessagesConfig messagesConfig = new MessagesConfig();
@@ -63,7 +62,7 @@ public final class TiAuth extends Plugin {
                 database.getAuthUserRepository().getExecutor().shutdown();
                 database.close();
             } catch (Exception e) {
-                getLogger().log(Level.WARNING, "Error during database closing", e);
+                logger.log(Level.WARNING, "Error during database closing", e);
             }
         }
     }
@@ -77,7 +76,7 @@ public final class TiAuth extends Plugin {
         try {
             database = new Database(new File(getDataFolder(), "auth.db"));
         } catch (SQLException e) {
-            getLogger().log(Level.SEVERE, "Error during database initialization", e);
+            logger.log(Level.SEVERE, "Error during database initialization", e);
         }
     }
 

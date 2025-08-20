@@ -33,7 +33,7 @@ tasks.shadowJar {
     //relocate("com.zaxxer", "ru.matveylegenda.tidiscord2fa.thirdparty.com.zaxxer")
     relocate("at.favre", "ru.matveylegenda.tiauth.thirdparty.at.favre")
     relocate("com.github", "ru.matveylegenda.tiauth.thirdparty.com.github")
-    relocate("com.google", "ru.matveylegenda.tiauth.thirdparty.com.google")
+    //relocate("com.google", "ru.matveylegenda.tiauth.thirdparty.com.google")
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
     relocate("net.elytrium", "ru.matveylegenda.tiauth.thirdparty.net.elytrium")
 }

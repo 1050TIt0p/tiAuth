@@ -34,7 +34,7 @@ public class AuthUserRepository {
                     callback.run();
                 }
             } catch (SQLException e) {
-                TiAuth.getLogger().log(Level.WARNING, "Error during database query", e);
+                TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
     }
@@ -46,7 +46,7 @@ public class AuthUserRepository {
                 callback.accept(user);
             } catch (SQLException e) {
                 callback.accept(null);
-                TiAuth.getLogger().log(Level.WARNING, "Error during database query", e);
+                TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
     }
@@ -58,7 +58,7 @@ public class AuthUserRepository {
                 callback.accept(users);
             } catch (SQLException e) {
                 callback.accept(null);
-                TiAuth.getLogger().log(Level.WARNING, "Error during database query", e);
+                TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
     }
@@ -75,7 +75,7 @@ public class AuthUserRepository {
                     }
                 }
             } catch (SQLException e) {
-                TiAuth.getLogger().log(Level.WARNING, "Error during database query", e);
+                TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
     }
@@ -89,7 +89,7 @@ public class AuthUserRepository {
                     authUserDao.update(user);
                 }
             } catch (SQLException e) {
-                TiAuth.getLogger().log(Level.WARNING, "Error during database query", e);
+                TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
     }
@@ -103,7 +103,7 @@ public class AuthUserRepository {
                     authUserDao.update(user);
                 }
             } catch (SQLException e) {
-                TiAuth.getLogger().log(Level.WARNING, "Error during database query", e);
+                TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
     }
@@ -117,7 +117,7 @@ public class AuthUserRepository {
                     authUserDao.update(user);
                 }
             } catch (SQLException e) {
-                TiAuth.getLogger().log(Level.WARNING, "Error during database query", e);
+                TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
     }
