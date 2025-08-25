@@ -51,6 +51,17 @@ public class AuthManager {
             return;
         }
 
+        if (password.length() < mainConfig.auth.minPasswordLength ||
+                password.length() > mainConfig.auth.maxPasswordLength) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.register.invalidLength
+                            .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
+                            .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+            );
+            return;
+        }
+
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
                 utils.kickPlayer(

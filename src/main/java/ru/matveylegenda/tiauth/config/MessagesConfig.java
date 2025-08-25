@@ -14,6 +14,7 @@ public class MessagesConfig extends YamlSerializable {
     public static class Register {
         public String usage = "{prefix} &fИспользование: &#8833EC/register <пароль> <пароль>";
         public String mismatch = "{prefix} &fПароли не совпадают";
+        public String invalidLength = "{prefix} &fДлина пароля должна быть от &#8833EC{min} &fдо &#8833EC{max} &fсимволов";
         public String alreadyRegistered = "{prefix} &fВы уже зарегистрированы";
         public String success = "{prefix} &fВы успешно зарегистрировались";
     }

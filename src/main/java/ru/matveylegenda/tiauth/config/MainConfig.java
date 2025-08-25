@@ -42,6 +42,16 @@ public class MainConfig extends YamlSerializable {
         public int sessionLifetimeMinutes = 60;
 
         @Comment({
+                @CommentValue(" Минимальная длина пароля")
+        })
+        public int minPasswordLength = 6;
+
+        @Comment({
+                @CommentValue(" Максимальная длина пароля")
+        })
+        public int maxPasswordLength = 32;
+
+        @Comment({
                 @CommentValue(" Алгоритм хеширования пароля"),
                 @CommentValue(" Доступные варианты:"),
                 @CommentValue(" bcrypt"),
