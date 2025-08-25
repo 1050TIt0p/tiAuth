@@ -8,13 +8,19 @@ public class MessagesConfig extends YamlSerializable {
     public String prefix = "&#8833ECᴀ&#7F65E7ᴜ&#7796E3ᴛ&#6EC8DEʜ &8»";
     public String onlyPlayer = "{prefix} &fКоманду может использовать только игрок";
 
+    public CheckPassword checkPassword = new CheckPassword();
+
+    public static class CheckPassword {
+        public String wrongPassword = "{prefix} &fНеверный пароль";
+        public String invalidLength = "{prefix} &fДлина пароля должна быть от &#8833EC{min} &fдо &#8833EC{max} &fсимволов";
+    }
+
     public Register register = new Register();
 
     @NewLine
     public static class Register {
         public String usage = "{prefix} &fИспользование: &#8833EC/register <пароль> <пароль>";
         public String mismatch = "{prefix} &fПароли не совпадают";
-        public String invalidLength = "{prefix} &fДлина пароля должна быть от &#8833EC{min} &fдо &#8833EC{max} &fсимволов";
         public String alreadyRegistered = "{prefix} &fВы уже зарегистрированы";
         public String success = "{prefix} &fВы успешно зарегистрировались";
     }
@@ -24,7 +30,6 @@ public class MessagesConfig extends YamlSerializable {
     @NewLine
     public static class Unregister {
         public String usage = "{prefix} &fИспользование: &#8833EC/unregister <пароль>";
-        public String wrongPassword = "{prefix} &fНеверный пароль";
         public String success = "{prefix} &fВы успешно удалили аккаунт";
     }
 
@@ -36,8 +41,14 @@ public class MessagesConfig extends YamlSerializable {
         public String usage = "{prefix} &fИспользование: &#8833EC/login <пароль>";
         public String notRegistered = "{prefix} &fВы еще не зарегистрированы";
         public String alreadyLogged = "{prefix} &fВы уже авторизованы";
-        public String wrongPassword = "{prefix} &fНеверный пароль";
         public String success = "{prefix} &fВы успешно авторизовались";
+    }
+
+    public ChangePassword changePassword = new ChangePassword();
+
+    @NewLine
+    public static class ChangePassword {
+        public String success = "{prefix} &fВы успешно изменили пароль";
     }
 
     public Logout logout = new Logout();

@@ -55,7 +55,7 @@ public class AuthManager {
                 password.length() > mainConfig.auth.maxPasswordLength) {
             utils.sendMessage(
                     player,
-                    messagesConfig.register.invalidLength
+                    messagesConfig.checkPassword.invalidLength
                             .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
                             .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
             );
@@ -125,7 +125,7 @@ public class AuthManager {
             if (!hash.verifyPassword(password, hashedPassword)) {
                 utils.sendMessage(
                         player,
-                        messagesConfig.unregister.wrongPassword
+                        messagesConfig.checkPassword.wrongPassword
                 );
                 return;
             }
@@ -189,7 +189,7 @@ public class AuthManager {
             } else {
                 utils.sendMessage(
                         player,
-                        messagesConfig.login.wrongPassword
+                        messagesConfig.checkPassword.wrongPassword
                 );
             }
         });
@@ -209,6 +209,62 @@ public class AuthManager {
         sessionCache.addPlayer(player.getName(), ip);
 
         connectToBackend(player);
+    }
+
+    public void changePasswordPlayer(ProxiedPlayer player, String oldPassword, String newPassword) {
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            if (!success) {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.database.queryError
+                );
+                return;
+            }
+
+            Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
+            String hashedPassword = user.getPassword();
+
+            if (!hash.verifyPassword(oldPassword, hashedPassword)) {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.checkPassword.wrongPassword
+                );
+                return;
+            }
+
+            changePasswordPlayer(player, newPassword);
+        });
+    }
+
+    public void changePasswordPlayer(ProxiedPlayer player, String password) {
+        if (password.length() < mainConfig.auth.minPasswordLength ||
+                password.length() > mainConfig.auth.maxPasswordLength) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.checkPassword.invalidLength
+                            .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
+                            .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+            );
+            return;
+        }
+
+        Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
+        String hashedPassword = hash.hashPassword(password);
+
+        database.getAuthUserRepository().updatePassword(player.getName(), hashedPassword, success -> {
+            if (!success) {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.database.queryError
+                );
+                return;
+            }
+
+            utils.sendMessage(
+                    player,
+                    messagesConfig.changePassword.success
+            );
+        });
     }
 
     public void logoutPlayer(ProxiedPlayer player) {
