@@ -13,12 +13,12 @@ import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
-import ru.matveylegenda.tiauth.util.ChatUtils;
+import ru.matveylegenda.tiauth.util.Utils;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import static ru.matveylegenda.tiauth.util.ChatUtils.colorize;
+import static ru.matveylegenda.tiauth.util.Utils.colorize;
 
 public class AuthManager {
     private final TiAuth plugin;
@@ -28,7 +28,7 @@ public class AuthManager {
     private final SessionCache sessionCache;
     private final MainConfig mainConfig;
     private final MessagesConfig messagesConfig;
-    private final ChatUtils chatUtils;
+    private final Utils utils;
 
     public AuthManager(TiAuth plugin) {
         this.plugin = plugin;
@@ -38,12 +38,12 @@ public class AuthManager {
         this.sessionCache = plugin.getSessionCache();
         this.mainConfig = plugin.getMainConfig();
         this.messagesConfig = plugin.getMessagesConfig();
-        this.chatUtils = plugin.getChatUtils();
+        this.utils = plugin.getUtils();
     }
 
     public void registerPlayer(ProxiedPlayer player, String password, String repeatPassword) {
         if (!password.equals(repeatPassword)) {
-            chatUtils.sendMessage(
+            utils.sendMessage(
                     player,
                     messagesConfig.register.mismatch
             );
@@ -51,9 +51,17 @@ public class AuthManager {
             return;
         }
 
-        database.getAuthUserRepository().getUser(player.getName(), user -> {
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            if (!success) {
+                utils.kickPlayer(
+                        player,
+                        messagesConfig.database.queryError
+                );
+                return;
+            }
+
             if (user != null) {
-                chatUtils.sendMessage(
+                utils.sendMessage(
                         player,
                         messagesConfig.register.alreadyRegistered
                 );
@@ -68,8 +76,16 @@ public class AuthManager {
                             hash.hashPassword(password),
                             false,
                             player.getAddress().getAddress().getHostAddress()
-                    ), () -> {
-                        chatUtils.sendMessage(
+                    ), success1 -> {
+                        if (!success1) {
+                            utils.kickPlayer(
+                                    player,
+                                    messagesConfig.database.queryError
+                            );
+                            return;
+                        }
+
+                        utils.sendMessage(
                                 player,
                                 messagesConfig.register.success
                         );
@@ -83,9 +99,17 @@ public class AuthManager {
     }
 
     public void loginPlayer(ProxiedPlayer player, String password) {
-        database.getAuthUserRepository().getUser(player.getName(), user -> {
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            if (!success) {
+                utils.kickPlayer(
+                        player,
+                        messagesConfig.database.queryError
+                );
+                return;
+            }
+
             if (user == null) {
-                chatUtils.sendMessage(
+                utils.sendMessage(
                         player,
                         messagesConfig.login.notRegistered
                 );
@@ -94,7 +118,7 @@ public class AuthManager {
             }
 
             if (authCache.isAuthenticated(player.getName())) {
-                chatUtils.sendMessage(
+                utils.sendMessage(
                         player,
                         messagesConfig.login.alreadyLogged
                 );
@@ -108,7 +132,7 @@ public class AuthManager {
             if (hash.verifyPassword(password, hashedPassword)) {
                 loginPlayer(player);
             } else {
-                chatUtils.sendMessage(
+                utils.sendMessage(
                         player,
                         messagesConfig.login.wrongPassword
                 );
@@ -117,7 +141,7 @@ public class AuthManager {
     }
 
     public void loginPlayer(ProxiedPlayer player) {
-        chatUtils.sendMessage(
+        utils.sendMessage(
                 player,
                 messagesConfig.login.success
         );
@@ -139,21 +163,39 @@ public class AuthManager {
 
     public void togglePremium(ProxiedPlayer player) {
         if (premiumCache.isPremium(player.getName())) {
-            database.getAuthUserRepository().setPremium(player.getName(), false);
-            premiumCache.removePremium(player.getName());
+            database.getAuthUserRepository().setPremium(player.getName(), false, success -> {
+                if (!success) {
+                    utils.sendMessage(
+                            player,
+                            messagesConfig.database.queryError
+                    );
+                    return;
+                }
 
-            chatUtils.sendMessage(
-                    player,
-                    messagesConfig.premium.disabled
-            );
+                premiumCache.removePremium(player.getName());
+
+                utils.sendMessage(
+                        player,
+                        messagesConfig.premium.disabled
+                );
+            });
         } else {
-            database.getAuthUserRepository().setPremium(player.getName(), true);
-            premiumCache.addPremium(player.getName());
+            database.getAuthUserRepository().setPremium(player.getName(), true, success -> {
+                if (!success) {
+                    utils.sendMessage(
+                            player,
+                            messagesConfig.database.queryError
+                    );
+                    return;
+                }
 
-            chatUtils.sendMessage(
-                    player,
-                    messagesConfig.premium.enabled
-            );
+                premiumCache.addPremium(player.getName());
+
+                utils.sendMessage(
+                        player,
+                        messagesConfig.premium.enabled
+                );
+            });
         }
     }
 
@@ -207,7 +249,7 @@ public class AuthManager {
                 return;
             }
 
-            chatUtils.sendMessage(
+            utils.sendMessage(
                     player,
                     reminderMessage
             );

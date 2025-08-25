@@ -16,7 +16,6 @@ repositories {
 dependencies {
     compileOnly("net.md-5:bungeecord-api:1.21-R0.3")
     implementation("org.bstats:bstats-bungeecord:3.0.2")
-    implementation("com.j256.ormlite:ormlite-core:6.1")
     implementation("com.j256.ormlite:ormlite-jdbc:6.1")
     //implementation("com.zaxxer:HikariCP:7.0.1")
     compileOnly("org.projectlombok:lombok:1.18.38")
@@ -29,13 +28,13 @@ dependencies {
 
 tasks.shadowJar {
     relocate("org.bstats", "ru.matveylegenda.tiauth.thirdparty.org.bstats")
-    relocate("com.j256", "ru.matveylegenda.tiauth.thirdparty.com.j256")
+    relocate("com.j256.ormlite", "ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite")
     //relocate("com.zaxxer", "ru.matveylegenda.tidiscord2fa.thirdparty.com.zaxxer")
-    relocate("at.favre", "ru.matveylegenda.tiauth.thirdparty.at.favre")
-    relocate("com.github", "ru.matveylegenda.tiauth.thirdparty.com.github")
-    //relocate("com.google", "ru.matveylegenda.tiauth.thirdparty.com.google")
+    relocate("at.favre.lib", "ru.matveylegenda.tiauth.thirdparty.at.favre.lib")
+    relocate("com.github.benmanes.caffeine", "ru.matveylegenda.tiauth.thirdparty.com.github.benmanes.caffeine")
+    relocate("com.google.errorprone", "ru.matveylegenda.tiauth.thirdparty.com.google.errorprone")
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
-    relocate("net.elytrium", "ru.matveylegenda.tiauth.thirdparty.net.elytrium")
+    relocate("net.elytrium.serializer", "ru.matveylegenda.tiauth.thirdparty.net.elytrium.serializer")
 }
 
 def targetJavaVersion = 17

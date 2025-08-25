@@ -14,8 +14,9 @@ import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.manager.AuthManager;
+import ru.matveylegenda.tiauth.util.Utils;
 
-import static ru.matveylegenda.tiauth.util.ChatUtils.colorize;
+import static ru.matveylegenda.tiauth.util.Utils.colorize;
 
 public class AuthListener implements Listener {
     private final Database database;
@@ -24,6 +25,7 @@ public class AuthListener implements Listener {
     private final MainConfig mainConfig;
     private final MessagesConfig messagesConfig;
     private final AuthManager authManager;
+    private final Utils utils;
 
     public AuthListener(TiAuth plugin) {
         this.database = plugin.getDatabase();
@@ -32,6 +34,7 @@ public class AuthListener implements Listener {
         this.mainConfig = plugin.getMainConfig();
         this.messagesConfig = plugin.getMessagesConfig();
         this.authManager = plugin.getAuthManager();
+        this.utils = plugin.getUtils();
     }
 
     @EventHandler
@@ -50,7 +53,14 @@ public class AuthListener implements Listener {
         if (event.getReason() == ServerConnectEvent.Reason.JOIN_PROXY) {
             event.setCancelled(true);
 
-            database.getAuthUserRepository().getUser(player.getName(), user -> {
+            database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+                if (!success) {
+                    utils.kickPlayer(
+                            player,
+                            messagesConfig.database.queryError
+                    );
+                    return;
+                }
                 authManager.forceAuth(player, user);
             });
 
@@ -59,11 +69,9 @@ public class AuthListener implements Listener {
 
         if (!authCache.isAuthenticated(player.getName()) &&
                 !event.getTarget().getName().equals(mainConfig.servers.auth)) {
-            player.disconnect(
-                    colorize(
-                            messagesConfig.kick.notAuth
-                                    .replace("{prefix}", messagesConfig.prefix)
-                    )
+            utils.kickPlayer(
+                    player,
+                    messagesConfig.kick.notAuth
             );
         }
     }

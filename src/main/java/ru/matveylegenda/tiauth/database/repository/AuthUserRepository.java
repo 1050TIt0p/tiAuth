@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
@@ -26,26 +27,29 @@ public class AuthUserRepository {
         TableUtils.createTableIfNotExists(connectionSource, AuthUser.class);
     }
 
-    public void registerUser(AuthUser user, Runnable callback) {
+    public void registerUser(AuthUser user, Consumer<Boolean> callback) {
         executor.submit(() -> {
             try {
                 authUserDao.create(user);
                 if (callback != null) {
-                    callback.run();
+                    callback.accept(true);
                 }
             } catch (SQLException e) {
+                if (callback != null) {
+                    callback.accept(true);
+                }
                 TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
     }
 
-    public void getUser(String username, Consumer<AuthUser> callback) {
+    public void getUser(String username, BiConsumer<AuthUser, Boolean> callback) {
         executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
-                callback.accept(user);
+                callback.accept(user, true);
             } catch (SQLException e) {
-                callback.accept(null);
+                callback.accept(null, false);
                 TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
@@ -63,7 +67,7 @@ public class AuthUserRepository {
         });
     }
 
-    public void updatePassword(String username, String newPassword, Runnable callback) {
+    public void updatePassword(String username, String newPassword, Consumer<Boolean> callback) {
         executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
@@ -71,10 +75,13 @@ public class AuthUserRepository {
                     user.setPassword(newPassword);
                     authUserDao.update(user);
                     if (callback != null) {
-                        callback.run();
+                        callback.accept(true);
                     }
                 }
             } catch (SQLException e) {
+                if (callback != null) {
+                    callback.accept(false);
+                }
                 TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
@@ -108,15 +115,21 @@ public class AuthUserRepository {
         });
     }
 
-    public void setPremium(String username, boolean enabled) {
+    public void setPremium(String username, boolean enabled, Consumer<Boolean> callback) {
         executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
                     user.setPremium(enabled);
                     authUserDao.update(user);
+                    if (callback != null) {
+                        callback.accept(true);
+                    }
                 }
             } catch (SQLException e) {
+                if (callback != null) {
+                    callback.accept(true);
+                }
                 TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });

@@ -61,4 +61,11 @@ public class MessagesConfig extends YamlSerializable {
         public String login = "{prefix} &fАвторизируйтесь командой &#8833EC/login <пароль>";
         public String register = "{prefix} &fЗарегистрируйтесь командой &#8833EC/register <пароль> <пароль>";
     }
+
+    public Database database = new Database();
+
+    @NewLine
+    public static class Database {
+        public String queryError = "{prefix} &fПроизошла ошибка при запросе к базе данных. Сообщите администрации!";
+    }
 }

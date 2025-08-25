@@ -6,24 +6,24 @@ import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.manager.AuthManager;
-import ru.matveylegenda.tiauth.util.ChatUtils;
+import ru.matveylegenda.tiauth.util.Utils;
 
 public class PremiumCommand extends Command {
     private final MessagesConfig messagesConfig;
-    private final ChatUtils chatUtils;
+    private final Utils utils;
     private final AuthManager authManager;
 
     public PremiumCommand(TiAuth plugin, String name) {
         super(name);
         this.messagesConfig = plugin.getMessagesConfig();
-        this.chatUtils = plugin.getChatUtils();
+        this.utils = plugin.getUtils();
         this.authManager = plugin.getAuthManager();
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (!(sender instanceof ProxiedPlayer player)) {
-            chatUtils.sendMessage(
+            utils.sendMessage(
                     sender,
                     messagesConfig.onlyPlayer
             );

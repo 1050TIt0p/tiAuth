@@ -17,7 +17,7 @@ import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.listener.AuthListener;
 import ru.matveylegenda.tiauth.listener.ChatListener;
 import ru.matveylegenda.tiauth.manager.AuthManager;
-import ru.matveylegenda.tiauth.util.ChatUtils;
+import ru.matveylegenda.tiauth.util.Utils;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -33,8 +33,8 @@ public final class TiAuth extends Plugin {
     private final MessagesConfig messagesConfig = new MessagesConfig();
     private final AuthCache authCache = new AuthCache();
     private final PremiumCache premiumCache = new PremiumCache();
-    private final SessionCache sessionCache = new SessionCache(mainConfig);
-    private final ChatUtils chatUtils = new ChatUtils(messagesConfig);
+    private SessionCache sessionCache;
+    private final Utils utils = new Utils(messagesConfig);
     private AuthManager authManager;
 
     @Override
@@ -43,9 +43,10 @@ public final class TiAuth extends Plugin {
         if (!getDataFolder().exists()) {
             getDataFolder().mkdir();
         }
-        initializeDatabase();
         loadConfigs();
+        initializeDatabase();
         premiumCache.load(database.getAuthUserRepository());
+        sessionCache = new SessionCache(mainConfig.auth.sessionLifetimeMinutes);
         authManager = new AuthManager(this);
 
         PluginManager pluginManager = getProxy().getPluginManager();

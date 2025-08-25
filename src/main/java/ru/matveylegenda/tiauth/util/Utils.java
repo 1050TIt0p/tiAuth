@@ -2,6 +2,7 @@ package ru.matveylegenda.tiauth.util;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 
 import java.util.regex.Matcher;
@@ -9,11 +10,11 @@ import java.util.regex.Pattern;
 
 import static net.md_5.bungee.api.ChatColor.COLOR_CHAR;
 
-public class ChatUtils {
+public class Utils {
     private final MessagesConfig messagesConfig;
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([a-fA-F\\d]{6})");
 
-    public ChatUtils(MessagesConfig messagesConfig) {
+    public Utils(MessagesConfig messagesConfig) {
         this.messagesConfig = messagesConfig;
     }
 
@@ -42,6 +43,12 @@ public class ChatUtils {
         }
 
         sender.sendMessage(
+                colorize(message.replace("{prefix}", messagesConfig.prefix))
+        );
+    }
+
+    public void kickPlayer(ProxiedPlayer player, String message) {
+        player.disconnect(
                 colorize(message.replace("{prefix}", messagesConfig.prefix))
         );
     }

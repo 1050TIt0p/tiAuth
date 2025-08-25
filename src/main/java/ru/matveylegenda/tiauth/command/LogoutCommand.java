@@ -9,14 +9,14 @@ import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.manager.AuthManager;
-import ru.matveylegenda.tiauth.util.ChatUtils;
+import ru.matveylegenda.tiauth.util.Utils;
 
 public class LogoutCommand extends Command {
     private final Database database;
     private final AuthCache authCache;
     private final PremiumCache premiumCache;
     private final MessagesConfig messagesConfig;
-    private final ChatUtils chatUtils;
+    private final Utils utils;
     private final AuthManager authManager;
 
     public LogoutCommand(TiAuth plugin, String name, String... aliases) {
@@ -25,14 +25,14 @@ public class LogoutCommand extends Command {
         this.authCache = plugin.getAuthCache();
         this.premiumCache = plugin.getPremiumCache();
         this.messagesConfig = plugin.getMessagesConfig();
-        this.chatUtils = plugin.getChatUtils();
+        this.utils = plugin.getUtils();
         this.authManager = plugin.getAuthManager();
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (!(sender instanceof ProxiedPlayer player)) {
-            chatUtils.sendMessage(
+            utils.sendMessage(
                     sender,
                     messagesConfig.onlyPlayer
             );
@@ -45,7 +45,7 @@ public class LogoutCommand extends Command {
         }
 
         if (premiumCache.isPremium(player.getName())) {
-            chatUtils.sendMessage(
+            utils.sendMessage(
                     sender,
                     messagesConfig.logout.logoutByPremium
             );
@@ -53,7 +53,15 @@ public class LogoutCommand extends Command {
             return;
         }
 
-        database.getAuthUserRepository().getUser(player.getName(), user -> {
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            if (!success) {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.database.queryError
+                );
+                return;
+            }
+
             authManager.logoutPlayer(player);
             authManager.forceAuth(player, user);
         });

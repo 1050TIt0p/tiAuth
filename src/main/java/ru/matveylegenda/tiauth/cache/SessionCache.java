@@ -10,9 +10,9 @@ import java.util.concurrent.TimeUnit;
 public class SessionCache {
     private final Cache<String, String> sessions;
 
-    public SessionCache(MainConfig mainConfig) {
+    public SessionCache(int sessinLifetime) {
         this.sessions = Caffeine.newBuilder()
-                .expireAfterWrite(mainConfig.auth.sessionLifetimeMinutes, TimeUnit.MINUTES)
+                .expireAfterWrite(sessinLifetime, TimeUnit.MINUTES)
                 .build();
     }
 
