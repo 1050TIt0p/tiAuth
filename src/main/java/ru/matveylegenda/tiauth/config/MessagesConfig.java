@@ -19,6 +19,16 @@ public class MessagesConfig extends YamlSerializable {
         public String success = "{prefix} &fВы успешно зарегистрировались";
     }
 
+    public Unregister unregister = new Unregister();
+
+    @NewLine
+    public static class Unregister {
+        public String usage = "{prefix} &fИспользование: &#8833EC/unregister <пароль>";
+        public String wrongPassword = "{prefix} &fНеверный пароль";
+        public String success = "{prefix} &fВы успешно удалили аккаунт";
+    }
+
+
     public Login login = new Login();
 
     @NewLine

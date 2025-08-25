@@ -7,10 +7,7 @@ import org.bstats.bungeecord.Metrics;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
-import ru.matveylegenda.tiauth.command.LoginCommand;
-import ru.matveylegenda.tiauth.command.LogoutCommand;
-import ru.matveylegenda.tiauth.command.PremiumCommand;
-import ru.matveylegenda.tiauth.command.RegisterCommand;
+import ru.matveylegenda.tiauth.command.*;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
@@ -89,6 +86,7 @@ public final class TiAuth extends Plugin {
     private void registerCommands(PluginManager pluginManager) {
         pluginManager.registerCommand(this, new LoginCommand(this, "login", "log", "l"));
         pluginManager.registerCommand(this, new RegisterCommand(this, "register", "reg"));
+        pluginManager.registerCommand(this, new UnregisterCommand(this, "unregister", "unreg"));
         pluginManager.registerCommand(this, new PremiumCommand(this, "premium"));
         pluginManager.registerCommand(this, new LogoutCommand(this, "logout"));
     }

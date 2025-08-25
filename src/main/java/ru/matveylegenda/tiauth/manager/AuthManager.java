@@ -109,6 +109,50 @@ public class AuthManager {
         });
     }
 
+    public void unregisterPlayer(ProxiedPlayer player, String password) {
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            if (!success) {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.database.queryError
+                );
+                return;
+            }
+
+            Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
+            String hashedPassword = user.getPassword();
+
+            if (!hash.verifyPassword(password, hashedPassword)) {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.unregister.wrongPassword
+                );
+                return;
+            }
+
+            unregisterPlayer(player);
+        });
+    }
+
+    public void unregisterPlayer(ProxiedPlayer player) {
+        database.getAuthUserRepository().deleteUser(player.getName(), success -> {
+            if (!success) {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.database.queryError
+                );
+                return;
+            }
+
+            sessionCache.removePlayer(player.getName());
+
+            utils.kickPlayer(
+                    player,
+                    messagesConfig.unregister.success
+            );
+        });
+    }
+
     public void loginPlayer(ProxiedPlayer player, String password) {
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {

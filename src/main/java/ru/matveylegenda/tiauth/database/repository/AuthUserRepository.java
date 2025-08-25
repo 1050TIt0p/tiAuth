@@ -43,6 +43,26 @@ public class AuthUserRepository {
         });
     }
 
+    public void deleteUser(String username, Consumer<Boolean> callback) {
+        executor.submit(() -> {
+            try {
+                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
+                if (user != null) {
+                    authUserDao.delete(user);
+                    if (callback != null) {
+                        callback.accept(true);
+                    }
+                }
+            } catch (SQLException e) {
+                if (callback != null) {
+                    callback.accept(false);
+                }
+                TiAuth.logger.log(Level.WARNING, "Error during database delete query", e);
+            }
+        });
+    }
+
+
     public void getUser(String username, BiConsumer<AuthUser, Boolean> callback) {
         executor.submit(() -> {
             try {
