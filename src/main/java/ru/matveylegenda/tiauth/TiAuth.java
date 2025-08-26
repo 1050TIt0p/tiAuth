@@ -13,6 +13,7 @@ import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.listener.AuthListener;
 import ru.matveylegenda.tiauth.listener.ChatListener;
+import ru.matveylegenda.tiauth.listener.DialogListener;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
 
@@ -80,6 +81,7 @@ public final class TiAuth extends Plugin {
 
     private void registerListeners(PluginManager pluginManager) {
         pluginManager.registerListener(this, new AuthListener(this));
+        pluginManager.registerListener(this, new DialogListener(this));
         pluginManager.registerListener(this, new ChatListener(this));
     }
 

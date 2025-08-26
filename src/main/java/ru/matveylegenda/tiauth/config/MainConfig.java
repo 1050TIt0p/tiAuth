@@ -69,5 +69,11 @@ public class MainConfig extends YamlSerializable {
                 "/register",
                 "/reg"
         );
+
+        @Comment({
+                @CommentValue(" Использовать ли диалоговое окно для регистрации/авторизации"),
+                @CommentValue(" Работает только на клиентах 1.21.6+")
+        })
+        public boolean useDialogs = true;
     }
 }

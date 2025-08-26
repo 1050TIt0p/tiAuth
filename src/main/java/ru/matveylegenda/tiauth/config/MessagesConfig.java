@@ -10,6 +10,7 @@ public class MessagesConfig extends YamlSerializable {
 
     public CheckPassword checkPassword = new CheckPassword();
 
+    @NewLine
     public static class CheckPassword {
         public String wrongPassword = "{prefix} &fНеверный пароль";
         public String invalidLength = "{prefix} &fДлина пароля должна быть от &#8833EC{min} &fдо &#8833EC{max} &fсимволов";
@@ -90,5 +91,27 @@ public class MessagesConfig extends YamlSerializable {
     @NewLine
     public static class Database {
         public String queryError = "{prefix} &fПроизошла ошибка при запросе к базе данных. Сообщите администрации!";
+    }
+
+    public Dialog dialog = new Dialog();
+
+    @NewLine
+    public static class Dialog {
+        public Register register = new Register();
+
+        public static class Register {
+            public String title = "Регистрация";
+            public String passwordField = "Пароль";
+            public String repeatPasswordField = "Повторите пароль";
+            public String confirmButton = "Зарегистрироваться";
+        }
+
+        public Login login = new Login();
+
+        public static class Login {
+            public String title = "Авторизация";
+            public String passwordField = "Пароль";
+            public String confirmButton = "Авторизоваться";
+        }
     }
 }

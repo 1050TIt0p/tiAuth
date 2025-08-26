@@ -1,7 +1,14 @@
 package ru.matveylegenda.tiauth.manager;
 
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.dialog.Dialog;
+import net.md_5.bungee.api.dialog.DialogBase;
+import net.md_5.bungee.api.dialog.NoticeDialog;
+import net.md_5.bungee.api.dialog.action.ActionButton;
+import net.md_5.bungee.api.dialog.action.CustomClickAction;
+import net.md_5.bungee.api.dialog.input.TextInput;
 import net.md_5.bungee.api.scheduler.ScheduledTask;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
@@ -15,10 +22,13 @@ import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.util.Utils;
 
+import java.awt.*;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static ru.matveylegenda.tiauth.util.Utils.colorize;
+import static ru.matveylegenda.tiauth.util.Utils.colorizeComponent;
 
 public class AuthManager {
     private final TiAuth plugin;
@@ -374,6 +384,60 @@ public class AuthManager {
                         reminderMessage
                 );
             }, 0, mainConfig.auth.reminderInterval, TimeUnit.SECONDS);
+        });
+    }
+
+    public void showLoginDialog(ProxiedPlayer player) {
+        if (!mainConfig.auth.useDialogs) {
+            return;
+        }
+
+        if (player.getPendingConnection().getVersion() < 771) {
+            return;
+        }
+
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            if (!success) {
+                utils.kickPlayer(
+                        player,
+                        messagesConfig.database.queryError
+                );
+                return;
+            }
+
+            Dialog dialog;
+            if (user != null) {
+                dialog = new NoticeDialog(new DialogBase(colorizeComponent(messagesConfig.dialog.login.title))
+                        .inputs(
+                                List.of(
+                                        new TextInput("password", colorizeComponent(messagesConfig.dialog.login.passwordField))
+                                )
+                        ))
+                        .action(
+                                new ActionButton(
+                                        colorizeComponent(messagesConfig.dialog.login.confirmButton),
+                                        new CustomClickAction("tiauth_login")
+                                )
+                        );
+            } else {
+                dialog = new NoticeDialog(new DialogBase(colorizeComponent(messagesConfig.dialog.register.title))
+                        .inputs(
+                                List.of(
+                                        new TextInput("password", colorizeComponent(messagesConfig.dialog.register.passwordField)),
+                                        new TextInput("repeatPassword", colorizeComponent(messagesConfig.dialog.register.repeatPasswordField))
+                                )
+                        ))
+                        .action(
+                                new ActionButton(
+                                        colorizeComponent(messagesConfig.dialog.register.confirmButton),
+                                        new CustomClickAction("tiauth_register")
+                                )
+                        );
+            }
+
+            plugin.getProxy().getScheduler().schedule(plugin, () -> {
+                player.showDialog(dialog);
+            }, 50, TimeUnit.MILLISECONDS);
         });
     }
 

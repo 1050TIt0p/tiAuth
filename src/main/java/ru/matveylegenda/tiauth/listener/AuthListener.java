@@ -5,6 +5,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PreLoginEvent;
 import net.md_5.bungee.api.event.ServerConnectEvent;
+import net.md_5.bungee.api.event.ServerConnectedEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import ru.matveylegenda.tiauth.TiAuth;
@@ -15,8 +16,6 @@ import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
-
-import static ru.matveylegenda.tiauth.util.Utils.colorize;
 
 public class AuthListener implements Listener {
     private final Database database;
@@ -73,6 +72,16 @@ public class AuthListener implements Listener {
                     player,
                     messagesConfig.kick.notAuth
             );
+        }
+    }
+
+    @EventHandler
+    public void onServerConnectedEvent(ServerConnectedEvent event) {
+        ProxiedPlayer player = event.getPlayer();
+
+        if (event.getServer().getInfo().getName().equals(mainConfig.servers.auth) &&
+                !authCache.isAuthenticated(player.getName())) {
+            authManager.showLoginDialog(player);
         }
     }
 
