@@ -310,61 +310,71 @@ public class AuthManager {
         }
     }
 
-    public void forceAuth(ProxiedPlayer player, AuthUser user) {
-        if (user != null && !player.getName().equals(user.getRealName())) {
-            player.disconnect(
-                    colorize(
-                            messagesConfig.kick.realname
-                                    .replace("{prefix}", messagesConfig.prefix)
-                                    .replace("{realname}", user.getRealName())
-                                    .replace("{name}", player.getName())
-                    )
-            );
-
-            return;
-        }
-
-        String sessionIP = sessionCache.getIP(player.getName());
-
-        if (premiumCache.isPremium(player.getName()) ||
-                (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
-            authCache.setAuthenticated(player.getName());
-            connectToBackend(player);
-
-            return;
-        }
-
-        connectToAuthServer(player);
-
-        ScheduledTask[] taskHolder = new ScheduledTask[2];
-        taskHolder[0] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
-            if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
-                taskHolder[0].cancel();
+    public void forceAuth(ProxiedPlayer player) {
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            if (!success) {
+                utils.kickPlayer(
+                        player,
+                        messagesConfig.database.queryError
+                );
                 return;
             }
 
-            player.disconnect(
-                    colorize(
-                            messagesConfig.kick.timeout
-                                    .replace("{prefix}", messagesConfig.prefix)
-                    )
-            );
-        }, mainConfig.auth.timeoutSeconds, TimeUnit.SECONDS);
+            if (user != null && !player.getName().equals(user.getRealName())) {
+                player.disconnect(
+                        colorize(
+                                messagesConfig.kick.realname
+                                        .replace("{prefix}", messagesConfig.prefix)
+                                        .replace("{realname}", user.getRealName())
+                                        .replace("{name}", player.getName())
+                        )
+                );
 
-        String reminderMessage = (user != null)
-                ? messagesConfig.reminder.login
-                : messagesConfig.reminder.register;
-        taskHolder[1] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
-            if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
-                taskHolder[1].cancel();
                 return;
             }
 
-            utils.sendMessage(
-                    player,
-                    reminderMessage
-            );
-        }, 0, mainConfig.auth.reminderInterval, TimeUnit.SECONDS);
+            String sessionIP = sessionCache.getIP(player.getName());
+
+            if (premiumCache.isPremium(player.getName()) ||
+                    (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
+                authCache.setAuthenticated(player.getName());
+                connectToBackend(player);
+
+                return;
+            }
+
+            connectToAuthServer(player);
+
+            ScheduledTask[] taskHolder = new ScheduledTask[2];
+            taskHolder[0] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
+                if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
+                    taskHolder[0].cancel();
+                    return;
+                }
+
+                player.disconnect(
+                        colorize(
+                                messagesConfig.kick.timeout
+                                        .replace("{prefix}", messagesConfig.prefix)
+                        )
+                );
+            }, mainConfig.auth.timeoutSeconds, TimeUnit.SECONDS);
+
+            String reminderMessage = (user != null)
+                    ? messagesConfig.reminder.login
+                    : messagesConfig.reminder.register;
+            taskHolder[1] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
+                if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
+                    taskHolder[1].cancel();
+                    return;
+                }
+
+                utils.sendMessage(
+                        player,
+                        reminderMessage
+                );
+            }, 0, mainConfig.auth.reminderInterval, TimeUnit.SECONDS);
+        });
     }
 
     public void connectToAuthServer(ProxiedPlayer player) {

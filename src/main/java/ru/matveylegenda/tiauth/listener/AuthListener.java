@@ -61,7 +61,7 @@ public class AuthListener implements Listener {
                     );
                     return;
                 }
-                authManager.forceAuth(player, user);
+                authManager.forceAuth(player);
             });
 
             return;
