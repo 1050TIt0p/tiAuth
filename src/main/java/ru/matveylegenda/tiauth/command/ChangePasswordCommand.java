@@ -34,7 +34,7 @@ public class ChangePasswordCommand extends Command {
         if (args.length != 2) {
             utils.sendMessage(
                     player,
-                    messagesConfig.unregister.usage
+                    messagesConfig.changePassword.usage
             );
 
             return;

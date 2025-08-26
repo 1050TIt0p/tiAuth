@@ -48,6 +48,7 @@ public class MessagesConfig extends YamlSerializable {
 
     @NewLine
     public static class ChangePassword {
+        public String usage = "{prefix} &fИспользование: &#8833EC/changepassword <старый пароль> <новый пароль>";
         public String success = "{prefix} &fВы успешно изменили пароль";
     }
 
