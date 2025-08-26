@@ -36,7 +36,7 @@ public class AuthUserRepository {
                 }
             } catch (SQLException e) {
                 if (callback != null) {
-                    callback.accept(true);
+                    callback.accept(false);
                 }
                 TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
@@ -148,7 +148,7 @@ public class AuthUserRepository {
                 }
             } catch (SQLException e) {
                 if (callback != null) {
-                    callback.accept(true);
+                    callback.accept(false);
                 }
                 TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
