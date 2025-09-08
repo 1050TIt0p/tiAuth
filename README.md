@@ -29,7 +29,6 @@ Authorization plugin for BungeeCord
 
 ### TODO:
 Sorted roughly in the order of planned implementation
-- Notifications in dialog for incorrect passwords, etc.
 - Add support for multiple authentication servers and backends + online load balancer
 - Display authentication countdown in ActionBar, Title, and BossBar
 - Add MySQL and PostgreSQL database types
