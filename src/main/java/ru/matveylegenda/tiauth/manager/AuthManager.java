@@ -1,6 +1,5 @@
 package ru.matveylegenda.tiauth.manager;
 
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.dialog.Dialog;
@@ -24,12 +23,10 @@ import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.util.Utils;
 
-import java.awt.*;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import static ru.matveylegenda.tiauth.util.Utils.colorize;
 import static ru.matveylegenda.tiauth.util.Utils.colorizeComponent;
 
 public class AuthManager {
@@ -489,13 +486,21 @@ public class AuthManager {
     }
 
     private void connectToAuthServer(ProxiedPlayer player) {
+        ServerInfo currentServer = player.getServer().getInfo();
         ServerInfo authServer = plugin.getProxy().getServerInfo(mainConfig.servers.auth);
-        player.connect(authServer);
+
+        if (currentServer == null || !currentServer.equals(authServer)) {
+            player.connect(authServer);
+        }
     }
 
     private void connectToBackend(ProxiedPlayer player) {
+        ServerInfo currentServer = player.getServer().getInfo();
         ServerInfo backendServer = plugin.getProxy().getServerInfo(mainConfig.servers.backend);
-        player.connect(backendServer);
+
+        if (currentServer == null || !currentServer.equals(backendServer)) {
+            player.connect(backendServer);
+        }
     }
 
     public boolean supportDialog(ProxiedPlayer player) {
