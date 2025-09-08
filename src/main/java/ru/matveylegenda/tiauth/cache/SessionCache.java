@@ -2,7 +2,6 @@ package ru.matveylegenda.tiauth.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import ru.matveylegenda.tiauth.config.MainConfig;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -10,9 +9,9 @@ import java.util.concurrent.TimeUnit;
 public class SessionCache {
     private final Cache<String, String> sessions;
 
-    public SessionCache(int sessinLifetime) {
+    public SessionCache(int sessionLifetime) {
         this.sessions = Caffeine.newBuilder()
-                .expireAfterWrite(sessinLifetime, TimeUnit.MINUTES)
+                .expireAfterWrite(sessionLifetime, TimeUnit.MINUTES)
                 .build();
     }
 
