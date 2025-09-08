@@ -113,5 +113,13 @@ public class MessagesConfig extends YamlSerializable {
             public String passwordField = "Пароль";
             public String confirmButton = "Авторизоваться";
         }
+
+        public Notifications notifications = new Notifications();
+
+        public static class Notifications {
+            public String wrongPassword = "&cНеверный пароль";
+            public String invalidLength = "&cДлина пароля должна быть от {min} до {max} символов";
+            public String mismatch = "&cПароли не совпадают";
+        }
     }
 }

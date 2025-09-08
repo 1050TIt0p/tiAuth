@@ -60,6 +60,10 @@ public class AuthManager {
                     messagesConfig.register.mismatch
             );
 
+            if (supportDialog(player)) {
+                showLoginDialog(player, messagesConfig.dialog.notifications.mismatch);
+            }
+
             return;
         }
 
@@ -71,6 +75,16 @@ public class AuthManager {
                             .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
                             .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
             );
+
+            if (supportDialog(player)) {
+                showLoginDialog(
+                        player,
+                        messagesConfig.dialog.notifications.invalidLength
+                                .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
+                                .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+                );
+            }
+
             return;
         }
 
@@ -203,6 +217,10 @@ public class AuthManager {
                         player,
                         messagesConfig.checkPassword.wrongPassword
                 );
+
+                if (supportDialog(player)) {
+                    showLoginDialog(player, messagesConfig.dialog.notifications.wrongPassword);
+                }
             }
         });
     }
@@ -400,11 +418,15 @@ public class AuthManager {
     }
 
     public void showLoginDialog(ProxiedPlayer player) {
+        showLoginDialog(player, null);
+    }
+
+    public void showLoginDialog(ProxiedPlayer player, String noticeMessage) {
         if (!mainConfig.auth.useDialogs) {
             return;
         }
 
-        if (player.getPendingConnection().getVersion() < 771) {
+        if (!supportDialog(player)) {
             return;
         }
 
@@ -447,24 +469,36 @@ public class AuthManager {
                         );
             }
 
+            if (noticeMessage != null) {
+                dialog.getBase().body(
+                        List.of(
+                                new PlainMessageBody(colorizeComponent(noticeMessage))
+                        )
+                );
+            }
+
             plugin.getProxy().getScheduler().schedule(plugin, () -> {
                 player.showDialog(dialog);
             }, 50, TimeUnit.MILLISECONDS);
         });
     }
 
-    public void connectToAuthServer(PostLoginEvent event) {
+    private void connectToAuthServer(PostLoginEvent event) {
         ServerInfo authServer = plugin.getProxy().getServerInfo(mainConfig.servers.auth);
         event.setTarget(authServer);
     }
 
-    public void connectToAuthServer(ProxiedPlayer player) {
+    private void connectToAuthServer(ProxiedPlayer player) {
         ServerInfo authServer = plugin.getProxy().getServerInfo(mainConfig.servers.auth);
         player.connect(authServer);
     }
 
-    public void connectToBackend(ProxiedPlayer player) {
+    private void connectToBackend(ProxiedPlayer player) {
         ServerInfo backendServer = plugin.getProxy().getServerInfo(mainConfig.servers.backend);
         player.connect(backendServer);
+    }
+
+    public boolean supportDialog(ProxiedPlayer player) {
+        return player.getPendingConnection().getVersion() >= 771;
     }
 }
