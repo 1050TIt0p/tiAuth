@@ -2,10 +2,7 @@ package ru.matveylegenda.tiauth.listener;
 
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.event.PlayerDisconnectEvent;
-import net.md_5.bungee.api.event.PreLoginEvent;
-import net.md_5.bungee.api.event.ServerConnectEvent;
-import net.md_5.bungee.api.event.ServerConnectedEvent;
+import net.md_5.bungee.api.event.*;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import ru.matveylegenda.tiauth.TiAuth;
@@ -18,6 +15,7 @@ import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
 
 public class AuthListener implements Listener {
+    private final TiAuth plugin;
     private final Database database;
     private final AuthCache authCache;
     private final PremiumCache premiumCache;
@@ -27,6 +25,7 @@ public class AuthListener implements Listener {
     private final Utils utils;
 
     public AuthListener(TiAuth plugin) {
+        this.plugin = plugin;
         this.database = plugin.getDatabase();
         this.authCache = plugin.getAuthCache();
         this.premiumCache = plugin.getPremiumCache();
@@ -46,23 +45,29 @@ public class AuthListener implements Listener {
     }
 
     @EventHandler
+    public void onPostLogin(PostLoginEvent event) {
+        ProxiedPlayer player = event.getPlayer();
+        event.registerIntent(plugin);
+
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            if (!success) {
+                utils.kickPlayer(
+                        player,
+                        messagesConfig.database.queryError
+                );
+                event.completeIntent(plugin);
+
+                return;
+            }
+            authManager.forceAuth(player, event);
+        });
+    }
+
+    @EventHandler
     public void onServerConnect(ServerConnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
 
         if (event.getReason() == ServerConnectEvent.Reason.JOIN_PROXY) {
-            event.setCancelled(true);
-
-            database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
-                if (!success) {
-                    utils.kickPlayer(
-                            player,
-                            messagesConfig.database.queryError
-                    );
-                    return;
-                }
-                authManager.forceAuth(player);
-            });
-
             return;
         }
 

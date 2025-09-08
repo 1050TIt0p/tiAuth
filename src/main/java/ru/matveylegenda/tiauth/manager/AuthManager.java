@@ -8,7 +8,9 @@ import net.md_5.bungee.api.dialog.DialogBase;
 import net.md_5.bungee.api.dialog.NoticeDialog;
 import net.md_5.bungee.api.dialog.action.ActionButton;
 import net.md_5.bungee.api.dialog.action.CustomClickAction;
+import net.md_5.bungee.api.dialog.body.PlainMessageBody;
 import net.md_5.bungee.api.dialog.input.TextInput;
+import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.scheduler.ScheduledTask;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
@@ -321,69 +323,79 @@ public class AuthManager {
     }
 
     public void forceAuth(ProxiedPlayer player) {
+        forceAuth(player, null);
+    }
+
+    public void forceAuth(ProxiedPlayer player, PostLoginEvent event) {
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
-            if (!success) {
-                utils.kickPlayer(
-                        player,
-                        messagesConfig.database.queryError
-                );
-                return;
-            }
-
-            if (user != null && !player.getName().equals(user.getRealName())) {
-                player.disconnect(
-                        colorize(
-                                messagesConfig.kick.realname
-                                        .replace("{prefix}", messagesConfig.prefix)
-                                        .replace("{realname}", user.getRealName())
-                                        .replace("{name}", player.getName())
-                        )
-                );
-
-                return;
-            }
-
-            String sessionIP = sessionCache.getIP(player.getName());
-
-            if (premiumCache.isPremium(player.getName()) ||
-                    (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
-                authCache.setAuthenticated(player.getName());
-                connectToBackend(player);
-
-                return;
-            }
-
-            connectToAuthServer(player);
-
-            ScheduledTask[] taskHolder = new ScheduledTask[2];
-            taskHolder[0] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
-                if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
-                    taskHolder[0].cancel();
+            try {
+                if (!success) {
+                    utils.kickPlayer(
+                            player,
+                            messagesConfig.database.queryError
+                    );
                     return;
                 }
 
-                player.disconnect(
-                        colorize(
-                                messagesConfig.kick.timeout
-                                        .replace("{prefix}", messagesConfig.prefix)
-                        )
-                );
-            }, mainConfig.auth.timeoutSeconds, TimeUnit.SECONDS);
+                if (user != null && !player.getName().equals(user.getRealName())) {
+                    utils.kickPlayer(
+                            player,
+                            messagesConfig.kick.realname
+                                    .replace("{realname}", user.getRealName())
+                                    .replace("{name}", player.getName())
+                    );
 
-            String reminderMessage = (user != null)
-                    ? messagesConfig.reminder.login
-                    : messagesConfig.reminder.register;
-            taskHolder[1] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
-                if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
-                    taskHolder[1].cancel();
                     return;
                 }
 
-                utils.sendMessage(
-                        player,
-                        reminderMessage
-                );
-            }, 0, mainConfig.auth.reminderInterval, TimeUnit.SECONDS);
+                String sessionIP = sessionCache.getIP(player.getName());
+
+                if (premiumCache.isPremium(player.getName()) ||
+                        (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
+                    authCache.setAuthenticated(player.getName());
+                    connectToBackend(player);
+
+                    return;
+                }
+
+                if (event != null) {
+                    connectToAuthServer(event);
+                } else {
+                    connectToAuthServer(player);
+                }
+
+                ScheduledTask[] taskHolder = new ScheduledTask[2];
+                taskHolder[0] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
+                    if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
+                        taskHolder[0].cancel();
+                        return;
+                    }
+
+                    utils.kickPlayer(
+                            player,
+                            messagesConfig.kick.timeout
+                    );
+                }, mainConfig.auth.timeoutSeconds, TimeUnit.SECONDS);
+
+                String reminderMessage = (user != null)
+                        ? messagesConfig.reminder.login
+                        : messagesConfig.reminder.register;
+                taskHolder[1] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
+                    if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
+                        taskHolder[1].cancel();
+                        return;
+                    }
+
+                    utils.sendMessage(
+                            player,
+                            reminderMessage
+                    );
+                }, 0, mainConfig.auth.reminderInterval, TimeUnit.SECONDS);
+            } finally {
+                if (event != null) {
+                    event.completeIntent(plugin);
+                }
+            }
         });
     }
 
@@ -439,6 +451,11 @@ public class AuthManager {
                 player.showDialog(dialog);
             }, 50, TimeUnit.MILLISECONDS);
         });
+    }
+
+    public void connectToAuthServer(PostLoginEvent event) {
+        ServerInfo authServer = plugin.getProxy().getServerInfo(mainConfig.servers.auth);
+        event.setTarget(authServer);
     }
 
     public void connectToAuthServer(ProxiedPlayer player) {
