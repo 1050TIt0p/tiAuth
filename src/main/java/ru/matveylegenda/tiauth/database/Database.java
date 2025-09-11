@@ -2,7 +2,6 @@ package ru.matveylegenda.tiauth.database;
 
 import com.j256.ormlite.jdbc.DataSourceConnectionSource;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.jdbc.db.MysqlDatabaseType;
 import com.j256.ormlite.support.ConnectionSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -12,6 +11,8 @@ import ru.matveylegenda.tiauth.database.repository.AuthUserRepository;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
 public class Database {
@@ -19,17 +20,20 @@ public class Database {
     private final HikariDataSource dataSource;
     @Getter
     private final AuthUserRepository authUserRepository;
+    private ExecutorService executor;
 
     private Database(ConnectionSource connectionSource) throws SQLException {
         this.connectionSource = connectionSource;
         this.dataSource = null;
-        this.authUserRepository = new AuthUserRepository(connectionSource, true);
+        executor = Executors.newSingleThreadExecutor();
+        this.authUserRepository = new AuthUserRepository(connectionSource, executor);
     }
 
     private Database(ConnectionSource connectionSource, HikariDataSource dataSource) throws SQLException {
         this.connectionSource = connectionSource;
         this.dataSource = dataSource;
-        this.authUserRepository = new AuthUserRepository(connectionSource, false);
+        executor = Executors.newFixedThreadPool(dataSource.getMaximumPoolSize());
+        this.authUserRepository = new AuthUserRepository(connectionSource, executor);
     }
 
     public static Database forSQLite(File file) throws SQLException {

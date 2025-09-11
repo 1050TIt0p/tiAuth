@@ -11,9 +11,7 @@ import ru.matveylegenda.tiauth.database.model.AuthUser;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -23,19 +21,14 @@ public class AuthUserRepository {
     private ExecutorService executor;
     private final Dao<AuthUser, String> authUserDao;
 
-    public AuthUserRepository(ConnectionSource connectionSource, boolean isSQLite) throws SQLException {
+    public AuthUserRepository(ConnectionSource connectionSource, ExecutorService executor) throws SQLException {
         authUserDao = DaoManager.createDao(connectionSource, AuthUser.class);
         TableUtils.createTableIfNotExists(connectionSource, AuthUser.class);
-
-        if (isSQLite) {
-            executor = Executors.newSingleThreadExecutor();
-        } else {
-            executor = null;
-        }
+        this.executor = executor;
     }
 
     public void registerUser(AuthUser user, Consumer<Boolean> callback) {
-        runAsync(() -> {
+        executor.submit(() -> {
             try {
                 authUserDao.create(user);
                 if (callback != null) {
@@ -51,7 +44,7 @@ public class AuthUserRepository {
     }
 
     public void deleteUser(String username, Consumer<Boolean> callback) {
-        runAsync(() -> {
+        executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
@@ -71,7 +64,7 @@ public class AuthUserRepository {
 
 
     public void getUser(String username, BiConsumer<AuthUser, Boolean> callback) {
-        runAsync(() -> {
+        executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 callback.accept(user, true);
@@ -83,7 +76,7 @@ public class AuthUserRepository {
     }
 
     public void getAllUsers(Consumer<List<AuthUser>> callback) {
-        runAsync(() -> {
+        executor.submit(() -> {
             try {
                 List<AuthUser> users = authUserDao.queryForAll();
                 callback.accept(users);
@@ -95,7 +88,7 @@ public class AuthUserRepository {
     }
 
     public void updatePassword(String username, String newPassword, Consumer<Boolean> callback) {
-        runAsync(() -> {
+        executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
@@ -115,7 +108,7 @@ public class AuthUserRepository {
     }
 
     public void updateLastLogin(String username) {
-        runAsync(() -> {
+        executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
@@ -129,7 +122,7 @@ public class AuthUserRepository {
     }
 
     public void updateLastIp(String username, String ip) {
-        runAsync(() -> {
+        executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
@@ -143,7 +136,7 @@ public class AuthUserRepository {
     }
 
     public void setPremium(String username, boolean enabled, Consumer<Boolean> callback) {
-        runAsync(() -> {
+        executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
@@ -160,13 +153,5 @@ public class AuthUserRepository {
                 TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
-    }
-
-    private void runAsync(Runnable runnable) {
-        if (executor != null) {
-            executor.submit(runnable);
-        } else {
-            CompletableFuture.runAsync(runnable);
-        }
     }
 }
