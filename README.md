@@ -7,7 +7,7 @@ Authorization plugin for BungeeCord
 - Dialog window support `(1.21.6+)`
   - Interactive window with a password input field
 - Premium mode
-  - Allows licensed players to skip password entry, including with local `online-mode true`
+  - Allows licensed players to skip password entry by activating local `online-mode true`
 - Session support
   - Allows players to skip password entry for a certain period after successful authentication
 - Multiple database types support
