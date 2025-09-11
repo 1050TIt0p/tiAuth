@@ -4,12 +4,14 @@ import net.elytrium.serializer.annotations.Comment;
 import net.elytrium.serializer.annotations.CommentValue;
 import net.elytrium.serializer.annotations.NewLine;
 import net.elytrium.serializer.language.object.YamlSerializable;
+import ru.matveylegenda.tiauth.database.DatabaseType;
 
 import java.util.List;
 
 public class MainConfig extends YamlSerializable {
 
     public Servers servers = new Servers();
+
     public static class Servers {
         @Comment({
                 @CommentValue(" Сервер авторизации на который будет перемещать игроков для регистрации/авторизации")
@@ -20,6 +22,62 @@ public class MainConfig extends YamlSerializable {
                 @CommentValue(" Бэкенд сервер на который будет перемещать игроков после регистрации/авторизации")
         })
         public String backend = "hub";
+    }
+
+    public Database database = new Database();
+
+    @NewLine
+    public static class Database {
+        @Comment({
+                @CommentValue(" Тип базы данных"),
+                @CommentValue(" Доступные варианты: SQLITE, H2, MYSQL, POSTGRESQL")
+        })
+        public DatabaseType type = DatabaseType.SQLITE;
+        public String host;
+        public int port;
+        public String database;
+        public String user;
+        public String password;
+
+        @NewLine
+        @Comment({
+                @CommentValue(" Параметры пула соединений (H2, MySQL, PostgreSQL")
+        })
+        @Comment(
+                value = {
+                        @CommentValue(" Максимальное время ожидания соединения из пула")
+                },
+                at = Comment.At.SAME_LINE
+        )
+        public long connectionTimeoutMs = 30000;
+        @Comment(
+                value = {
+                        @CommentValue(" Максимальное время простоя соединения в пуле. Применяется только если min-idle меньше max-pool-size")
+                },
+                at = Comment.At.SAME_LINE
+        )
+        public long idleTimeoutMs = 600000;
+        @Comment(
+                value = {
+                        @CommentValue(" Максимальное время жизни соединения в пуле. После этого соединение будет закрыто и открыто новое, если требуется")
+                },
+                at = Comment.At.SAME_LINE
+        )
+        public long maxLifetimeMs = 1800000;
+        @Comment(
+                value = {
+                        @CommentValue(" Максимальное количество соединений в пуле. Для H2 рекомендуется использовать небольшое количество соединений, например 2")
+                },
+                at = Comment.At.SAME_LINE
+        )
+        public int maxPoolSize = 10;
+        @Comment(
+                value = {
+                        @CommentValue(" Минимальное количество простаивающих соединений в пуле. -1 = max-pool-size")
+                },
+                at = Comment.At.SAME_LINE
+        )
+        public int minIdle = -1;
     }
 
     public Auth auth = new Auth();

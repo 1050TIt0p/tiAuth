@@ -58,7 +58,9 @@ public final class TiAuth extends Plugin {
     public void onDisable() {
         if (database != null) {
             try {
-                database.getAuthUserRepository().getExecutor().shutdown();
+                if (database.getAuthUserRepository().getExecutor() != null) {
+                    database.getAuthUserRepository().getExecutor().shutdown();
+                }
                 database.close();
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Error during database closing", e);
@@ -73,7 +75,41 @@ public final class TiAuth extends Plugin {
 
     private void initializeDatabase() {
         try {
-            database = new Database(new File(getDataFolder(), "auth.db"));
+            switch (mainConfig.database.type) {
+                case SQLITE -> database = Database.forSQLite(new File(getDataFolder(), "auth.db"));
+                case H2 -> database = Database.forH2(
+                        new File(getDataFolder(), "auth-v2"),
+                        mainConfig.database.connectionTimeoutMs,
+                        mainConfig.database.idleTimeoutMs,
+                        mainConfig.database.maxLifetimeMs,
+                        mainConfig.database.maxPoolSize,
+                        mainConfig.database.minIdle
+                );
+                case MYSQL -> database = Database.forMySQL(
+                        mainConfig.database.host,
+                        mainConfig.database.port,
+                        mainConfig.database.database,
+                        mainConfig.database.user,
+                        mainConfig.database.password,
+                        mainConfig.database.connectionTimeoutMs,
+                        mainConfig.database.idleTimeoutMs,
+                        mainConfig.database.maxLifetimeMs,
+                        mainConfig.database.maxPoolSize,
+                        mainConfig.database.minIdle
+                );
+                case POSTGRESQL -> database = Database.forPostgreSQL(
+                        mainConfig.database.host,
+                        mainConfig.database.port,
+                        mainConfig.database.database,
+                        mainConfig.database.user,
+                        mainConfig.database.password,
+                        mainConfig.database.connectionTimeoutMs,
+                        mainConfig.database.idleTimeoutMs,
+                        mainConfig.database.maxLifetimeMs,
+                        mainConfig.database.maxPoolSize,
+                        mainConfig.database.minIdle
+                );
+            }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error during database initialization", e);
         }
