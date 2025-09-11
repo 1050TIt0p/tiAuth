@@ -30,6 +30,8 @@ dependencies {
 }
 
 tasks.shadowJar {
+    archiveClassifier.set("")
+
     relocate("org.bstats", "ru.matveylegenda.tiauth.thirdparty.org.bstats")
     relocate("com.j256.ormlite", "ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite")
     relocate("com.zaxxer.hikari", "ru.matveylegenda.tiauth.thirdparty.com.zaxxer.hikari")
