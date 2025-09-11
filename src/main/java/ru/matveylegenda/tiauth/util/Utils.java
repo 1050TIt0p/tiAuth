@@ -40,23 +40,7 @@ public class Utils {
     }
 
     public static BaseComponent colorizeComponent(String message) {
-        Matcher matcher = HEX_PATTERN.matcher(message);
-        StringBuilder builder = new StringBuilder(message.length() + 4 * 8);
-        while (matcher.find()) {
-            String group = matcher.group(1);
-            matcher.appendReplacement(builder,
-                    COLOR_CHAR + "x" +
-                            COLOR_CHAR + group.charAt(0) +
-                            COLOR_CHAR + group.charAt(1) +
-                            COLOR_CHAR + group.charAt(2) +
-                            COLOR_CHAR + group.charAt(3) +
-                            COLOR_CHAR + group.charAt(4) +
-                            COLOR_CHAR + group.charAt(5));
-        }
-        message = matcher.appendTail(builder).toString();
-
-
-        return TextComponent.fromLegacy(ChatColor.translateAlternateColorCodes('&', message));
+        return TextComponent.fromLegacy(colorize(message));
     }
 
     public void sendMessage(CommandSender sender, String message) {
