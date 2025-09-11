@@ -107,6 +107,7 @@ public class Database {
             dataSource.close();
         }
 
+        executor.shutdown();
         connectionSource.close();
     }
 }

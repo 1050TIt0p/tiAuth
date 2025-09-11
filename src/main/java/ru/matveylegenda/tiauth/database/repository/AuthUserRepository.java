@@ -4,7 +4,6 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import lombok.Getter;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 
@@ -17,7 +16,6 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public class AuthUserRepository {
-    @Getter
     private ExecutorService executor;
     private final Dao<AuthUser, String> authUserDao;
 

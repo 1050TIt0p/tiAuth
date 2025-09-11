@@ -58,9 +58,6 @@ public final class TiAuth extends Plugin {
     public void onDisable() {
         if (database != null) {
             try {
-                if (database.getAuthUserRepository().getExecutor() != null) {
-                    database.getAuthUserRepository().getExecutor().shutdown();
-                }
                 database.close();
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Error during database closing", e);
