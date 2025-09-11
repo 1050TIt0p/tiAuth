@@ -31,6 +31,5 @@ Authorization plugin for BungeeCord
 Sorted roughly in the order of planned implementation
 - Add support for multiple authentication servers and backends + online load balancer
 - Display authentication countdown in ActionBar, Title, and BossBar
-- Add MySQL and PostgreSQL database types
 - Administrator commands
 - 2FA via Discord, Telegram, and TOTP
