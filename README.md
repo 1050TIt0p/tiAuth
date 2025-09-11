@@ -10,6 +10,8 @@ Authorization plugin for BungeeCord
   - Allows licensed players to skip password entry, including with local `online-mode true`
 - Session support
   - Allows players to skip password entry for a certain period after successful authentication
+- Multiple database types support
+  - Supports `SQLite`, `H2`, `MySQL`, `PostgreSQL`
 
 ---
 
