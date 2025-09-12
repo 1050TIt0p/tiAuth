@@ -15,7 +15,8 @@ public class MainConfig extends YamlSerializable {
     public static class Servers {
         @Comment({
                 @CommentValue(" Использовать ли виртуальный сервер NanoLimbo для сервера авторизации"),
-                @CommentValue(" Настройка виртуального сервера в plugins/tiAuth/limbo/settings.yml")
+                @CommentValue(" Настройка виртуального сервера в plugins/tiAuth/limbo/settings.yml"),
+                @CommentValue(" Функция не тестировалась должным образом, возможны баги")
         })
         public boolean useVirtualServer = false;
 
