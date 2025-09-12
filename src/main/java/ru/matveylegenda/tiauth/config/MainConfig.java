@@ -14,7 +14,15 @@ public class MainConfig extends YamlSerializable {
 
     public static class Servers {
         @Comment({
-                @CommentValue(" Сервер авторизации на который будет перемещать игроков для регистрации/авторизации")
+                @CommentValue(" Использовать ли виртуальный сервер NanoLimbo для сервера авторизации"),
+                @CommentValue(" Настройка виртуального сервера в plugins/tiAuth/limbo/settings.yml")
+        })
+        public boolean useVirtualServer = false;
+
+        @NewLine
+        @Comment({
+                @CommentValue(" Сервер авторизации на который будет перемещать игроков для регистрации/авторизации"),
+                @CommentValue(" При использовании виртуального сервера убедитесь, что в конфигурации BungeeCord у вас нет сервера с таким же названием")
         })
         public String auth = "auth";
 

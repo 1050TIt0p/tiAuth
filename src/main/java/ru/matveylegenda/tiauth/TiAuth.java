@@ -1,6 +1,7 @@
 package ru.matveylegenda.tiauth;
 
 import lombok.Getter;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import org.bstats.bungeecord.Metrics;
@@ -16,6 +17,7 @@ import ru.matveylegenda.tiauth.listener.ChatListener;
 import ru.matveylegenda.tiauth.listener.DialogListener;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
+import ua.nanit.limbo.server.LimboServer;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -52,6 +54,26 @@ public final class TiAuth extends Plugin {
         registerCommands(pluginManager);
 
         new Metrics(this, 26921);
+
+        if (mainConfig.servers.useVirtualServer) {
+            try {
+                Path limboPath = getDataFolder().toPath().resolve("limbo");
+                if (!limboPath.toFile().exists()) {
+                    limboPath.toFile().mkdir();
+                }
+                LimboServer limboServer = new LimboServer();
+                limboServer.start(limboPath);
+
+                ServerInfo authServer = getProxy().constructServerInfo(mainConfig.servers.auth, limboServer.getConfig().getAddress(), "auth server", false);
+                getProxy().getServers().put(
+                        mainConfig.servers.auth,
+                        authServer
+                );
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error when starting the virtual server", e);
+                getProxy().stop();
+            }
+        }
     }
 
     @Override

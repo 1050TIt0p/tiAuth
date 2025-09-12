@@ -11,6 +11,9 @@ repositories {
     maven {
         url "https://libraries.minecraft.net"
     }
+    maven {
+        url 'https://jitpack.io'
+    }
 }
 
 dependencies {
@@ -27,6 +30,7 @@ dependencies {
     compileOnly("org.postgresql:postgresql:42.7.7")
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
     implementation("net.elytrium:serializer:1.1.1")
+    implementation("com.github.1050TIt0p:NanoLimbo:1.9.9")
 }
 
 tasks.shadowJar {
@@ -40,6 +44,11 @@ tasks.shadowJar {
     relocate("com.google.errorprone", "ru.matveylegenda.tiauth.thirdparty.com.google.errorprone")
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
     relocate("net.elytrium.serializer", "ru.matveylegenda.tiauth.thirdparty.net.elytrium.serializer")
+    relocate("ua.nanit.limbo", "ru.matveylegenda.tiauth.thirdparty.ua.nanit.limbo")
+    relocate("org.spongepowered.configurate", "ru.matveylegenda.tiauth.thirdparty.org.spongepowered.configurate")
+    relocate("net.kyori", "ru.matveylegenda.tiauth.thirdparty.net.kyori")
+    relocate("io.leangen.geantyref", "ru.matveylegenda.tiauth.thirdparty.io.leangen.geantyref")
+    relocate("com.grack.nanojson", "ru.matveylegenda.tiauth.thirdparty.com.grack.nanojson")
 }
 
 def targetJavaVersion = 17
