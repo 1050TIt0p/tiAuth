@@ -13,7 +13,7 @@ Authorization plugin for BungeeCord
 - Multiple database types support
   - Supports `SQLite`, `H2`, `MySQL`, `PostgreSQL`
 - Virtual server
-  - Virtual server for auth server provided by [NanoLimbo](https://github.com/1050TIt0p/NanoLimbo)
+  - Virtual server for auth server powered by [NanoLimbo](https://github.com/1050TIt0p/NanoLimbo)
 
 ---
 
