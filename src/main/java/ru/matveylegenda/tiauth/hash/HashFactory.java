@@ -4,11 +4,10 @@ import ru.matveylegenda.tiauth.hash.impl.BCryptHash;
 import ru.matveylegenda.tiauth.hash.impl.Sha256Hash;
 
 public class HashFactory {
-    public static Hash create(String type) {
-        return switch (type.toLowerCase()) {
-            case "bcrypt" -> new BCryptHash();
-            case "sha256" -> new Sha256Hash();
-            default -> throw new IllegalArgumentException("Unknown hash type: " + type);
+    public static Hash create(HashType hashType) {
+        return switch (hashType) {
+            case BCRYPT -> new BCryptHash();
+            case SHA256 -> new Sha256Hash();
         };
     }
 }

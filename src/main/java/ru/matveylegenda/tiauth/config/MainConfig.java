@@ -5,6 +5,7 @@ import net.elytrium.serializer.annotations.CommentValue;
 import net.elytrium.serializer.annotations.NewLine;
 import net.elytrium.serializer.language.object.YamlSerializable;
 import ru.matveylegenda.tiauth.database.DatabaseType;
+import ru.matveylegenda.tiauth.hash.HashType;
 
 import java.util.List;
 
@@ -121,10 +122,10 @@ public class MainConfig extends YamlSerializable {
         @Comment({
                 @CommentValue(" Алгоритм хеширования пароля"),
                 @CommentValue(" Доступные варианты:"),
-                @CommentValue(" bcrypt"),
-                @CommentValue(" sha256")
+                @CommentValue(" BCRYPT"),
+                @CommentValue(" SHA256")
         })
-        public String hashAlgorithm = "bcrypt";
+        public HashType hashAlgorithm = HashType.BCRYPT;
 
         @Comment({
                 @CommentValue(" Команды, которые можно использовать во время авторизации")
