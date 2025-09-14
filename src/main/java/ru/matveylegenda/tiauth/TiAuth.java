@@ -45,6 +45,7 @@ public final class TiAuth extends Plugin {
         }
         loadConfigs();
         initializeDatabase();
+        startLimboServer();
         premiumCache.load(database.getAuthUserRepository());
         sessionCache = new SessionCache(mainConfig.auth.sessionLifetimeMinutes);
         authManager = new AuthManager(this);
@@ -54,26 +55,6 @@ public final class TiAuth extends Plugin {
         registerCommands(pluginManager);
 
         new Metrics(this, 26921);
-
-        if (mainConfig.servers.useVirtualServer) {
-            try {
-                Path limboPath = getDataFolder().toPath().resolve("limbo");
-                if (!limboPath.toFile().exists()) {
-                    limboPath.toFile().mkdir();
-                }
-                LimboServer limboServer = new LimboServer();
-                limboServer.start(limboPath);
-
-                ServerInfo authServer = getProxy().constructServerInfo(mainConfig.servers.auth, limboServer.getConfig().getAddress(), "auth server", false);
-                getProxy().getServers().put(
-                        mainConfig.servers.auth,
-                        authServer
-                );
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Error when starting the virtual server", e);
-                getProxy().stop();
-            }
-        }
     }
 
     @Override
@@ -131,6 +112,28 @@ public final class TiAuth extends Plugin {
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error during database initialization", e);
+        }
+    }
+
+    private void startLimboServer() {
+        if (mainConfig.servers.useVirtualServer) {
+            try {
+                Path limboPath = getDataFolder().toPath().resolve("limbo");
+                if (!limboPath.toFile().exists()) {
+                    limboPath.toFile().mkdir();
+                }
+                LimboServer limboServer = new LimboServer();
+                limboServer.start(limboPath);
+
+                ServerInfo authServer = getProxy().constructServerInfo(mainConfig.servers.auth, limboServer.getConfig().getAddress(), "auth server", false);
+                getProxy().getServers().put(
+                        mainConfig.servers.auth,
+                        authServer
+                );
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error when starting the virtual server", e);
+                getProxy().stop();
+            }
         }
     }
 
