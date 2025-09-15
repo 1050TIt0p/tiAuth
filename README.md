@@ -19,20 +19,26 @@ Authorization plugin for BungeeCord
 
 ### Commands:
 #### For players:
-- /register <password> <password> - Register an account
-- /login <password> - Log in
-- /logout - Reset session
-- /changepassword <old password> <new password> - Change password
-- /premium - Enable premium mode
-- /unregister <password> - Delete account
+- `/register <password> <password>` - Register an account
+- `/login <password>` - Log in
+- `/logout` - Destory session
+- `/changepassword <old password> <new password>` - Change password
+- `/premium` - Enable premium mode
+- `/unregister` <password> - Delete account
 
 #### For administrators:
-- coming soon...
+- `/tiauth reload` - Reload config
+  - Permission: `tiauth.admin.commands.reload`
+- `/tiauth unregister <player>` - Delete player account
+  - Permission: `tiauth.admin.commands.unregister`
+- `/tiauth changepassword <player> <password>` - Change player password
+  - Permission: `tiauth.admin.commands.changepassword`
+- `/tiauth forcelogin <player>` - Force login player
+  - Permission: `tiauth.admin.commands.forcelogin`
 
 ---
 
 ### TODO:
 Sorted roughly in the order of planned implementation
 - Add support for multiple authentication servers and backends + online load balancer
-- Administrator commands
 - 2FA via Discord, Telegram, and TOTP
