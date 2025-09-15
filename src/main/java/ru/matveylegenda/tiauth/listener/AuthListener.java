@@ -4,6 +4,7 @@ import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.*;
 import net.md_5.bungee.api.plugin.Listener;
+import net.md_5.bungee.api.scheduler.ScheduledTask;
 import net.md_5.bungee.event.EventHandler;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
@@ -12,6 +13,7 @@ import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.manager.AuthManager;
+import ru.matveylegenda.tiauth.manager.TaskManager;
 import ru.matveylegenda.tiauth.util.Utils;
 
 public class AuthListener implements Listener {
@@ -22,6 +24,7 @@ public class AuthListener implements Listener {
     private final MainConfig mainConfig;
     private final MessagesConfig messagesConfig;
     private final AuthManager authManager;
+    private final TaskManager taskManager;
     private final Utils utils;
 
     public AuthListener(TiAuth plugin) {
@@ -32,6 +35,7 @@ public class AuthListener implements Listener {
         this.mainConfig = plugin.getMainConfig();
         this.messagesConfig = plugin.getMessagesConfig();
         this.authManager = plugin.getAuthManager();
+        this.taskManager = plugin.getTaskManager();
         this.utils = plugin.getUtils();
     }
 
@@ -97,5 +101,7 @@ public class AuthListener implements Listener {
         if (authCache.isAuthenticated(player.getName())) {
             authCache.logout(player.getName());
         }
+
+        taskManager.cancelTasks(player);
     }
 }

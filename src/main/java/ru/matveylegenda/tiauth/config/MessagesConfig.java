@@ -122,4 +122,24 @@ public class MessagesConfig extends YamlSerializable {
             public String mismatch = "&cПароли не совпадают";
         }
     }
+
+    public BossBar bossBar = new BossBar();
+
+    @NewLine
+    public static class BossBar {
+        public String message = "{prefix} &fОсталось &#8833EC{time} &fсекунд";
+    }
+
+    public Title title = new Title();
+
+    public static class Title {
+        public String title = "{prefix}";
+        public String subTitle = "&fОсталось &#8833EC{time} &fсекунд";
+    }
+
+    public ActionBar actionBar = new ActionBar();
+
+    public static class ActionBar {
+        public String message = "{prefix} &fОсталось &#8833EC{time} &fсекунд";
+    }
 }

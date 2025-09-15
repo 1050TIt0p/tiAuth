@@ -10,7 +10,6 @@ import net.md_5.bungee.api.dialog.action.CustomClickAction;
 import net.md_5.bungee.api.dialog.body.PlainMessageBody;
 import net.md_5.bungee.api.dialog.input.TextInput;
 import net.md_5.bungee.api.event.PostLoginEvent;
-import net.md_5.bungee.api.scheduler.ScheduledTask;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
@@ -38,6 +37,7 @@ public class AuthManager {
     private final MainConfig mainConfig;
     private final MessagesConfig messagesConfig;
     private final Utils utils;
+    private final TaskManager taskManager;
 
     public AuthManager(TiAuth plugin) {
         this.plugin = plugin;
@@ -48,6 +48,7 @@ public class AuthManager {
         this.mainConfig = plugin.getMainConfig();
         this.messagesConfig = plugin.getMessagesConfig();
         this.utils = plugin.getUtils();
+        this.taskManager = plugin.getTaskManager();
     }
 
     public void registerPlayer(ProxiedPlayer player, String password, String repeatPassword) {
@@ -379,33 +380,15 @@ public class AuthManager {
                     connectToAuthServer(player);
                 }
 
-                ScheduledTask[] taskHolder = new ScheduledTask[2];
-                taskHolder[0] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
-                    if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
-                        taskHolder[0].cancel();
-                        return;
-                    }
-
-                    utils.kickPlayer(
-                            player,
-                            messagesConfig.kick.timeout
-                    );
-                }, mainConfig.auth.timeoutSeconds, TimeUnit.SECONDS);
-
                 String reminderMessage = (user != null)
                         ? messagesConfig.reminder.login
                         : messagesConfig.reminder.register;
-                taskHolder[1] = plugin.getProxy().getScheduler().schedule(plugin, () -> {
-                    if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
-                        taskHolder[1].cancel();
-                        return;
-                    }
 
-                    utils.sendMessage(
-                            player,
-                            reminderMessage
-                    );
-                }, 0, mainConfig.auth.reminderInterval, TimeUnit.SECONDS);
+                plugin.getProxy().getScheduler().schedule(plugin, () -> {
+                    taskManager.startAuthTimeoutTask(player);
+                    taskManager.startAuthReminderTask(player, reminderMessage);
+                    taskManager.startDisplayTimerTask(player);
+                }, 100, TimeUnit.MILLISECONDS);
             } finally {
                 if (event != null) {
                     event.completeIntent(plugin);

@@ -6,6 +6,8 @@ import net.elytrium.serializer.annotations.NewLine;
 import net.elytrium.serializer.language.object.YamlSerializable;
 import ru.matveylegenda.tiauth.database.DatabaseType;
 import ru.matveylegenda.tiauth.hash.HashType;
+import ru.matveylegenda.tiauth.util.BarColor;
+import ru.matveylegenda.tiauth.util.BarStyle;
 
 import java.util.List;
 
@@ -143,5 +145,38 @@ public class MainConfig extends YamlSerializable {
                 @CommentValue(" Работает только на клиентах 1.21.6+")
         })
         public boolean useDialogs = true;
+    }
+
+    public BossBar bossBar = new BossBar();
+
+    @NewLine
+    public static class BossBar {
+        public boolean enabled = true;
+        @Comment(
+                value = {
+                        @CommentValue(" PINK / BLUE / RED / GREEN / YELLOW / PURPLE / WHITE"),
+                },
+                at = Comment.At.APPEND
+        )
+        public BarColor color = BarColor.PURPLE;
+        @Comment(
+                value = {
+                        @CommentValue(" SOLID / SEGMENTED_6 / SEGMENTED_10 / SEGMENTED_12 / SEGMENTED_20"),
+                },
+                at = Comment.At.APPEND
+        )
+        public BarStyle style = BarStyle.SEGMENTED_12;
+    }
+
+    public Title title = new Title();
+
+    public static class Title {
+        public boolean enabled = false;
+    }
+
+    public ActionBar actionBar = new ActionBar();
+
+    public static class ActionBar {
+        public boolean enabled = false;
     }
 }

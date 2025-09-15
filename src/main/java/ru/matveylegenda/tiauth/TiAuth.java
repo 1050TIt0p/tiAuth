@@ -16,6 +16,7 @@ import ru.matveylegenda.tiauth.listener.AuthListener;
 import ru.matveylegenda.tiauth.listener.ChatListener;
 import ru.matveylegenda.tiauth.listener.DialogListener;
 import ru.matveylegenda.tiauth.manager.AuthManager;
+import ru.matveylegenda.tiauth.manager.TaskManager;
 import ru.matveylegenda.tiauth.util.Utils;
 import ua.nanit.limbo.server.LimboServer;
 
@@ -35,6 +36,7 @@ public final class TiAuth extends Plugin {
     private final PremiumCache premiumCache = new PremiumCache();
     private SessionCache sessionCache;
     private final Utils utils = new Utils(messagesConfig);
+    private TaskManager taskManager;
     private AuthManager authManager;
 
     @Override
@@ -48,6 +50,7 @@ public final class TiAuth extends Plugin {
         startLimboServer();
         premiumCache.load(database.getAuthUserRepository());
         sessionCache = new SessionCache(mainConfig.auth.sessionLifetimeMinutes);
+        taskManager = new TaskManager(this);
         authManager = new AuthManager(this);
 
         PluginManager pluginManager = getProxy().getPluginManager();
