@@ -1,4 +1,4 @@
-package ru.matveylegenda.tiauth.command;
+package ru.matveylegenda.tiauth.command.player;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -8,12 +8,12 @@ import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
 
-public class UnregisterCommand extends Command {
+public class RegisterCommand extends Command {
     private final MessagesConfig messagesConfig;
     private final Utils utils;
     private final AuthManager authManager;
 
-    public UnregisterCommand(TiAuth plugin, String name, String... aliases) {
+    public RegisterCommand(TiAuth plugin, String name, String... aliases) {
         super(name, null, aliases);
         this.messagesConfig = plugin.getMessagesConfig();
         this.utils = plugin.getUtils();
@@ -28,19 +28,21 @@ public class UnregisterCommand extends Command {
                     messagesConfig.onlyPlayer
             );
 
-            return;
+           return;
         }
 
-        if (args.length != 1) {
+        if (args.length != 2) {
             utils.sendMessage(
                     player,
-                    messagesConfig.unregister.usage
+                    messagesConfig.player.register.usage
             );
 
             return;
         }
 
         String password = args[0];
-        authManager.unregisterPlayer(player, password);
+        String repeatPassword = args[1];
+
+        authManager.registerPlayer(player, password, repeatPassword);
     }
 }

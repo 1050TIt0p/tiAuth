@@ -47,9 +47,10 @@ public class AuthUserRepository {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
                     authUserDao.delete(user);
-                    if (callback != null) {
-                        callback.accept(true);
-                    }
+                }
+
+                if (callback != null) {
+                    callback.accept(true);
                 }
             } catch (SQLException e) {
                 if (callback != null) {
@@ -92,9 +93,10 @@ public class AuthUserRepository {
                 if (user != null) {
                     user.setPassword(newPassword);
                     authUserDao.update(user);
-                    if (callback != null) {
-                        callback.accept(true);
-                    }
+                }
+
+                if (callback != null) {
+                    callback.accept(true);
                 }
             } catch (SQLException e) {
                 if (callback != null) {
@@ -140,9 +142,10 @@ public class AuthUserRepository {
                 if (user != null) {
                     user.setPremium(enabled);
                     authUserDao.update(user);
-                    if (callback != null) {
-                        callback.accept(true);
-                    }
+                }
+
+                if (callback != null) {
+                    callback.accept(true);
                 }
             } catch (SQLException e) {
                 if (callback != null) {

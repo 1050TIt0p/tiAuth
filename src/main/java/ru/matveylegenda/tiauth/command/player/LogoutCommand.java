@@ -1,20 +1,29 @@
-package ru.matveylegenda.tiauth.command;
+package ru.matveylegenda.tiauth.command.player;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.TiAuth;
+import ru.matveylegenda.tiauth.cache.AuthCache;
+import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
+import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
 
-public class LoginCommand extends Command {
+public class LogoutCommand extends Command {
+    private final Database database;
+    private final AuthCache authCache;
+    private final PremiumCache premiumCache;
     private final MessagesConfig messagesConfig;
     private final Utils utils;
     private final AuthManager authManager;
 
-    public LoginCommand(TiAuth plugin, String name, String... aliases) {
+    public LogoutCommand(TiAuth plugin, String name, String... aliases) {
         super(name, null, aliases);
+        this.database = plugin.getDatabase();
+        this.authCache = plugin.getAuthCache();
+        this.premiumCache = plugin.getPremiumCache();
         this.messagesConfig = plugin.getMessagesConfig();
         this.utils = plugin.getUtils();
         this.authManager = plugin.getAuthManager();
@@ -28,19 +37,23 @@ public class LoginCommand extends Command {
                     messagesConfig.onlyPlayer
             );
 
-           return;
+            return;
         }
 
-        if (args.length != 1) {
+        if (!authCache.isAuthenticated(player.getName())) {
+            return;
+        }
+
+        if (premiumCache.isPremium(player.getName())) {
             utils.sendMessage(
-                    player,
-                    messagesConfig.login.usage
+                    sender,
+                    messagesConfig.player.logout.logoutByPremium
             );
 
             return;
         }
 
-        String password = args[0];
-        authManager.loginPlayer(player, password);
+        authManager.logoutPlayer(player);
+        authManager.forceAuth(player);
     }
 }

@@ -8,7 +8,8 @@ import org.bstats.bungeecord.Metrics;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
-import ru.matveylegenda.tiauth.command.*;
+import ru.matveylegenda.tiauth.command.admin.TiAuthCommand;
+import ru.matveylegenda.tiauth.command.player.*;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
@@ -71,7 +72,7 @@ public final class TiAuth extends Plugin {
         }
     }
 
-    private void loadConfigs() {
+    public void loadConfigs() {
         mainConfig.reload(Path.of(getDataFolder().getAbsolutePath(), "config.yml"));
         messagesConfig.reload(Path.of(getDataFolder().getAbsolutePath(), "messages.yml"));
     }
@@ -147,6 +148,7 @@ public final class TiAuth extends Plugin {
     }
 
     private void registerCommands(PluginManager pluginManager) {
+        pluginManager.registerCommand(this, new TiAuthCommand(this, "tiauth", "auth"));
         pluginManager.registerCommand(this, new LoginCommand(this, "login", "log", "l"));
         pluginManager.registerCommand(this, new RegisterCommand(this, "register", "reg"));
         pluginManager.registerCommand(this, new UnregisterCommand(this, "unregister", "unreg"));

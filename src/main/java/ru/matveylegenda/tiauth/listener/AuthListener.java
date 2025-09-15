@@ -4,7 +4,6 @@ import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.*;
 import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.api.scheduler.ScheduledTask;
 import net.md_5.bungee.event.EventHandler;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
@@ -57,7 +56,7 @@ public class AuthListener implements Listener {
             if (!success) {
                 utils.kickPlayer(
                         player,
-                        messagesConfig.database.queryError
+                        messagesConfig.queryError
                 );
                 event.completeIntent(plugin);
 
@@ -79,7 +78,7 @@ public class AuthListener implements Listener {
                 !event.getTarget().getName().equals(mainConfig.servers.auth)) {
             utils.kickPlayer(
                     player,
-                    messagesConfig.kick.notAuth
+                    messagesConfig.player.kick.notAuth
             );
         }
     }

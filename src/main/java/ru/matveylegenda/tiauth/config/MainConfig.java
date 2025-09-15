@@ -44,7 +44,7 @@ public class MainConfig extends YamlSerializable {
                 @CommentValue(" Тип базы данных"),
                 @CommentValue(" Доступные варианты: SQLITE, H2, MYSQL, POSTGRESQL")
         })
-        public DatabaseType type = DatabaseType.SQLITE;
+        public DatabaseType type = DatabaseType.H2;
         public String host;
         public int port;
         public String database;
