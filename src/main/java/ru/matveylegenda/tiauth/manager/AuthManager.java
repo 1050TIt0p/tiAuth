@@ -247,7 +247,7 @@ public class AuthManager {
             if (!hash.verifyPassword(password, hashedPassword)) {
                 int attempts = loginAttempts.merge(player.getName(), 1, Integer::sum);
 
-                if (attempts > mainConfig.auth.loginAttempts) {
+                if (attempts >= mainConfig.auth.loginAttempts) {
                     utils.kickPlayer(
                             player,
                             messagesConfig.player.kick.tooManyAttempts
