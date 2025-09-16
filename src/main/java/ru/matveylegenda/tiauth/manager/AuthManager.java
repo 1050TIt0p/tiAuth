@@ -24,6 +24,7 @@ import ru.matveylegenda.tiauth.util.Utils;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +34,7 @@ import static ru.matveylegenda.tiauth.util.Utils.colorizeComponent;
 
 public class AuthManager {
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
+    private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
     private final TiAuth plugin;
     private final Database database;
     private final AuthCache authCache;
@@ -243,13 +245,31 @@ public class AuthManager {
             String hashedPassword = user.getPassword();
 
             if (!hash.verifyPassword(password, hashedPassword)) {
+                int attempts = loginAttempts.merge(player.getName(), 1, Integer::sum);
+
+                if (attempts > mainConfig.auth.loginAttempts) {
+                    utils.kickPlayer(
+                            player,
+                            messagesConfig.player.kick.tooManyAttempts
+                    );
+
+                    loginAttempts.remove(player.getName());
+                    endProcess(player);
+                    return;
+                }
+
                 utils.sendMessage(
                         player,
-                        messagesConfig.player.checkPassword.wrongPassword
+                        messagesConfig.player.login.wrongPassword
+                                .replace("{attempts}", String.valueOf(mainConfig.auth.loginAttempts - attempts))
                 );
 
                 if (supportDialog(player)) {
-                    showLoginDialog(player, messagesConfig.player.dialog.notifications.wrongPassword);
+                    showLoginDialog(
+                            player,
+                            messagesConfig.player.dialog.notifications.wrongPassword
+                                    .replace("{attempts}", String.valueOf(mainConfig.auth.loginAttempts - attempts))
+                    );
                 }
                 endProcess(player);
                 return;
@@ -261,6 +281,7 @@ public class AuthManager {
                         messagesConfig.player.login.success
                 );
 
+                loginAttempts.remove(player.getName());
                 endProcess(player);
             });
         });

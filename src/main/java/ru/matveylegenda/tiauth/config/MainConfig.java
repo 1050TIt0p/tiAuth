@@ -97,6 +97,11 @@ public class MainConfig extends YamlSerializable {
     @NewLine
     public static class Auth {
         @Comment({
+                @CommentValue(" Количество попыток ввода пароля")
+        })
+        public int loginAttempts = 3;
+
+        @Comment({
                 @CommentValue(" Раз в сколько секунд игроку отправляется сообщение о требованием в регистрации/авторизации")
         })
         public int reminderInterval = 3;

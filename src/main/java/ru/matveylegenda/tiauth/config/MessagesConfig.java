@@ -87,6 +87,7 @@ public class MessagesConfig extends YamlSerializable {
             public String usage = "{prefix} &fИспользование: &#8833EC/login <пароль>";
             public String notRegistered = "{prefix} &fВы еще не зарегистрированы";
             public String alreadyLogged = "{prefix} &fВы уже авторизованы";
+            public String wrongPassword = "{prefix} &fНеверный пароль. Осталось &#8833EC{attempts} &fпопыток";
             public String success = "{prefix} &fВы успешно авторизовались";
         }
 
@@ -121,6 +122,7 @@ public class MessagesConfig extends YamlSerializable {
             public String notAuth = "{prefix} &fВы не авторизованы";
             public String timeout = "{prefix} &fВы не успели авторизоваться";
             public String realname = "{prefix} &fПравильный ник: &#8833EC{realname}\n&fВаш ник: &#8833EC{name}";
+            public String tooManyAttempts = "{prefix} &fВы превысили количество попыток для ввода пароля";
         }
 
         public Reminder reminder = new Reminder();
@@ -155,7 +157,7 @@ public class MessagesConfig extends YamlSerializable {
             public Notifications notifications = new Notifications();
 
             public static class Notifications {
-                public String wrongPassword = "&cНеверный пароль";
+                public String wrongPassword = "&cНеверный пароль\nОсталось {attempts} попыток";
                 public String invalidLength = "&cДлина пароля должна быть от {min} до {max} символов";
                 public String mismatch = "&cПароли не совпадают";
             }
