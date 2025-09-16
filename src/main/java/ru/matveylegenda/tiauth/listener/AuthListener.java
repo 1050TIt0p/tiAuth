@@ -89,6 +89,7 @@ public class AuthListener implements Listener {
 
         if (event.getServer().getInfo().getName().equals(mainConfig.servers.auth) &&
                 !authCache.isAuthenticated(player.getName())) {
+            taskManager.startDisplayTimerTask(player);
             authManager.showLoginDialog(player);
         }
     }

@@ -463,11 +463,8 @@ public class AuthManager {
                         ? messagesConfig.player.reminder.login
                         : messagesConfig.player.reminder.register;
 
-                plugin.getProxy().getScheduler().schedule(plugin, () -> {
-                    taskManager.startAuthTimeoutTask(player);
-                    taskManager.startAuthReminderTask(player, reminderMessage);
-                    taskManager.startDisplayTimerTask(player);
-                }, 100, TimeUnit.MILLISECONDS);
+                taskManager.startAuthTimeoutTask(player);
+                taskManager.startAuthReminderTask(player, reminderMessage);
             } finally {
                 if (event != null) {
                     event.completeIntent(plugin);
