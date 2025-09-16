@@ -161,14 +161,14 @@ public class MainConfig extends YamlSerializable {
                 value = {
                         @CommentValue(" PINK / BLUE / RED / GREEN / YELLOW / PURPLE / WHITE"),
                 },
-                at = Comment.At.APPEND
+                at = Comment.At.SAME_LINE
         )
         public BarColor color = BarColor.PURPLE;
         @Comment(
                 value = {
                         @CommentValue(" SOLID / SEGMENTED_6 / SEGMENTED_10 / SEGMENTED_12 / SEGMENTED_20"),
                 },
-                at = Comment.At.APPEND
+                at = Comment.At.SAME_LINE
         )
         public BarStyle style = BarStyle.SEGMENTED_12;
     }
