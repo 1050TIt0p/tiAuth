@@ -175,12 +175,14 @@ public class MainConfig extends YamlSerializable {
 
     public Title title = new Title();
 
+    @NewLine
     public static class Title {
         public boolean enabled = false;
     }
 
     public ActionBar actionBar = new ActionBar();
 
+    @NewLine
     public static class ActionBar {
         public boolean enabled = false;
     }
