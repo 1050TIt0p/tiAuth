@@ -8,6 +8,7 @@ public class MessagesConfig extends YamlSerializable {
     public String prefix = "&#8833ECᴀ&#7F65E7ᴜ&#7796E3ᴛ&#6EC8DEʜ &8»";
     public String onlyPlayer = "{prefix} &fКоманду может использовать только игрок";
     public String queryError = "{prefix} &fПроизошла ошибка при запросе к базе данных. Сообщите администрации!";
+    public String processing = "{prefix} &fПодождите, пока завершится обработка предыдущего запроса";
     public String playerNotFound = "{prefix} &fИгрок не найден";
     public String noPermission = "{prefix} &fНедостаточно прав";
 

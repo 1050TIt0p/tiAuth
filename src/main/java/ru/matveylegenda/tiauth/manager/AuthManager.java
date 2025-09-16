@@ -24,12 +24,15 @@ import ru.matveylegenda.tiauth.util.Utils;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static ru.matveylegenda.tiauth.util.Utils.colorizeComponent;
 
 public class AuthManager {
+    private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final TiAuth plugin;
     private final Database database;
     private final AuthCache authCache;
@@ -87,12 +90,17 @@ public class AuthManager {
             return;
         }
 
+        if (!beginProcess(player)) {
+            return;
+        }
+
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
                 utils.kickPlayer(
                         player,
                         messagesConfig.queryError
                 );
+                endProcess(player);
                 return;
             }
 
@@ -101,6 +109,7 @@ public class AuthManager {
                         player,
                         messagesConfig.player.register.alreadyRegistered
                 );
+                endProcess(player);
                 return;
             }
 
@@ -118,6 +127,7 @@ public class AuthManager {
                                     player,
                                     messagesConfig.queryError
                             );
+                            endProcess(player);
                             return;
                         }
 
@@ -129,18 +139,25 @@ public class AuthManager {
 
                         sessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
                         connectToBackend(player);
+
+                        endProcess(player);
                     }
             );
         });
     }
 
     public void unregisterPlayer(ProxiedPlayer player, String password) {
+        if (!beginProcess(player)) {
+            return;
+        }
+
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
                 utils.sendMessage(
                         player,
                         messagesConfig.queryError
                 );
+                endProcess(player);
                 return;
             }
 
@@ -152,6 +169,7 @@ public class AuthManager {
                         player,
                         messagesConfig.player.checkPassword.wrongPassword
                 );
+                endProcess(player);
                 return;
             }
 
@@ -161,6 +179,7 @@ public class AuthManager {
                             player,
                             messagesConfig.queryError
                     );
+                    endProcess(player);
                     return;
                 }
 
@@ -170,6 +189,8 @@ public class AuthManager {
                         player,
                         messagesConfig.player.unregister.success
                 );
+
+                endProcess(player);
             });
         });
     }
@@ -186,12 +207,17 @@ public class AuthManager {
     }
 
     public void loginPlayer(ProxiedPlayer player, String password) {
+        if (!beginProcess(player)) {
+            return;
+        }
+
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
                 utils.kickPlayer(
                         player,
                         messagesConfig.queryError
                 );
+                endProcess(player);
                 return;
             }
 
@@ -200,7 +226,7 @@ public class AuthManager {
                         player,
                         messagesConfig.player.login.notRegistered
                 );
-
+                endProcess(player);
                 return;
             }
 
@@ -209,21 +235,14 @@ public class AuthManager {
                         player,
                         messagesConfig.player.login.alreadyLogged
                 );
-
+                endProcess(player);
                 return;
             }
 
             Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
             String hashedPassword = user.getPassword();
 
-            if (hash.verifyPassword(password, hashedPassword)) {
-                loginPlayer(player, () -> {
-                    utils.sendMessage(
-                            player,
-                            messagesConfig.player.login.success
-                    );
-                });
-            } else {
+            if (!hash.verifyPassword(password, hashedPassword)) {
                 utils.sendMessage(
                         player,
                         messagesConfig.player.checkPassword.wrongPassword
@@ -232,7 +251,18 @@ public class AuthManager {
                 if (supportDialog(player)) {
                     showLoginDialog(player, messagesConfig.player.dialog.notifications.wrongPassword);
                 }
+                endProcess(player);
+                return;
             }
+
+            loginPlayer(player, () -> {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.player.login.success
+                );
+
+                endProcess(player);
+            });
         });
     }
 
@@ -250,12 +280,17 @@ public class AuthManager {
     }
 
     public void changePasswordPlayer(ProxiedPlayer player, String oldPassword, String newPassword) {
+        if (!beginProcess(player)) {
+            return;
+        }
+
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
                 utils.sendMessage(
                         player,
                         messagesConfig.queryError
                 );
+                endProcess(player);
                 return;
             }
 
@@ -267,6 +302,7 @@ public class AuthManager {
                                 .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
                                 .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
                 );
+                endProcess(player);
                 return;
             }
 
@@ -278,6 +314,7 @@ public class AuthManager {
                         player,
                         messagesConfig.player.checkPassword.wrongPassword
                 );
+                endProcess(player);
                 return;
             }
 
@@ -287,6 +324,7 @@ public class AuthManager {
                             player,
                             messagesConfig.queryError
                     );
+                    endProcess(player);
                     return;
                 }
 
@@ -294,6 +332,8 @@ public class AuthManager {
                         player,
                         messagesConfig.player.changePassword.success
                 );
+
+                endProcess(player);
             });
         });
     }
@@ -318,41 +358,42 @@ public class AuthManager {
     }
 
     public void togglePremium(ProxiedPlayer player) {
-        if (premiumCache.isPremium(player.getName())) {
-            database.getAuthUserRepository().setPremium(player.getName(), false, success -> {
-                if (!success) {
-                    utils.sendMessage(
-                            player,
-                            messagesConfig.queryError
-                    );
-                    return;
-                }
+        if (!beginProcess(player)) {
+            return;
+        }
 
+        boolean isPremium = premiumCache.isPremium(player.getName());
+
+        database.getAuthUserRepository().setPremium(player.getName(), !isPremium, success -> {
+            if (!success) {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.queryError
+                );
+                endProcess(player);
+                return;
+            }
+
+            if (isPremium) {
                 premiumCache.removePremium(player.getName());
 
                 utils.sendMessage(
                         player,
                         messagesConfig.player.premium.disabled
                 );
-            });
-        } else {
-            database.getAuthUserRepository().setPremium(player.getName(), true, success -> {
-                if (!success) {
-                    utils.sendMessage(
-                            player,
-                            messagesConfig.queryError
-                    );
-                    return;
-                }
+                endProcess(player);
+                return;
+            }
 
-                premiumCache.addPremium(player.getName());
+            premiumCache.addPremium(player.getName());
 
-                utils.sendMessage(
-                        player,
-                        messagesConfig.player.premium.enabled
-                );
-            });
-        }
+            utils.sendMessage(
+                    player,
+                    messagesConfig.player.premium.enabled
+            );
+
+            endProcess(player);
+        });
     }
 
     public void forceAuth(ProxiedPlayer player) {
@@ -503,7 +544,20 @@ public class AuthManager {
         }
     }
 
-    public boolean supportDialog(ProxiedPlayer player) {
+    private boolean supportDialog(ProxiedPlayer player) {
         return player.getPendingConnection().getVersion() >= 771;
+    }
+
+    private boolean beginProcess(ProxiedPlayer player) {
+        if (!inProcess.add(player.getName())) {
+            utils.sendMessage(player, messagesConfig.processing);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void endProcess(ProxiedPlayer player) {
+        inProcess.remove(player.getName());
     }
 }
