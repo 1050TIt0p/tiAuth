@@ -374,6 +374,7 @@ public class AuthManager {
     }
 
     public void logoutPlayer(ProxiedPlayer player) {
+        taskManager.cancelTasks(player);
         authCache.logout(player.getName());
         sessionCache.removePlayer(player.getName());
     }
