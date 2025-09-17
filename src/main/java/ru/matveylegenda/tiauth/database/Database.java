@@ -57,6 +57,8 @@ public class Database {
         config.setMaximumPoolSize(maxPoolSize);
         if (minIdle > 0) config.setMinimumIdle(minIdle);
 
+        config.setDriverClassName("org.h2.Driver");
+
         HikariDataSource dataSource = new HikariDataSource(config);
         ConnectionSource connectionSource = new DataSourceConnectionSource(dataSource, dataSource.getJdbcUrl());
 
@@ -74,6 +76,8 @@ public class Database {
         config.setMaxLifetime(maxLifetime);
         config.setMaximumPoolSize(maxPoolSize);
         if (minIdle > 0) config.setMinimumIdle(minIdle);
+
+        config.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
         HikariDataSource dataSource = new HikariDataSource(config);
         ConnectionSource connectionSource = new DataSourceConnectionSource(dataSource, dataSource.getJdbcUrl());
