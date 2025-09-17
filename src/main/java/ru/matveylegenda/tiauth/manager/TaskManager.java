@@ -43,7 +43,10 @@ public class TaskManager {
     public void startAuthTimeoutTask(ProxiedPlayer player) {
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
             if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
-                authTimeoutTasks.remove(player.getName());
+                ScheduledTask task1 = authTimeoutTasks.remove(player.getName());
+                if (task1 != null) {
+                    task1.cancel();
+                }
                 return;
             }
 
@@ -59,7 +62,10 @@ public class TaskManager {
     public void startAuthReminderTask(ProxiedPlayer player, String reminderMessage) {
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
             if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
-                authReminderTasks.remove(player.getName()).cancel();
+                ScheduledTask task1 = authReminderTasks.remove(player.getName());
+                if (task1 != null) {
+                    task1.cancel();
+                }
                 return;
             }
 
@@ -81,7 +87,10 @@ public class TaskManager {
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
             if (counter.get() <= 0 || !player.isConnected() || authCache.isAuthenticated(player.getName())) {
                 clearDisplays(player, barId);
-                titleTimerTasks.remove(player.getName()).cancel();
+                ScheduledTask task1 = titleTimerTasks.remove(player.getName());
+                if (task1 != null) {
+                    task1.cancel();
+                }
                 return;
             }
 
