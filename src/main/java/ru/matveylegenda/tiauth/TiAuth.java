@@ -49,10 +49,10 @@ public final class TiAuth extends Plugin {
         loadConfigs();
         initializeDatabase();
         startLimboServer();
+        utils = new Utils(messagesConfig);
         sessionCache = new SessionCache(mainConfig.auth.sessionLifetimeMinutes);
         taskManager = new TaskManager(this);
         authManager = new AuthManager(this);
-        utils = new Utils(messagesConfig);
 
         PluginManager pluginManager = getProxy().getPluginManager();
         registerListeners(pluginManager);
@@ -79,6 +79,8 @@ public final class TiAuth extends Plugin {
         switch (mainConfig.lang) {
             case RU -> messagesConfigPath = Path.of(getDataFolder().getAbsolutePath(), "lang", "messages_ru.yml");
         }
+
+        messagesConfig.loadLang(mainConfig.lang);
         messagesConfig.reload(messagesConfigPath);
     }
 
