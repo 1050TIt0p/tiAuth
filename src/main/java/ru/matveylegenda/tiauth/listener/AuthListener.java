@@ -7,6 +7,7 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
+import ru.matveylegenda.tiauth.cache.BanCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
@@ -20,6 +21,7 @@ public class AuthListener implements Listener {
     private final Database database;
     private final AuthCache authCache;
     private final PremiumCache premiumCache;
+    private final BanCache banCache;
     private final MainConfig mainConfig;
     private final MessagesConfig messagesConfig;
     private final AuthManager authManager;
@@ -31,6 +33,7 @@ public class AuthListener implements Listener {
         this.database = plugin.getDatabase();
         this.authCache = plugin.getAuthCache();
         this.premiumCache = plugin.getPremiumCache();
+        this.banCache = plugin.getBanCache();
         this.mainConfig = plugin.getMainConfig();
         this.messagesConfig = plugin.getMessagesConfig();
         this.authManager = plugin.getAuthManager();
@@ -41,11 +44,20 @@ public class AuthListener implements Listener {
     @EventHandler
     public void onPreLogin(PreLoginEvent event) {
         PendingConnection connection = event.getConnection();
+
+        if (banCache.isBanned(connection.getName())) {
+            utils.kickPlayer(
+                    event,
+                    messagesConfig.player.kick.ban
+                            .replace("{time}", String.valueOf(banCache.getRemainingSeconds(connection.getName())))
+            );
+            return;
+        }
+
         event.registerIntent(plugin);
 
         database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
             if (!success) {
-                System.out.println(event.getConnection().getName() + " query to database respond error");
                 utils.kickPlayer(
                         event,
                         messagesConfig.queryError

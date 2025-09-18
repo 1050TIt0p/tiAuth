@@ -12,6 +12,7 @@ import net.md_5.bungee.api.dialog.input.TextInput;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
+import ru.matveylegenda.tiauth.cache.BanCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
@@ -41,6 +42,7 @@ public class AuthManager {
     private final AuthCache authCache;
     private final PremiumCache premiumCache;
     private final SessionCache sessionCache;
+    private final BanCache banCache;
     private final MainConfig mainConfig;
     private final MessagesConfig messagesConfig;
     private final Utils utils;
@@ -53,6 +55,7 @@ public class AuthManager {
         this.authCache = plugin.getAuthCache();
         this.premiumCache = plugin.getPremiumCache();
         this.sessionCache = plugin.getSessionCache();
+        this.banCache = plugin.getBanCache();
         this.mainConfig = plugin.getMainConfig();
         this.messagesConfig = plugin.getMessagesConfig();
         this.utils = plugin.getUtils();
@@ -271,6 +274,10 @@ public class AuthManager {
                             player,
                             messagesConfig.player.kick.tooManyAttempts
                     );
+
+                    if (mainConfig.auth.banPlayer) {
+                        banCache.addPlayer(player.getName());
+                    }
 
                     loginAttempts.remove(player.getName());
                     endProcess(player);

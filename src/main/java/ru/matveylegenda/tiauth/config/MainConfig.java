@@ -107,6 +107,16 @@ public class MainConfig extends YamlSerializable {
         public int loginAttempts = 3;
 
         @Comment({
+                @CommentValue(" Банить ли игрока при исчерпании попыток авторизации")
+        })
+        public boolean banPlayer = true;
+
+        @Comment({
+                @CommentValue(" На сколько секунд банить игрока при исчерпании попыток авторизации")
+        })
+        public int banTime = 60;
+
+        @Comment({
                 @CommentValue(" Раз в сколько секунд игроку отправляется сообщение о требованием в регистрации/авторизации")
         })
         public int reminderInterval = 3;

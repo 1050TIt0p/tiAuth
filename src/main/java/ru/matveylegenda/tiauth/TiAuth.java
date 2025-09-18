@@ -6,6 +6,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import org.bstats.bungeecord.Metrics;
 import ru.matveylegenda.tiauth.cache.AuthCache;
+import ru.matveylegenda.tiauth.cache.BanCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.command.admin.TiAuthCommand;
@@ -36,6 +37,7 @@ public final class TiAuth extends Plugin {
     private final AuthCache authCache = new AuthCache();
     private final PremiumCache premiumCache = new PremiumCache();
     private SessionCache sessionCache;
+    private BanCache banCache;
     private Utils utils;
     private TaskManager taskManager;
     private AuthManager authManager;
@@ -51,6 +53,7 @@ public final class TiAuth extends Plugin {
         startLimboServer();
         utils = new Utils(messagesConfig);
         sessionCache = new SessionCache(mainConfig.auth.sessionLifetimeMinutes);
+        banCache = new BanCache(mainConfig.auth.banTime);
         taskManager = new TaskManager(this);
         authManager = new AuthManager(this);
 
