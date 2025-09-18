@@ -21,16 +21,4 @@ public class PremiumCache {
     public void removePremium(String name) {
         premiumUsers.remove(name.toLowerCase(Locale.ROOT));
     }
-
-    public void load(AuthUserRepository repository) {
-        repository.getAllUsers(users -> {
-            if (users == null) return;
-
-            for (AuthUser user : users) {
-                if (user.isPremium()) {
-                    premiumUsers.add(user.getUsername());
-                }
-            }
-        });
-    }
 }

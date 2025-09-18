@@ -5,6 +5,7 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.event.PreLoginEvent;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 
 import java.util.regex.Matcher;
@@ -57,5 +58,12 @@ public class Utils {
         player.disconnect(
                 colorize(message.replace("{prefix}", messagesConfig.prefix))
         );
+    }
+
+    public void kickPlayer(PreLoginEvent event, String message) {
+        event.setReason(
+                colorizeComponent(message.replace("{prefix}", messagesConfig.prefix))
+        );
+        event.setCancelled(true);
     }
 }

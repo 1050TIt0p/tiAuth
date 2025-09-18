@@ -74,18 +74,6 @@ public class AuthUserRepository {
         });
     }
 
-    public void getAllUsers(Consumer<List<AuthUser>> callback) {
-        executor.submit(() -> {
-            try {
-                List<AuthUser> users = authUserDao.queryForAll();
-                callback.accept(users);
-            } catch (SQLException e) {
-                callback.accept(null);
-                TiAuth.logger.log(Level.WARNING, "Error during database query", e);
-            }
-        });
-    }
-
     public void updatePassword(String username, String newPassword, Consumer<Boolean> callback) {
         executor.submit(() -> {
             try {

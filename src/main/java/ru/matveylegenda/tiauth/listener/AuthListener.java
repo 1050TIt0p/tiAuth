@@ -41,10 +41,26 @@ public class AuthListener implements Listener {
     @EventHandler
     public void onPreLogin(PreLoginEvent event) {
         PendingConnection connection = event.getConnection();
+        event.registerIntent(plugin);
 
-        if (premiumCache.isPremium(connection.getName())) {
-            connection.setOnlineMode(true);
-        }
+        database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
+            if (!success) {
+                utils.kickPlayer(
+                        event,
+                        messagesConfig.queryError
+                );
+
+                event.completeIntent(plugin);
+                return;
+            }
+
+            if (user.isPremium()) {
+                connection.setOnlineMode(true);
+                premiumCache.addPremium(connection.getName());
+            }
+
+            event.completeIntent(plugin);
+        });
     }
 
     @EventHandler

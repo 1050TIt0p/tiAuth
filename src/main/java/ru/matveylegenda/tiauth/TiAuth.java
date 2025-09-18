@@ -49,7 +49,6 @@ public final class TiAuth extends Plugin {
         loadConfigs();
         initializeDatabase();
         startLimboServer();
-        premiumCache.load(database.getAuthUserRepository());
         sessionCache = new SessionCache(mainConfig.auth.sessionLifetimeMinutes);
         taskManager = new TaskManager(this);
         authManager = new AuthManager(this);
