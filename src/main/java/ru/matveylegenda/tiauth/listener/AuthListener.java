@@ -132,6 +132,8 @@ public class AuthListener implements Listener {
                 !authCache.isAuthenticated(player.getName())) {
             taskManager.startDisplayTimerTask(player);
             authManager.showLoginDialog(player);
+        } else {
+            taskManager.cancelTasks(player);
         }
     }
 

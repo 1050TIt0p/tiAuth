@@ -8,7 +8,6 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.scheduler.ScheduledTask;
 import net.md_5.bungee.protocol.packet.BossBar;
 import ru.matveylegenda.tiauth.TiAuth;
-import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.util.Utils;
@@ -29,20 +28,18 @@ public class TaskManager {
     private final TiAuth plugin;
     private final MainConfig mainConfig;
     private final MessagesConfig messagesConfig;
-    private final AuthCache authCache;
     private final Utils utils;
 
     public TaskManager(TiAuth plugin) {
         this.plugin = plugin;
         this.mainConfig = plugin.getMainConfig();
         this.messagesConfig = plugin.getMessagesConfig();
-        this.authCache = plugin.getAuthCache();
         this.utils = plugin.getUtils();
     }
 
     public void startAuthTimeoutTask(ProxiedPlayer player) {
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
-            if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
+            if (!player.isConnected()) {
                 ScheduledTask task1 = authTimeoutTasks.remove(player.getName());
                 if (task1 != null) {
                     task1.cancel();
@@ -61,7 +58,7 @@ public class TaskManager {
 
     public void startAuthReminderTask(ProxiedPlayer player, String reminderMessage) {
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
-            if (!player.isConnected() || authCache.isAuthenticated(player.getName())) {
+            if (!player.isConnected()) {
                 ScheduledTask task1 = authReminderTasks.remove(player.getName());
                 if (task1 != null) {
                     task1.cancel();
@@ -85,7 +82,7 @@ public class TaskManager {
         if (mainConfig.bossBar.enabled) createBossBar(player, counter.get(), barId);
 
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
-            if (counter.get() <= 0 || !player.isConnected() || authCache.isAuthenticated(player.getName())) {
+            if (counter.get() <= 0 || !player.isConnected()) {
                 clearDisplays(player, barId);
                 ScheduledTask task1 = titleTimerTasks.remove(player.getName());
                 if (task1 != null) {
