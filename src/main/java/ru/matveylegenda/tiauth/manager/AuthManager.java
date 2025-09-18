@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 import static ru.matveylegenda.tiauth.util.Utils.colorizeComponent;
 
@@ -44,6 +45,7 @@ public class AuthManager {
     private final MessagesConfig messagesConfig;
     private final Utils utils;
     private final TaskManager taskManager;
+    private final Pattern passwordPattern;
 
     public AuthManager(TiAuth plugin) {
         this.plugin = plugin;
@@ -55,6 +57,7 @@ public class AuthManager {
         this.messagesConfig = plugin.getMessagesConfig();
         this.utils = plugin.getUtils();
         this.taskManager = plugin.getTaskManager();
+        this.passwordPattern = Pattern.compile(mainConfig.auth.passwordPattern);
     }
 
     public void registerPlayer(ProxiedPlayer player, String password, String repeatPassword) {
@@ -86,6 +89,22 @@ public class AuthManager {
                         messagesConfig.player.dialog.notifications.invalidLength
                                 .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
                                 .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+                );
+            }
+
+            return;
+        }
+
+        if (!passwordPattern.matcher(password).matches()) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.player.checkPassword.invalidPattern
+            );
+
+            if (supportDialog(player)) {
+                showLoginDialog(
+                        player,
+                        messagesConfig.player.dialog.notifications.invalidPattern
                 );
             }
 

@@ -132,6 +132,11 @@ public class MainConfig extends YamlSerializable {
         public int maxPasswordLength = 32;
 
         @Comment({
+                @CommentValue(" Регулярное выражение для пароля")
+        })
+        public String passwordPattern = "^[a-zA-Z0-9!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]*$";
+
+        @Comment({
                 @CommentValue(" Алгоритм хеширования пароля"),
                 @CommentValue(" Доступные варианты:"),
                 @CommentValue(" BCRYPT"),
