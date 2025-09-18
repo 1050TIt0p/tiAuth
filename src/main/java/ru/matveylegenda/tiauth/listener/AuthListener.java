@@ -45,6 +45,7 @@ public class AuthListener implements Listener {
 
         database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
             if (!success) {
+                System.out.println(event.getConnection().getName() + " query to database respond error");
                 utils.kickPlayer(
                         event,
                         messagesConfig.queryError
@@ -54,7 +55,7 @@ public class AuthListener implements Listener {
                 return;
             }
 
-            if (user.isPremium()) {
+            if (user != null && user.isPremium()) {
                 connection.setOnlineMode(true);
                 premiumCache.addPremium(connection.getName());
             }
