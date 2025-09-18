@@ -12,9 +12,14 @@ import ru.matveylegenda.tiauth.util.BarStyle;
 import java.util.List;
 
 public class MainConfig extends YamlSerializable {
+    @Comment({
+            @CommentValue(" Доступные языки: RU, EN")
+    })
+    public MessagesConfig.Lang lang = MessagesConfig.Lang.RU;
 
     public Servers servers = new Servers();
 
+    @NewLine
     public static class Servers {
         @Comment({
                 @CommentValue(" Использовать ли виртуальный сервер NanoLimbo для сервера авторизации"),

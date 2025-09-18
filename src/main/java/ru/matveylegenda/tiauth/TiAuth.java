@@ -36,7 +36,7 @@ public final class TiAuth extends Plugin {
     private final AuthCache authCache = new AuthCache();
     private final PremiumCache premiumCache = new PremiumCache();
     private SessionCache sessionCache;
-    private final Utils utils = new Utils(messagesConfig);
+    private Utils utils;
     private TaskManager taskManager;
     private AuthManager authManager;
 
@@ -52,6 +52,7 @@ public final class TiAuth extends Plugin {
         sessionCache = new SessionCache(mainConfig.auth.sessionLifetimeMinutes);
         taskManager = new TaskManager(this);
         authManager = new AuthManager(this);
+        utils = new Utils(messagesConfig);
 
         PluginManager pluginManager = getProxy().getPluginManager();
         registerListeners(pluginManager);
@@ -73,7 +74,12 @@ public final class TiAuth extends Plugin {
 
     public void loadConfigs() {
         mainConfig.reload(Path.of(getDataFolder().getAbsolutePath(), "config.yml"));
-        messagesConfig.reload(Path.of(getDataFolder().getAbsolutePath(), "messages.yml"));
+
+        Path messagesConfigPath = Path.of(getDataFolder().getAbsolutePath(), "lang", "messages_en.yml");
+        switch (mainConfig.lang) {
+            case RU -> messagesConfigPath = Path.of(getDataFolder().getAbsolutePath(), "lang", "messages_ru.yml");
+        }
+        messagesConfig.reload(messagesConfigPath);
     }
 
     private void initializeDatabase() {
