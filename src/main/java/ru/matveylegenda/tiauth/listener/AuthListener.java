@@ -16,6 +16,8 @@ import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.manager.TaskManager;
 import ru.matveylegenda.tiauth.util.Utils;
 
+import java.util.regex.Pattern;
+
 public class AuthListener implements Listener {
     private final TiAuth plugin;
     private final Database database;
@@ -27,6 +29,7 @@ public class AuthListener implements Listener {
     private final AuthManager authManager;
     private final TaskManager taskManager;
     private final Utils utils;
+    private final Pattern nickPattern;
 
     public AuthListener(TiAuth plugin) {
         this.plugin = plugin;
@@ -39,11 +42,20 @@ public class AuthListener implements Listener {
         this.authManager = plugin.getAuthManager();
         this.taskManager = plugin.getTaskManager();
         this.utils = plugin.getUtils();
+        this.nickPattern = Pattern.compile(mainConfig.nickPattern);
     }
 
     @EventHandler
     public void onPreLogin(PreLoginEvent event) {
         PendingConnection connection = event.getConnection();
+
+        if (!nickPattern.matcher(connection.getName()).matches()) {
+            utils.kickPlayer(
+                    event,
+                    messagesConfig.player.kick.invalidNickPattern
+            );
+            return;
+        }
 
         if (banCache.isBanned(connection.getName())) {
             utils.kickPlayer(

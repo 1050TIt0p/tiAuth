@@ -206,4 +206,10 @@ public class MainConfig extends YamlSerializable {
     public static class ActionBar {
         public boolean enabled = false;
     }
+
+    @NewLine
+    @Comment({
+            @CommentValue(" Регулярное выражение для ника")
+    })
+    public String nickPattern = "^[a-zA-Z0-9_]{3,16}$";
 }

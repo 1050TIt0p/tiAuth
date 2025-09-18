@@ -117,6 +117,7 @@ public class MessagesConfig extends YamlSerializable {
             public String realname;
             public String tooManyAttempts;
             public String ban;
+            public String invalidNickPattern;
         }
 
         @NewLine
@@ -211,6 +212,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.realname = "{prefix} &fПравильный ник: &#8833EC{realname}\n&fВаш ник: &#8833EC{name}";
                 player.kick.tooManyAttempts = "{prefix} &fВы превысили количество попыток для ввода пароля";
                 player.kick.ban = "{prefix} &fВаш аккаунт заблокирован на &#8833EC{time} &fсекунд за превышение попыток ввода пароля";
+                player.kick.invalidNickPattern = "{prefix} &fВаш ник содержит запрещенные символы";
                 player.reminder.login = "{prefix} &fАвторизируйтесь командой &#8833EC/login <пароль>";
                 player.reminder.register = "{prefix} &fЗарегистрируйтесь командой &#8833EC/register <пароль> <пароль>";
                 player.dialog.register.title = "Регистрация";
@@ -271,6 +273,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.realname = "{prefix} &fCorrect nickname: &#8833EC{realname}\n&fYour nickname: &#8833EC{name}";
                 player.kick.tooManyAttempts = "{prefix} &fYou exceeded the number of password attempts";
                 player.kick.ban = "{prefix} &fYour account has been locked for &#8833EC{time} &fseconds due to exceeding password attempts";
+                player.kick.invalidNickPattern = "{prefix} &fYour nickname contains invalid characters";
                 player.reminder.login = "{prefix} &fAuthenticate using &#8833EC/login <password>";
                 player.reminder.register = "{prefix} &fRegister using &#8833EC/register <password> <password>";
                 player.dialog.register.title = "Registration";
