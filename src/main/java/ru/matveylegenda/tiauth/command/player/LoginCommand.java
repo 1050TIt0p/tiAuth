@@ -40,7 +40,7 @@ public class LoginCommand extends Command {
             return;
         }
 
-        String password = args[0];
+        String password = args[0].trim();
         authManager.loginPlayer(player, password);
     }
 }

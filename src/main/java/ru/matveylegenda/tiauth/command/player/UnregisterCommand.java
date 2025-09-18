@@ -40,7 +40,7 @@ public class UnregisterCommand extends Command {
             return;
         }
 
-        String password = args[0];
+        String password = args[0].trim();
         authManager.unregisterPlayer(player, password);
     }
 }

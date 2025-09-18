@@ -21,13 +21,13 @@ public class DialogListener implements Listener {
         JsonObject jsonObject = event.getData().getAsJsonObject();
 
         if (event.getId().equals("minecraft:tiauth_login")) {
-            String password = jsonObject.get("password").getAsString();
+            String password = jsonObject.get("password").getAsString().trim();
             authManager.loginPlayer(player, password);
         }
 
         if (event.getId().equals("minecraft:tiauth_register")) {
-            String password = jsonObject.get("password").getAsString();
-            String repeatPassword = jsonObject.get("repeatPassword").getAsString();
+            String password = jsonObject.get("password").getAsString().trim();
+            String repeatPassword = jsonObject.get("repeatPassword").getAsString().trim();
             authManager.registerPlayer(player, password, repeatPassword);
         }
     }
