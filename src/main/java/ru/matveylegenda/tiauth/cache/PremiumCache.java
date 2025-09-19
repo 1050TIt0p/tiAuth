@@ -1,8 +1,5 @@
 package ru.matveylegenda.tiauth.cache;
 
-import ru.matveylegenda.tiauth.database.model.AuthUser;
-import ru.matveylegenda.tiauth.database.repository.AuthUserRepository;
-
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

@@ -3,7 +3,6 @@ package ru.matveylegenda.tiauth.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class BanCache {

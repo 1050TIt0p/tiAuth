@@ -249,6 +249,67 @@ public class AuthManager {
     }
 
     public void loginPlayer(ProxiedPlayer player, String password) {
+        if (authCache.isAuthenticated(player.getName())) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.player.login.alreadyLogged
+            );
+            return;
+        }
+
+        if (password.isEmpty()) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.player.checkPassword.passwordEmpty
+            );
+
+            if (supportDialog(player)) {
+                showLoginDialog(
+                        player,
+                        messagesConfig.player.dialog.notifications.passwordEmpty
+                );
+            }
+
+            return;
+        }
+
+        if (password.length() < mainConfig.auth.minPasswordLength ||
+                password.length() > mainConfig.auth.maxPasswordLength) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.player.checkPassword.invalidLength
+                            .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
+                            .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+            );
+
+            if (supportDialog(player)) {
+                showLoginDialog(
+                        player,
+                        messagesConfig.player.dialog.notifications.invalidLength
+                                .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
+                                .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+                );
+            }
+
+            return;
+        }
+
+        if (!passwordPattern.matcher(password).matches()) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.player.checkPassword.invalidPattern
+            );
+
+            if (supportDialog(player)) {
+                showLoginDialog(
+                        player,
+                        messagesConfig.player.dialog.notifications.invalidPattern
+                );
+            }
+
+            return;
+        }
+
         if (!beginProcess(player)) {
             return;
         }
@@ -269,31 +330,6 @@ public class AuthManager {
                         messagesConfig.player.login.notRegistered
                 );
                 endProcess(player);
-                return;
-            }
-
-            if (authCache.isAuthenticated(player.getName())) {
-                utils.sendMessage(
-                        player,
-                        messagesConfig.player.login.alreadyLogged
-                );
-                endProcess(player);
-                return;
-            }
-
-            if (password.isEmpty()) {
-                utils.sendMessage(
-                        player,
-                        messagesConfig.player.checkPassword.passwordEmpty
-                );
-
-                if (supportDialog(player)) {
-                    showLoginDialog(
-                            player,
-                            messagesConfig.player.dialog.notifications.passwordEmpty
-                    );
-                }
-
                 return;
             }
 
@@ -362,6 +398,59 @@ public class AuthManager {
     }
 
     public void changePasswordPlayer(ProxiedPlayer player, String oldPassword, String newPassword) {
+        if (oldPassword.isEmpty() || newPassword.isEmpty()) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.player.checkPassword.passwordEmpty
+            );
+
+            if (supportDialog(player)) {
+                showLoginDialog(
+                        player,
+                        messagesConfig.player.dialog.notifications.passwordEmpty
+                );
+            }
+
+            return;
+        }
+
+        if ((oldPassword.length() < mainConfig.auth.minPasswordLength || oldPassword.length() > mainConfig.auth.maxPasswordLength) ||
+                (newPassword.length() < mainConfig.auth.minPasswordLength || newPassword.length() > mainConfig.auth.maxPasswordLength)) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.player.checkPassword.invalidLength
+                            .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
+                            .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+            );
+
+            if (supportDialog(player)) {
+                showLoginDialog(
+                        player,
+                        messagesConfig.player.dialog.notifications.invalidLength
+                                .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
+                                .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+                );
+            }
+
+            return;
+        }
+
+        if (!passwordPattern.matcher(oldPassword).matches() || !passwordPattern.matcher(oldPassword).matches()) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.player.checkPassword.invalidPattern
+            );
+
+            if (supportDialog(player)) {
+                showLoginDialog(
+                        player,
+                        messagesConfig.player.dialog.notifications.invalidPattern
+                );
+            }
+
+            return;
+        }
+
         if (!beginProcess(player)) {
             return;
         }
@@ -373,34 +462,6 @@ public class AuthManager {
                         messagesConfig.queryError
                 );
                 endProcess(player);
-                return;
-            }
-
-            if (newPassword.length() < mainConfig.auth.minPasswordLength ||
-                    newPassword.length() > mainConfig.auth.maxPasswordLength) {
-                utils.sendMessage(
-                        player,
-                        messagesConfig.player.checkPassword.invalidLength
-                                .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
-                                .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
-                );
-                endProcess(player);
-                return;
-            }
-
-            if (!passwordPattern.matcher(newPassword).matches()) {
-                utils.sendMessage(
-                        player,
-                        messagesConfig.player.checkPassword.invalidPattern
-                );
-
-                if (supportDialog(player)) {
-                    showLoginDialog(
-                            player,
-                            messagesConfig.player.dialog.notifications.invalidPattern
-                    );
-                }
-
                 return;
             }
 

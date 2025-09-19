@@ -8,7 +8,6 @@ import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
