@@ -353,6 +353,22 @@ public class AuthManager {
                 return;
             }
 
+            if (!passwordPattern.matcher(newPassword).matches()) {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.player.checkPassword.invalidPattern
+                );
+
+                if (supportDialog(player)) {
+                    showLoginDialog(
+                            player,
+                            messagesConfig.player.dialog.notifications.invalidPattern
+                    );
+                }
+
+                return;
+            }
+
             Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
             String hashedPassword = user.getPassword();
 
