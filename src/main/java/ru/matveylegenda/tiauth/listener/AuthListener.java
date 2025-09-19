@@ -57,11 +57,11 @@ public class AuthListener implements Listener {
             return;
         }
 
-        if (banCache.isBanned(connection.getName())) {
+        if (banCache.isBanned(connection.getAddress().getAddress().getHostAddress())) {
             utils.kickPlayer(
                     event,
                     messagesConfig.player.kick.ban
-                            .replace("{time}", String.valueOf(banCache.getRemainingSeconds(connection.getName())))
+                            .replace("{time}", String.valueOf(banCache.getRemainingSeconds(connection.getAddress().getAddress().getHostAddress())))
             );
             return;
         }
@@ -132,8 +132,6 @@ public class AuthListener implements Listener {
                 !authCache.isAuthenticated(player.getName())) {
             taskManager.startDisplayTimerTask(player);
             authManager.showLoginDialog(player);
-        } else {
-            taskManager.cancelTasks(player);
         }
     }
 

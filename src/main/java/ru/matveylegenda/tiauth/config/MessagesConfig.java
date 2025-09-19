@@ -68,6 +68,7 @@ public class MessagesConfig extends YamlSerializable {
             public String wrongPassword;
             public String invalidLength;
             public String invalidPattern;
+            public String passwordEmpty;
         }
 
         @NewLine
@@ -150,6 +151,7 @@ public class MessagesConfig extends YamlSerializable {
                 public String invalidLength;
                 public String invalidPattern;
                 public String mismatch;
+                public String passwordEmpty;
             }
         }
 
@@ -191,6 +193,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.checkPassword.wrongPassword = "{prefix} &fНеверный пароль";
                 player.checkPassword.invalidLength = "{prefix} &fДлина пароля должна быть от &#8833EC{min} &fдо &#8833EC{max} &fсимволов";
                 player.checkPassword.invalidPattern = "{prefix} &fПароль содержит недопустимые символы";
+                player.checkPassword.passwordEmpty = "{prefix} &fПароль не может быть пустым";
                 player.register.usage = "{prefix} &fИспользование: &#8833EC/register <пароль> <пароль>";
                 player.register.mismatch = "{prefix} &fПароли не совпадают";
                 player.register.alreadyRegistered = "{prefix} &fВы уже зарегистрированы";
@@ -226,6 +229,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.dialog.notifications.invalidLength = "&cДлина пароля должна быть от {min} до {max} символов";
                 player.dialog.notifications.invalidPattern = "&cПароль содержит недопустимые символы";
                 player.dialog.notifications.mismatch = "&cПароли не совпадают";
+                player.dialog.notifications.passwordEmpty = "&cПароль не может быть пустым";
                 player.bossBar.message = "{prefix} &fОсталось &#8833EC{time} &fсекунд";
                 player.title.title = "{prefix}";
                 player.title.subTitle = "&fОсталось &#8833EC{time} &fсекунд";
@@ -252,6 +256,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.checkPassword.wrongPassword = "{prefix} &fWrong password";
                 player.checkPassword.invalidLength = "{prefix} &fPassword length must be between &#8833EC{min} &fand &#8833EC{max} &fcharacters";
                 player.checkPassword.invalidPattern = "{prefix} &fPassword contains invalid characters";
+                player.checkPassword.passwordEmpty = "{prefix} &fPassword cannot be empty";
                 player.register.usage = "{prefix} &fUsage: &#8833EC/register <password> <password>";
                 player.register.mismatch = "{prefix} &fPasswords do not match";
                 player.register.alreadyRegistered = "{prefix} &fYou are already registered";
@@ -287,6 +292,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.dialog.notifications.invalidLength = "&cPassword length must be between {min} and {max} characters";
                 player.dialog.notifications.invalidPattern = "&cPassword contains invalid characters";
                 player.dialog.notifications.mismatch = "&cPasswords do not match";
+                player.dialog.notifications.passwordEmpty = "&cPassword cannot be empty";
                 player.bossBar.message = "{prefix} &fTime remaining: &#8833EC{time} &fseconds";
                 player.title.title = "{prefix}";
                 player.title.subTitle = "&fTime remaining: &#8833EC{time} &fseconds";

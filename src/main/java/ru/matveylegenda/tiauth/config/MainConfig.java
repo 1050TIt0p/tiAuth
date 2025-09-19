@@ -83,11 +83,13 @@ public class MainConfig extends YamlSerializable {
         public long maxLifetimeMs = 1800000;
         @Comment(
                 value = {
-                        @CommentValue(" Максимальное количество соединений в пуле. Для H2 рекомендуется использовать небольшое количество соединений, например 2")
+                        @CommentValue(" Максимальное количество соединений в пуле"),
+                        @CommentValue(" Для H2 рекомендуется использовать небольшое количество соединений, например 2"),
+                        @CommentValue(" Для MySQL и PostgreSQL можно выставить больше, например 10")
                 },
                 at = Comment.At.SAME_LINE
         )
-        public int maxPoolSize = 10;
+        public int maxPoolSize = 2;
         @Comment(
                 value = {
                         @CommentValue(" Минимальное количество простаивающих соединений в пуле. -1 = max-pool-size")
@@ -124,7 +126,7 @@ public class MainConfig extends YamlSerializable {
         @Comment({
                 @CommentValue(" Сколько секунд дается игроку на регистрацию/авторизацию")
         })
-        public int timeoutSeconds = 30;
+        public int timeoutSeconds = 60;
 
         @Comment({
                 @CommentValue(" Сколько игрок может заходить без авторизации, если его IP не изменился")

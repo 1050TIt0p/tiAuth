@@ -77,6 +77,22 @@ public class AuthManager {
             return;
         }
 
+        if (password.isEmpty()) {
+            utils.sendMessage(
+                    player,
+                    messagesConfig.player.checkPassword.passwordEmpty
+            );
+
+            if (supportDialog(player)) {
+                showLoginDialog(
+                        player,
+                        messagesConfig.player.dialog.notifications.passwordEmpty
+                );
+            }
+
+            return;
+        }
+
         if (password.length() < mainConfig.auth.minPasswordLength ||
                 password.length() > mainConfig.auth.maxPasswordLength) {
             utils.sendMessage(
@@ -162,6 +178,8 @@ public class AuthManager {
                         authCache.setAuthenticated(player.getName());
 
                         sessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
+                        taskManager.cancelTasks(player);
+
                         connectToBackend(player);
 
                         endProcess(player);
@@ -263,6 +281,22 @@ public class AuthManager {
                 return;
             }
 
+            if (password.isEmpty()) {
+                utils.sendMessage(
+                        player,
+                        messagesConfig.player.checkPassword.passwordEmpty
+                );
+
+                if (supportDialog(player)) {
+                    showLoginDialog(
+                            player,
+                            messagesConfig.player.dialog.notifications.passwordEmpty
+                    );
+                }
+
+                return;
+            }
+
             Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
             String hashedPassword = user.getPassword();
 
@@ -276,7 +310,7 @@ public class AuthManager {
                     );
 
                     if (mainConfig.auth.banPlayer) {
-                        banCache.addPlayer(player.getName());
+                        banCache.addPlayer(player.getAddress().getAddress().getHostAddress());
                     }
 
                     loginAttempts.remove(player.getName());
@@ -320,6 +354,7 @@ public class AuthManager {
         database.getAuthUserRepository().updateLastLogin(player.getName());
         database.getAuthUserRepository().updateLastIp(player.getName(), ip);
         sessionCache.addPlayer(player.getName(), ip);
+        taskManager.cancelTasks(player);
 
         connectToBackend(player);
 

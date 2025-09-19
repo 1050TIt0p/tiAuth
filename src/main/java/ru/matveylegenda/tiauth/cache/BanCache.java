@@ -17,16 +17,16 @@ public class BanCache {
                 .build();
     }
 
-    public void addPlayer(String name) {
-        bans.put(name.toLowerCase(Locale.ROOT), System.currentTimeMillis());
+    public void addPlayer(String ip) {
+        bans.put(ip, System.currentTimeMillis());
     }
 
-    public boolean isBanned(String name) {
-        return bans.asMap().containsKey(name.toLowerCase(Locale.ROOT));
+    public boolean isBanned(String ip) {
+        return bans.asMap().containsKey(ip);
     }
 
-    public int getRemainingSeconds(String name) {
-        Long startTime = bans.getIfPresent(name.toLowerCase(Locale.ROOT));
+    public int getRemainingSeconds(String ip) {
+        Long startTime = bans.getIfPresent(ip);
         long currentTime = System.currentTimeMillis();
 
         if (startTime == null) return 0;
