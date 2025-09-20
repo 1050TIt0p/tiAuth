@@ -23,7 +23,7 @@ import static ru.matveylegenda.tiauth.util.Utils.colorizeComponent;
 public class TaskManager {
     private final Map<String, ScheduledTask> authTimeoutTasks = new ConcurrentHashMap<>();
     private final Map<String, ScheduledTask> authReminderTasks = new ConcurrentHashMap<>();
-    private final Map<String, ScheduledTask> titleTimerTasks = new ConcurrentHashMap<>();
+    private final Map<String, ScheduledTask> displayTimerTasks = new ConcurrentHashMap<>();
     private final Map<String, UUID> bossBars = new ConcurrentHashMap<>();
     private final TiAuth plugin;
     private final MainConfig mainConfig;
@@ -84,7 +84,7 @@ public class TaskManager {
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
             if (counter.get() <= 0 || !player.isConnected()) {
                 clearDisplays(player, barId);
-                ScheduledTask task1 = titleTimerTasks.remove(player.getName());
+                ScheduledTask task1 = displayTimerTasks.remove(player.getName());
                 if (task1 != null) {
                     task1.cancel();
                 }
@@ -98,7 +98,7 @@ public class TaskManager {
             counter.getAndDecrement();
         }, 0, 1, TimeUnit.SECONDS);
 
-        titleTimerTasks.put(player.getName(), task);
+        displayTimerTasks.put(player.getName(), task);
     }
 
     private void createBossBar(ProxiedPlayer player, int counter, UUID barId) {
@@ -180,7 +180,7 @@ public class TaskManager {
             task.cancel();
         }
 
-        task = titleTimerTasks.remove(player.getName());
+        task = displayTimerTasks.remove(player.getName());
         if (task != null) {
             task.cancel();
         }
