@@ -126,6 +126,7 @@ public final class TiAuth extends Plugin {
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error during database initialization", e);
+            getProxy().stop();
         }
     }
 
