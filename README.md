@@ -35,10 +35,5 @@ Authorization plugin for BungeeCord
   - Permission: `tiauth.admin.commands.changepassword`
 - `/tiauth forcelogin <player>` - Force login player
   - Permission: `tiauth.admin.commands.forcelogin`
-
----
-
-### TODO:
-Sorted roughly in the order of planned implementation
-- Add support for multiple authentication servers and backends + online load balancer
-- 2FA via Discord, Telegram, and TOTP
+- `/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]` - Migrate database from other plugins/database type
+  - Permission: `tiauth.admin.commands.migrate`
