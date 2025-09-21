@@ -45,14 +45,14 @@ public class AuthUser {
         this.lastLogin = now;
     }
 
-    public AuthUser(String username, String realName, String password, boolean premium, String regIp, long regDate, long lastLogin) {
+    public AuthUser(String username, String realName, String password, boolean premium, String lastIp, String regIp, long lastLogin, long regDate) {
         this.username = username;
         this.realName = realName;
         this.password = password;
         this.premium = premium;
+        this.lastIp = lastIp;
         this.regIp = regIp;
-        this.lastIp = regIp;
-        this.regDate = regDate;
         this.lastLogin = lastLogin;
+        this.regDate = regDate;
     }
 }

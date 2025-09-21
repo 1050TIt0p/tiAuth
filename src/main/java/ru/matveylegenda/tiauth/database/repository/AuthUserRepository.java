@@ -8,6 +8,7 @@ import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
@@ -35,6 +36,26 @@ public class AuthUserRepository {
                 if (callback != null) {
                     callback.accept(false);
                 }
+                TiAuth.logger.log(Level.WARNING, "Error during database query", e);
+            }
+        });
+    }
+
+    public void registerUsers(List<AuthUser> users, Consumer<Boolean> callback) {
+        executor.submit(() -> {
+            try {
+                authUserDao.callBatchTasks(() -> {
+                    for (AuthUser user : users) {
+                        AuthUser exist = authUserDao.queryForId(user.getUsername());
+                        if (exist == null) {
+                            authUserDao.create(user);
+                        }
+                    }
+                    return null;
+                });
+                callback.accept(true);
+            } catch (Exception e) {
+                callback.accept(false);
                 TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });

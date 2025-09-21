@@ -7,8 +7,11 @@ import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
+import ru.matveylegenda.tiauth.database.DatabaseMigrator;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
+
+import java.io.File;
 
 public class TiAuthCommand extends Command {
     private final TiAuth plugin;
@@ -176,6 +179,98 @@ public class TiAuthCommand extends Command {
                             sender,
                             messagesConfig.admin.forceLogin.success
                                     .replace("{player}", player.getName())
+                    );
+                });
+            }
+
+            case "migrate" -> {
+                if (!sender.hasPermission("tiauth.admin.commands.migrate")) {
+                    utils.sendMessage(
+                            sender,
+                            messagesConfig.noPermission
+                    );
+                    return;
+                }
+
+                if (args.length < 3) {
+                    utils.sendMessage(
+                            sender,
+                            messagesConfig.admin.migrate.usage
+                    );
+                    return;
+                }
+
+                DatabaseMigrator.SourcePlugin sourcePlugin = DatabaseMigrator.SourcePlugin.valueOf(args[1].toUpperCase());
+                DatabaseMigrator.SourceDatabase sourceDatabase = DatabaseMigrator.SourceDatabase.valueOf(args[2].toUpperCase());
+
+                DatabaseMigrator databaseMigrator = new DatabaseMigrator(plugin);
+                databaseMigrator.setSourcePlugin(sourcePlugin);
+                databaseMigrator.setSourceDatabase(sourceDatabase);
+
+                switch (sourceDatabase) {
+                    case SQLITE -> {
+                        if (args.length < 4) {
+                            utils.sendMessage(
+                                    sender,
+                                    messagesConfig.admin.migrate.usage
+                            );
+                            return;
+                        }
+
+                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder(), args[3]).getAbsolutePath());
+                    }
+
+                    case H2 -> {
+                        if (args.length < 6) {
+                            utils.sendMessage(
+                                    sender,
+                                    messagesConfig.admin.migrate.usage
+                            );
+                            return;
+                        }
+
+                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder(), args[3]).getAbsolutePath());
+                        if (!args[4].equals("empty")) {
+                            databaseMigrator.setSourceDatabaseUser(args[4]);
+                        }
+                        if (!args[5].equals("empty")) {
+                            databaseMigrator.setSourceDatabasePassword(args[5]);
+                        }
+                    }
+
+                    case MYSQL, POSTGRESQL -> {
+                        if (args.length < 8) {
+                            utils.sendMessage(
+                                    sender,
+                                    messagesConfig.admin.migrate.usage
+                            );
+                            return;
+                        }
+
+                        if (!args[3].equals("empty")) {
+                            databaseMigrator.setSourceDatabaseUser(args[3]);
+                        }
+                        if (!args[4].equals("empty")) {
+                            databaseMigrator.setSourceDatabasePassword(args[4]);
+                        }
+                        databaseMigrator.setSourceDatabaseHost(args[5]);
+                        databaseMigrator.setSourceDatabasePort(args[6]);
+                        databaseMigrator.setSourceDatabaseName(args[7]);
+                    }
+                }
+
+                databaseMigrator.migrate(success -> {
+                    if (!success) {
+                        utils.sendMessage(
+                                sender,
+                                messagesConfig.admin.migrate.error
+                        );
+                        return;
+                    }
+
+                    utils.sendMessage(
+                            sender,
+                            messagesConfig.admin.migrate.success
                     );
                 });
             }
