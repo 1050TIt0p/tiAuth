@@ -4,13 +4,11 @@ import lombok.Setter;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 
-import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 
 @Setter
 public class DatabaseMigrator {
