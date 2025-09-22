@@ -93,18 +93,7 @@ public class AuthListener implements Listener {
         ProxiedPlayer player = event.getPlayer();
         event.registerIntent(plugin);
 
-        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
-            if (!success) {
-                utils.kickPlayer(
-                        player,
-                        messagesConfig.queryError
-                );
-                event.completeIntent(plugin);
-
-                return;
-            }
-            authManager.forceAuth(player, event);
-        });
+        authManager.forceAuth(player, event);
     }
 
     @EventHandler
