@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 
 @Setter
 public class DatabaseMigrator {
@@ -123,7 +124,7 @@ public class DatabaseMigrator {
                 database.getAuthUserRepository().registerUsers(authUsers, callback);
             } catch (SQLException e) {
                 callback.accept(false);
-                e.printStackTrace();
+                TiAuth.logger.log(Level.WARNING, "Error during database query", e);
             }
         });
     }
