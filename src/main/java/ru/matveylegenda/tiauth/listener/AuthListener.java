@@ -66,6 +66,12 @@ public class AuthListener implements Listener {
             return;
         }
 
+        if (premiumCache.isPremium(connection.getName())) {
+            connection.setOnlineMode(true);
+            premiumCache.addPremium(connection.getName());
+            return;
+        }
+
         event.registerIntent(plugin);
 
         database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
