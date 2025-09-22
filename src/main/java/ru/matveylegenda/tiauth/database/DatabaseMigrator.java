@@ -17,7 +17,7 @@ public class DatabaseMigrator {
     private final TiAuth plugin;
     private final Database database;
 
-    private SourceDatabase sourceDatabase;
+    private DatabaseType sourceDatabase;
     private SourcePlugin sourcePlugin;
 
     private String sourceDatabaseFile;
@@ -130,7 +130,7 @@ public class DatabaseMigrator {
         });
     }
 
-    private Connection getConnection(SourceDatabase sourceDatabase) throws SQLException {
+    private Connection getConnection(DatabaseType sourceDatabase) throws SQLException {
         return switch (sourceDatabase) {
             case SQLITE -> {
                 try {
@@ -181,13 +181,6 @@ public class DatabaseMigrator {
                 }
             }
         };
-    }
-
-    public enum SourceDatabase {
-        SQLITE,
-        H2,
-        MYSQL,
-        POSTGRESQL
     }
 
     public enum SourcePlugin {

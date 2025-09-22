@@ -8,6 +8,7 @@ import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.DatabaseMigrator;
+import ru.matveylegenda.tiauth.database.DatabaseType;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
 
@@ -201,7 +202,7 @@ public class TiAuthCommand extends Command {
                 }
 
                 DatabaseMigrator.SourcePlugin sourcePlugin = DatabaseMigrator.SourcePlugin.valueOf(args[1].toUpperCase());
-                DatabaseMigrator.SourceDatabase sourceDatabase = DatabaseMigrator.SourceDatabase.valueOf(args[2].toUpperCase());
+                DatabaseType sourceDatabase = DatabaseType.valueOf(args[2].toUpperCase());
 
                 DatabaseMigrator databaseMigrator = new DatabaseMigrator(plugin);
                 databaseMigrator.setSourcePlugin(sourcePlugin);
