@@ -40,8 +40,8 @@ public class RegisterCommand extends Command {
             return;
         }
 
-        String password = args[0].trim();
-        String repeatPassword = args[1].trim();
+        String password = args[0];
+        String repeatPassword = args[1];
 
         authManager.registerPlayer(player, password, repeatPassword);
     }

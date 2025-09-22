@@ -40,8 +40,8 @@ public class ChangePasswordCommand extends Command {
             return;
         }
 
-        String oldPassword = args[0].trim();
-        String newPassword = args[1].trim();
+        String oldPassword = args[0];
+        String newPassword = args[1];
         authManager.changePasswordPlayer(player, oldPassword, newPassword);
     }
 }
