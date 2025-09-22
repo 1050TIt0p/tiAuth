@@ -435,7 +435,7 @@ public class AuthManager {
             return;
         }
 
-        if (!passwordPattern.matcher(oldPassword).matches() || !passwordPattern.matcher(oldPassword).matches()) {
+        if (!passwordPattern.matcher(oldPassword).matches() || !passwordPattern.matcher(newPassword).matches()) {
             utils.sendMessage(
                     player,
                     messagesConfig.player.checkPassword.invalidPattern
