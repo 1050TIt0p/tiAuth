@@ -36,7 +36,8 @@ public class DatabaseMigrator {
         plugin.getProxy().getScheduler().runAsync(plugin, () -> {
             List<AuthUser> authUsers = new ArrayList<>();
 
-            try (Connection connection = getConnection(sourceDatabase); Statement statement = connection.createStatement();) {
+            try (Connection connection = getConnection(sourceDatabase);
+                 Statement statement = connection.createStatement()) {
                 switch (sourcePlugin) {
                     case TIAUTH -> {
                         ResultSet resultSet = statement.executeQuery("SELECT * FROM auth_users");
