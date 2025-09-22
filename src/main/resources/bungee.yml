@@ -1,6 +1,6 @@
 name: tiAuth
 author: 1050TI_top
-version: '1.0'
+version: '1.0.1'
 main: ru.matveylegenda.tiauth.TiAuth
 libraries:
   - org.xerial:sqlite-jdbc:3.50.3.0
