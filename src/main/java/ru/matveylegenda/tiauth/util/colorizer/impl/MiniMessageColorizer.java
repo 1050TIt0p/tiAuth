@@ -10,6 +10,11 @@ public class MiniMessageColorizer implements Colorizer {
     @Override
     public String colorize(String message) {
         Component component = MiniMessage.miniMessage().deserialize(message);
-        return LegacyComponentSerializer.legacySection().serialize(component);
+        return LegacyComponentSerializer.builder()
+                .character('§')
+                .hexColors()
+                .useUnusualXRepeatedCharacterHexFormat()
+                .build()
+                .serialize(component);
     }
 }
