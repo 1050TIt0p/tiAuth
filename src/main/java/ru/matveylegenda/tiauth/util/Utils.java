@@ -29,15 +29,15 @@ public class Utils {
             return;
         }
 
-        sender.sendMessage(message.replace("{prefix}", colorizedMessages.prefix()));
+        sender.sendMessage(message.replace("{prefix}", colorizedMessages.prefix));
     }
 
     public void kickPlayer(ProxiedPlayer player, String message) {
-        player.disconnect(message.replace("{prefix}", colorizedMessages.prefix()));
+        player.disconnect(message.replace("{prefix}", colorizedMessages.prefix));
     }
 
     public void kickPlayer(PreLoginEvent event, String message) {
-        event.setCancelReason(message.replace("{prefix}", colorizedMessages.prefix()));
+        event.setCancelReason(message.replace("{prefix}", colorizedMessages.prefix));
         event.setCancelled(true);
     }
 }
