@@ -20,6 +20,7 @@ public class ColorizedMessages {
         public Unregister unregister;
         public ChangePassword changePassword;
         public ForceLogin forceLogin;
+        public ForceRegister forceRegister;
         public Migrate migrate;
 
         public static class Config {
@@ -39,6 +40,12 @@ public class ColorizedMessages {
         public static class ForceLogin {
             public String usage;
             public String isAuthenticated;
+            public String success;
+        }
+
+        public static class ForceRegister {
+            public String usage;
+            public String alreadyRegistered;
             public String success;
         }
 
@@ -188,6 +195,11 @@ public class ColorizedMessages {
         admin.forceLogin.usage = COLORIZER.colorize(config.admin.forceLogin.usage);
         admin.forceLogin.isAuthenticated = COLORIZER.colorize(config.admin.forceLogin.isAuthenticated);
         admin.forceLogin.success = COLORIZER.colorize(config.admin.forceLogin.success);
+
+        admin.forceRegister = new Admin.ForceRegister();
+        admin.forceRegister.usage = COLORIZER.colorize(config.admin.forceRegister.usage);
+        admin.forceRegister.alreadyRegistered = COLORIZER.colorize(config.admin.forceRegister.alreadyRegistered);
+        admin.forceRegister.success = COLORIZER.colorize(config.admin.forceRegister.success);
 
         admin.migrate = new Admin.Migrate();
         admin.migrate.usage = COLORIZER.colorize(config.admin.migrate.usage);

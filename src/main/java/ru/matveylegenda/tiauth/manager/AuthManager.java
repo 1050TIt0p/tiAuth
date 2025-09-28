@@ -155,38 +155,49 @@ public class AuthManager {
             }
 
             Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
-            database.getAuthUserRepository().registerUser(
-                    new AuthUser(
-                            player.getName().toLowerCase(Locale.ROOT),
-                            player.getName(),
-                            hash.hashPassword(password),
-                            false,
-                            player.getAddress().getAddress().getHostAddress()
-                    ), success1 -> {
-                        if (!success1) {
-                            utils.kickPlayer(
-                                    player,
-                                    colorizedMessages.queryError
-                            );
-                            endProcess(player);
-                            return;
-                        }
+            registerPlayer(player.getName(), password, player.getAddress().getAddress().getHostAddress(), success1 -> {
+                if (!success1) {
+                    utils.kickPlayer(
+                            player,
+                            colorizedMessages.queryError
+                    );
+                    endProcess(player);
+                    return;
+                }
 
-                        utils.sendMessage(
-                                player,
-                                colorizedMessages.player.register.success
-                        );
-                        authCache.setAuthenticated(player.getName());
+                utils.sendMessage(
+                        player,
+                        colorizedMessages.player.register.success
+                );
+                authCache.setAuthenticated(player.getName());
 
-                        sessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
-                        taskManager.cancelTasks(player);
+                sessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
+                taskManager.cancelTasks(player);
 
-                        connectToBackend(player);
+                connectToBackend(player);
 
-                        endProcess(player);
-                    }
-            );
+                endProcess(player);
+            });
         });
+    }
+
+    public void registerPlayer(String playerName, String password, String ip, Consumer<Boolean> callback) {
+        Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
+        database.getAuthUserRepository().registerUser(
+                new AuthUser(
+                        playerName.toLowerCase(),
+                        playerName,
+                        hash.hashPassword(password),
+                        false,
+                        ip
+                ), success -> {
+                    if (!success) {
+                        callback.accept(false);
+                        return;
+                    }
+                    callback.accept(true);
+                }
+        );
     }
 
     public void unregisterPlayer(ProxiedPlayer player, String password) {

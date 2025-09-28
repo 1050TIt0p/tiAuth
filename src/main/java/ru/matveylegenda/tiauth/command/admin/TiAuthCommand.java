@@ -6,6 +6,7 @@ import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
+import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.DatabaseMigrator;
 import ru.matveylegenda.tiauth.database.DatabaseType;
 import ru.matveylegenda.tiauth.manager.AuthManager;
@@ -13,9 +14,11 @@ import ru.matveylegenda.tiauth.util.Utils;
 import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
 
 import java.io.File;
+import java.util.Locale;
 
 public class TiAuthCommand extends Command {
     private final TiAuth plugin;
+    private final Database database;
     private final Utils utils;
     private final ColorizedMessages colorizedMessages;
     private final AuthManager authManager;
@@ -25,6 +28,7 @@ public class TiAuthCommand extends Command {
     public TiAuthCommand(TiAuth plugin, String name, String... aliases) {
         super(name, null, aliases);
         this.plugin = plugin;
+        this.database = plugin.getDatabase();
         this.utils = plugin.getUtils();
         this.colorizedMessages = plugin.getColorizedMessages();
         this.authManager = plugin.getAuthManager();
@@ -182,6 +186,63 @@ public class TiAuthCommand extends Command {
                             colorizedMessages.admin.forceLogin.success
                                     .replace("{player}", player.getName())
                     );
+                });
+            }
+
+            case "forceregister" -> {
+                // /auth forceregister <игрок> <пароль>
+                if (!sender.hasPermission("tiauth.admin.commands.forceregister")) {
+                    utils.sendMessage(
+                            sender,
+                            colorizedMessages.noPermission
+                    );
+                    return;
+                }
+
+                if (args.length < 3) {
+                    utils.sendMessage(
+                            sender,
+                            colorizedMessages.admin.forceRegister.usage
+                    );
+                    return;
+                }
+
+                String playerName = args[1];
+                String password = args[2];
+
+                database.getAuthUserRepository().getUser(playerName.toLowerCase(Locale.ROOT), (user, success) -> {
+                    if (!success) {
+                        utils.sendMessage(
+                                sender,
+                                colorizedMessages.queryError
+                        );
+                        return;
+                    }
+
+                    if (user != null) {
+                        utils.sendMessage(
+                                sender,
+                                colorizedMessages.admin.forceRegister.alreadyRegistered
+                                        .replace("{player}", playerName)
+                        );
+                        return;
+                    }
+
+                    authManager.registerPlayer(playerName, password, null, success1 -> {
+                        if (!success1) {
+                            utils.sendMessage(
+                                    sender,
+                                    colorizedMessages.queryError
+                            );
+                            return;
+                        }
+
+                        utils.sendMessage(
+                                sender,
+                                colorizedMessages.admin.forceRegister.success
+                                        .replace("{player}", playerName)
+                        );
+                    });
                 });
             }
 
