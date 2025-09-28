@@ -71,7 +71,7 @@ public class AuthListener implements Listener {
         }
 
         if (premiumCache.isPremium(connection.getName())) {
-            connection.setOnlineMode(true)
+            connection.setOnlineMode(true);
             return;
         }
 
