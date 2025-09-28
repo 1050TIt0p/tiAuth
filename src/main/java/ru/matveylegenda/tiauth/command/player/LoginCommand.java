@@ -25,7 +25,7 @@ public class LoginCommand extends Command {
         if (!(sender instanceof ProxiedPlayer player)) {
             utils.sendMessage(
                     sender,
-                    colorizedMessages.onlyPlayer()
+                    colorizedMessages.onlyPlayer
             );
 
            return;
@@ -34,7 +34,7 @@ public class LoginCommand extends Command {
         if (args.length != 1) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().login().usage()
+                    colorizedMessages.player.login.usage
             );
 
             return;

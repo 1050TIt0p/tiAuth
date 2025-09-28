@@ -66,12 +66,12 @@ public class AuthManager {
         if (!password.equals(repeatPassword)) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().register().mismatch()
+                    colorizedMessages.player.register.mismatch
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
-                        player, colorizedMessages.player().dialog().notifications().mismatch()
+                        player, colorizedMessages.player.dialog.notifications.mismatch
                 );
             }
 
@@ -81,13 +81,13 @@ public class AuthManager {
         if (password.isEmpty()) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().checkPassword().passwordEmpty()
+                    colorizedMessages.player.checkPassword.passwordEmpty
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player().dialog().notifications().passwordEmpty()
+                        colorizedMessages.player.dialog.notifications.passwordEmpty
                 );
             }
 
@@ -98,7 +98,7 @@ public class AuthManager {
                 password.length() > mainConfig.auth.maxPasswordLength) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().checkPassword().invalidLength()
+                    colorizedMessages.player.checkPassword.invalidLength
                             .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
                             .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
             );
@@ -106,7 +106,7 @@ public class AuthManager {
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player().dialog().notifications().invalidLength()
+                        colorizedMessages.player.dialog.notifications.invalidLength
                                 .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
                                 .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
                 );
@@ -118,13 +118,13 @@ public class AuthManager {
         if (!passwordPattern.matcher(password).matches()) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().checkPassword().invalidPattern()
+                    colorizedMessages.player.checkPassword.invalidPattern
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player().dialog().notifications().invalidPattern()
+                        colorizedMessages.player.dialog.notifications.invalidPattern
                 );
             }
 
@@ -139,7 +139,7 @@ public class AuthManager {
             if (!success) {
                 utils.kickPlayer(
                         player,
-                        colorizedMessages.queryError()
+                        colorizedMessages.queryError
                 );
                 endProcess(player);
                 return;
@@ -148,7 +148,7 @@ public class AuthManager {
             if (user != null) {
                 utils.sendMessage(
                         player,
-                        colorizedMessages.player().register().alreadyRegistered()
+                        colorizedMessages.player.register.alreadyRegistered
                 );
                 endProcess(player);
                 return;
@@ -166,7 +166,7 @@ public class AuthManager {
                         if (!success1) {
                             utils.kickPlayer(
                                     player,
-                                    colorizedMessages.queryError()
+                                    colorizedMessages.queryError
                             );
                             endProcess(player);
                             return;
@@ -174,7 +174,7 @@ public class AuthManager {
 
                         utils.sendMessage(
                                 player,
-                                colorizedMessages.player().register().success()
+                                colorizedMessages.player.register.success
                         );
                         authCache.setAuthenticated(player.getName());
 
@@ -198,7 +198,7 @@ public class AuthManager {
             if (!success) {
                 utils.sendMessage(
                         player,
-                        colorizedMessages.queryError()
+                        colorizedMessages.queryError
                 );
                 endProcess(player);
                 return;
@@ -210,7 +210,7 @@ public class AuthManager {
             if (!hash.verifyPassword(password, hashedPassword)) {
                 utils.sendMessage(
                         player,
-                        colorizedMessages.player().checkPassword().wrongPassword()
+                        colorizedMessages.player.checkPassword.wrongPassword
                 );
                 endProcess(player);
                 return;
@@ -220,7 +220,7 @@ public class AuthManager {
                 if (!success1) {
                     utils.sendMessage(
                             player,
-                            colorizedMessages.queryError()
+                            colorizedMessages.queryError
                     );
                     endProcess(player);
                     return;
@@ -230,7 +230,7 @@ public class AuthManager {
 
                 utils.kickPlayer(
                         player,
-                        colorizedMessages.player().unregister().success()
+                        colorizedMessages.player.unregister.success
                 );
 
                 endProcess(player);
@@ -253,7 +253,7 @@ public class AuthManager {
         if (authCache.isAuthenticated(player.getName())) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().login().alreadyLogged()
+                    colorizedMessages.player.login.alreadyLogged
             );
             return;
         }
@@ -261,13 +261,13 @@ public class AuthManager {
         if (password.isEmpty()) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().checkPassword().passwordEmpty()
+                    colorizedMessages.player.checkPassword.passwordEmpty
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player().dialog().notifications().passwordEmpty()
+                        colorizedMessages.player.dialog.notifications.passwordEmpty
                 );
             }
 
@@ -282,7 +282,7 @@ public class AuthManager {
             if (!success) {
                 utils.kickPlayer(
                         player,
-                        colorizedMessages.queryError()
+                        colorizedMessages.queryError
                 );
                 endProcess(player);
                 return;
@@ -291,7 +291,7 @@ public class AuthManager {
             if (user == null) {
                 utils.sendMessage(
                         player,
-                        colorizedMessages.player().login().notRegistered()
+                        colorizedMessages.player.login.notRegistered
                 );
                 endProcess(player);
                 return;
@@ -306,7 +306,7 @@ public class AuthManager {
                 if (attempts >= mainConfig.auth.loginAttempts) {
                     utils.kickPlayer(
                             player,
-                            colorizedMessages.player().kick().tooManyAttempts()
+                            colorizedMessages.player.kick.tooManyAttempts
                     );
 
                     if (mainConfig.auth.banPlayer) {
@@ -320,14 +320,14 @@ public class AuthManager {
 
                 utils.sendMessage(
                         player,
-                        colorizedMessages.player().login().wrongPassword()
+                        colorizedMessages.player.login.wrongPassword
                                 .replace("{attempts}", String.valueOf(mainConfig.auth.loginAttempts - attempts))
                 );
 
                 if (supportDialog(player)) {
                     showLoginDialog(
                             player,
-                            colorizedMessages.player().dialog().notifications().wrongPassword()
+                            colorizedMessages.player.dialog.notifications.wrongPassword
                                     .replace("{attempts}", String.valueOf(mainConfig.auth.loginAttempts - attempts))
                     );
                 }
@@ -338,7 +338,7 @@ public class AuthManager {
             loginPlayer(player, () -> {
                 utils.sendMessage(
                         player,
-                        colorizedMessages.player().login().success()
+                        colorizedMessages.player.login.success
                 );
 
                 loginAttempts.remove(player.getName());
@@ -365,13 +365,13 @@ public class AuthManager {
         if (oldPassword.isEmpty() || newPassword.isEmpty()) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().checkPassword().passwordEmpty()
+                    colorizedMessages.player.checkPassword.passwordEmpty
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player().dialog().notifications().passwordEmpty()
+                        colorizedMessages.player.dialog.notifications.passwordEmpty
                 );
             }
 
@@ -381,7 +381,7 @@ public class AuthManager {
         if (newPassword.length() < mainConfig.auth.minPasswordLength || newPassword.length() > mainConfig.auth.maxPasswordLength) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().checkPassword().invalidLength()
+                    colorizedMessages.player.checkPassword.invalidLength
                             .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
                             .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
             );
@@ -389,7 +389,7 @@ public class AuthManager {
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player().dialog().notifications().invalidLength()
+                        colorizedMessages.player.dialog.notifications.invalidLength
                                 .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
                                 .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
                 );
@@ -401,13 +401,13 @@ public class AuthManager {
         if (!passwordPattern.matcher(newPassword).matches()) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().checkPassword().invalidPattern()
+                    colorizedMessages.player.checkPassword.invalidPattern
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player().dialog().notifications().invalidPattern()
+                        colorizedMessages.player.dialog.notifications.invalidPattern
                 );
             }
 
@@ -422,7 +422,7 @@ public class AuthManager {
             if (!success) {
                 utils.sendMessage(
                         player,
-                        colorizedMessages.queryError()
+                        colorizedMessages.queryError
                 );
                 endProcess(player);
                 return;
@@ -434,7 +434,7 @@ public class AuthManager {
             if (!hash.verifyPassword(oldPassword, hashedPassword)) {
                 utils.sendMessage(
                         player,
-                        colorizedMessages.player().checkPassword().wrongPassword()
+                        colorizedMessages.player.checkPassword.wrongPassword
                 );
                 endProcess(player);
                 return;
@@ -444,7 +444,7 @@ public class AuthManager {
                 if (!success1) {
                     utils.sendMessage(
                             player,
-                            colorizedMessages.queryError()
+                            colorizedMessages.queryError
                     );
                     endProcess(player);
                     return;
@@ -452,7 +452,7 @@ public class AuthManager {
 
                 utils.sendMessage(
                         player,
-                        colorizedMessages.player().changePassword().success()
+                        colorizedMessages.player.changePassword.success
                 );
 
                 endProcess(player);
@@ -491,7 +491,7 @@ public class AuthManager {
             if (!success) {
                 utils.sendMessage(
                         player,
-                        colorizedMessages.queryError()
+                        colorizedMessages.queryError
                 );
                 endProcess(player);
                 return;
@@ -502,7 +502,7 @@ public class AuthManager {
 
                 utils.sendMessage(
                         player,
-                        colorizedMessages.player().premium().disabled()
+                        colorizedMessages.player.premium.disabled
                 );
                 endProcess(player);
                 return;
@@ -512,7 +512,7 @@ public class AuthManager {
 
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().premium().enabled()
+                    colorizedMessages.player.premium.enabled
             );
 
             endProcess(player);
@@ -529,7 +529,7 @@ public class AuthManager {
                 if (!success) {
                     utils.kickPlayer(
                             player,
-                            colorizedMessages.queryError()
+                            colorizedMessages.queryError
                     );
                     return;
                 }
@@ -537,7 +537,7 @@ public class AuthManager {
                 if (user != null && !player.getName().equals(user.getRealName())) {
                     utils.kickPlayer(
                             player,
-                            colorizedMessages.player().kick().realname()
+                            colorizedMessages.player.kick.realname
                                     .replace("{realname}", user.getRealName())
                                     .replace("{name}", player.getName())
                     );
@@ -562,8 +562,8 @@ public class AuthManager {
                 }
 
                 String reminderMessage = (user != null)
-                        ? colorizedMessages.player().reminder().login()
-                        : colorizedMessages.player().reminder().register();
+                        ? colorizedMessages.player.reminder.login
+                        : colorizedMessages.player.reminder.register;
 
                 taskManager.startAuthTimeoutTask(player);
                 taskManager.startAuthReminderTask(player, reminderMessage);
@@ -592,36 +592,36 @@ public class AuthManager {
             if (!success) {
                 utils.kickPlayer(
                         player,
-                        colorizedMessages.queryError()
+                        colorizedMessages.queryError
                 );
                 return;
             }
 
             Dialog dialog;
             if (user != null) {
-                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(colorizedMessages.player().dialog().login().title()))
+                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(colorizedMessages.player.dialog.login.title))
                         .inputs(
                                 List.of(
-                                        new TextInput("password", TextComponent.fromLegacy(colorizedMessages.player().dialog().login().passwordField()))
+                                        new TextInput("password", TextComponent.fromLegacy(colorizedMessages.player.dialog.login.passwordField))
                                 )
                         ))
                         .action(
                                 new ActionButton(
-                                        TextComponent.fromLegacy(colorizedMessages.player().dialog().login().confirmButton()),
+                                        TextComponent.fromLegacy(colorizedMessages.player.dialog.login.confirmButton),
                                         new CustomClickAction("tiauth_login")
                                 )
                         );
             } else {
-                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(colorizedMessages.player().dialog().register().title()))
+                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(colorizedMessages.player.dialog.register.title))
                         .inputs(
                                 List.of(
-                                        new TextInput("password", TextComponent.fromLegacy(colorizedMessages.player().dialog().register().passwordField())),
-                                        new TextInput("repeatPassword", TextComponent.fromLegacy(colorizedMessages.player().dialog().register().repeatPasswordField()))
+                                        new TextInput("password", TextComponent.fromLegacy(colorizedMessages.player.dialog.register.passwordField)),
+                                        new TextInput("repeatPassword", TextComponent.fromLegacy(colorizedMessages.player.dialog.register.repeatPasswordField))
                                 )
                         ))
                         .action(
                                 new ActionButton(
-                                        TextComponent.fromLegacy(colorizedMessages.player().dialog().register().confirmButton()),
+                                        TextComponent.fromLegacy(colorizedMessages.player.dialog.register.confirmButton),
                                         new CustomClickAction("tiauth_register")
                                 )
                         );
@@ -670,7 +670,7 @@ public class AuthManager {
 
     private boolean beginProcess(ProxiedPlayer player) {
         if (!inProcess.add(player.getName())) {
-            utils.sendMessage(player, colorizedMessages.processing());
+            utils.sendMessage(player, colorizedMessages.processing);
             return false;
         }
 

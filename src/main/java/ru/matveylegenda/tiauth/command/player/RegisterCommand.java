@@ -25,7 +25,7 @@ public class RegisterCommand extends Command {
         if (!(sender instanceof ProxiedPlayer player)) {
             utils.sendMessage(
                     sender,
-                    colorizedMessages.onlyPlayer()
+                    colorizedMessages.onlyPlayer
             );
 
            return;
@@ -34,7 +34,7 @@ public class RegisterCommand extends Command {
         if (args.length != 2) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().register().usage()
+                    colorizedMessages.player.register.usage
             );
 
             return;

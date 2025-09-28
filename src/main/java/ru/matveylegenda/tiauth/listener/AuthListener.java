@@ -55,7 +55,7 @@ public class AuthListener implements Listener {
         if (!nickPattern.matcher(connection.getName()).matches()) {
             utils.kickPlayer(
                     event,
-                    colorizedMessages.player().kick().invalidNickPattern()
+                    colorizedMessages.player.kick.invalidNickPattern
             );
             return;
         }
@@ -64,7 +64,7 @@ public class AuthListener implements Listener {
         if (banCache.isBanned(ip)) {
             utils.kickPlayer(
                     event,
-                    colorizedMessages.player().kick().ban()
+                    colorizedMessages.player.kick.ban
                             .replace("{time}", String.valueOf(banCache.getRemainingSeconds(ip)))
             );
             return;
@@ -81,7 +81,7 @@ public class AuthListener implements Listener {
         if (count >= mainConfig.maxOnlineAccountsPerIp) {
             utils.kickPlayer(
                     event,
-                    colorizedMessages.player().kick().ipLimitOnlineReached()
+                    colorizedMessages.player.kick.ipLimitOnlineReached
             );
             return;
         }
@@ -92,7 +92,7 @@ public class AuthListener implements Listener {
             if (!success) {
                 utils.kickPlayer(
                         event,
-                        colorizedMessages.queryError()
+                        colorizedMessages.queryError
                 );
 
                 event.completeIntent(plugin);
@@ -104,7 +104,7 @@ public class AuthListener implements Listener {
                     if (count1 >= mainConfig.maxRegisteredAccountsPerIp) {
                         utils.kickPlayer(
                                 event,
-                                colorizedMessages.player().kick().ipLimitRegisteredReached()
+                                colorizedMessages.player.kick.ipLimitRegisteredReached
                         );
                     }
                     event.completeIntent(plugin);
@@ -139,7 +139,7 @@ public class AuthListener implements Listener {
                 !event.getTarget().getName().equals(mainConfig.servers.auth)) {
             utils.kickPlayer(
                     player,
-                    colorizedMessages.player().kick().notAuth()
+                    colorizedMessages.player.kick.notAuth
             );
         }
     }

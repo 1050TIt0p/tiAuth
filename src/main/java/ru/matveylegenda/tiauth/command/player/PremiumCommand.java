@@ -25,7 +25,7 @@ public class PremiumCommand extends Command {
         if (!(sender instanceof ProxiedPlayer player)) {
             utils.sendMessage(
                     sender,
-                    colorizedMessages.onlyPlayer()
+                    colorizedMessages.onlyPlayer
             );
 
            return;

@@ -31,7 +31,7 @@ public class LogoutCommand extends Command {
         if (!(sender instanceof ProxiedPlayer player)) {
             utils.sendMessage(
                     sender,
-                    colorizedMessages.onlyPlayer()
+                    colorizedMessages.onlyPlayer
             );
 
             return;
@@ -44,7 +44,7 @@ public class LogoutCommand extends Command {
         if (premiumCache.isPremium(player.getName())) {
             utils.sendMessage(
                     sender,
-                    colorizedMessages.player().logout().logoutByPremium()
+                    colorizedMessages.player.logout.logoutByPremium
             );
 
             return;

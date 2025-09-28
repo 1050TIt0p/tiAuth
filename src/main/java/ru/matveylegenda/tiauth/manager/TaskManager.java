@@ -47,7 +47,7 @@ public class TaskManager {
 
             utils.kickPlayer(
                     player,
-                    colorizedMessages.player().kick().timeout()
+                    colorizedMessages.player.kick.timeout
             );
         }, mainConfig.auth.timeoutSeconds, TimeUnit.SECONDS);
 
@@ -105,8 +105,8 @@ public class TaskManager {
         BossBar bossBar = new BossBar(barId, 0);
         bossBar.setTitle(
                 TextComponent.fromLegacy(
-                        colorizedMessages.player().bossBar().message()
-                                .replace("{prefix}", colorizedMessages.prefix())
+                        colorizedMessages.player.bossBar.message
+                                .replace("{prefix}", colorizedMessages.prefix)
                                 .replace("{time}", String.valueOf(counter))
                 )
         );
@@ -124,8 +124,8 @@ public class TaskManager {
 
         BossBar updateTitle = new BossBar(barId, 3);
         updateTitle.setTitle(TextComponent.fromLegacy(
-                colorizedMessages.player().bossBar().message()
-                        .replace("{prefix}", colorizedMessages.prefix())
+                colorizedMessages.player.bossBar.message
+                        .replace("{prefix}", colorizedMessages.prefix)
                         .replace("{time}", String.valueOf(counter))
         ));
         player.unsafe().sendPacket(updateTitle);
@@ -134,13 +134,13 @@ public class TaskManager {
     private void sendTitle(ProxiedPlayer player, int counter) {
         Title title = ProxyServer.getInstance().createTitle();
         title.title(TextComponent.fromLegacy(
-                colorizedMessages.player().title().title()
-                        .replace("{prefix}", colorizedMessages.prefix())
+                colorizedMessages.player.title.title
+                        .replace("{prefix}", colorizedMessages.prefix)
                         .replace("{time}", String.valueOf(counter))
         ));
         title.subTitle(TextComponent.fromLegacy(
-                colorizedMessages.player().title().subTitle()
-                        .replace("{prefix}", colorizedMessages.prefix())
+                colorizedMessages.player.title.subTitle
+                        .replace("{prefix}", colorizedMessages.prefix)
                         .replace("{time}", String.valueOf(counter))
         ));
         title.fadeIn(0);
@@ -152,8 +152,8 @@ public class TaskManager {
 
     private void sendActionBar(ProxiedPlayer player, int counter) {
         player.sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(
-                colorizedMessages.player().actionBar().message()
-                        .replace("{prefix}", colorizedMessages.prefix())
+                colorizedMessages.player.actionBar.message
+                        .replace("{prefix}", colorizedMessages.prefix)
                         .replace("{time}", String.valueOf(counter))
         ));
     }

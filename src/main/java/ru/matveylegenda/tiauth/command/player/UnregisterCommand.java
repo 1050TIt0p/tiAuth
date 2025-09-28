@@ -25,7 +25,7 @@ public class UnregisterCommand extends Command {
         if (!(sender instanceof ProxiedPlayer player)) {
             utils.sendMessage(
                     sender,
-                    colorizedMessages.onlyPlayer()
+                    colorizedMessages.onlyPlayer
             );
 
             return;
@@ -34,7 +34,7 @@ public class UnregisterCommand extends Command {
         if (args.length != 1) {
             utils.sendMessage(
                     player,
-                    colorizedMessages.player().unregister().usage()
+                    colorizedMessages.player.unregister.usage
             );
 
             return;

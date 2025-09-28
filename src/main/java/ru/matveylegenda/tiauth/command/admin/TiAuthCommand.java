@@ -37,7 +37,7 @@ public class TiAuthCommand extends Command {
         if (args.length == 0) {
             utils.sendMessage(
                     sender,
-                    colorizedMessages.admin().usage()
+                    colorizedMessages.admin.usage
             );
             return;
         }
@@ -47,16 +47,16 @@ public class TiAuthCommand extends Command {
                 if (!sender.hasPermission("tiauth.admin.commands.reload")) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission()
+                            colorizedMessages.noPermission
                     );
                     return;
                 }
 
                 plugin.loadConfigs();
-                plugin.setColorizedMessages(ColorizedMessages.load(plugin.getMessagesConfig()));
+                colorizedMessages.load(plugin.getMessagesConfig());
                 utils.sendMessage(
                         sender,
-                        colorizedMessages.admin().config().reload()
+                        colorizedMessages.admin.config.reload
                 );
             }
 
@@ -64,7 +64,7 @@ public class TiAuthCommand extends Command {
                 if (!sender.hasPermission("tiauth.admin.commands.unregister")) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission()
+                            colorizedMessages.noPermission
                     );
                     return;
                 }
@@ -72,7 +72,7 @@ public class TiAuthCommand extends Command {
                 if (args.length < 2) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.admin().unregister().usage()
+                            colorizedMessages.admin.unregister.usage
                     );
                     return;
                 }
@@ -82,7 +82,7 @@ public class TiAuthCommand extends Command {
                     if (!success) {
                         utils.sendMessage(
                                 sender,
-                                colorizedMessages.queryError()
+                                colorizedMessages.queryError
                         );
                         return;
                     }
@@ -93,13 +93,13 @@ public class TiAuthCommand extends Command {
 
                         utils.kickPlayer(
                                 player,
-                                colorizedMessages.player().unregister().success()
+                                colorizedMessages.player.unregister.success
                         );
                     }
 
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.admin().unregister().success()
+                            colorizedMessages.admin.unregister.success
                                     .replace("{player}", playerName)
                     );
                 });
@@ -109,7 +109,7 @@ public class TiAuthCommand extends Command {
                 if (!sender.hasPermission("tiauth.admin.commands.changepassword")) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission()
+                            colorizedMessages.noPermission
                     );
                     return;
                 }
@@ -117,7 +117,7 @@ public class TiAuthCommand extends Command {
                 if (args.length < 3) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.admin().changePassword().usage()
+                            colorizedMessages.admin.changePassword.usage
                     );
                     return;
                 }
@@ -128,14 +128,14 @@ public class TiAuthCommand extends Command {
                     if (!success) {
                         utils.sendMessage(
                                 sender,
-                                colorizedMessages.queryError()
+                                colorizedMessages.queryError
                         );
                         return;
                     }
 
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.admin().changePassword().success()
+                            colorizedMessages.admin.changePassword.success
                                     .replace("{player}", playerName)
                     );
                 });
@@ -145,7 +145,7 @@ public class TiAuthCommand extends Command {
                 if (!sender.hasPermission("tiauth.admin.commands.forcelogin")) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission()
+                            colorizedMessages.noPermission
                     );
                     return;
                 }
@@ -153,7 +153,7 @@ public class TiAuthCommand extends Command {
                 if (args.length < 2) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.admin().forceLogin().usage()
+                            colorizedMessages.admin.forceLogin.usage
                     );
                     return;
                 }
@@ -162,7 +162,7 @@ public class TiAuthCommand extends Command {
                 if (player == null) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.playerNotFound()
+                            colorizedMessages.playerNotFound
                     );
                     return;
                 }
@@ -170,7 +170,7 @@ public class TiAuthCommand extends Command {
                 if (authCache.isAuthenticated(player.getName())) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.admin().forceLogin().isAuthenticated()
+                            colorizedMessages.admin.forceLogin.isAuthenticated
                                     .replace("{player}", player.getName())
                     );
                     return;
@@ -179,7 +179,7 @@ public class TiAuthCommand extends Command {
                 authManager.loginPlayer(player, () -> {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.admin().forceLogin().success()
+                            colorizedMessages.admin.forceLogin.success
                                     .replace("{player}", player.getName())
                     );
                 });
@@ -189,7 +189,7 @@ public class TiAuthCommand extends Command {
                 if (!sender.hasPermission("tiauth.admin.commands.migrate")) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission()
+                            colorizedMessages.noPermission
                     );
                     return;
                 }
@@ -197,7 +197,7 @@ public class TiAuthCommand extends Command {
                 if (args.length < 3) {
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.admin().migrate().usage()
+                            colorizedMessages.admin.migrate.usage
                     );
                     return;
                 }
@@ -214,7 +214,7 @@ public class TiAuthCommand extends Command {
                         if (args.length < 4) {
                             utils.sendMessage(
                                     sender,
-                                    colorizedMessages.admin().migrate().usage()
+                                    colorizedMessages.admin.migrate.usage
                             );
                             return;
                         }
@@ -226,7 +226,7 @@ public class TiAuthCommand extends Command {
                         if (args.length < 6) {
                             utils.sendMessage(
                                     sender,
-                                    colorizedMessages.admin().migrate().usage()
+                                    colorizedMessages.admin.migrate.usage
                             );
                             return;
                         }
@@ -244,7 +244,7 @@ public class TiAuthCommand extends Command {
                         if (args.length < 8) {
                             utils.sendMessage(
                                     sender,
-                                    colorizedMessages.admin().migrate().usage()
+                                    colorizedMessages.admin.migrate.usage
                             );
                             return;
                         }
@@ -265,14 +265,14 @@ public class TiAuthCommand extends Command {
                     if (!success) {
                         utils.sendMessage(
                                 sender,
-                                colorizedMessages.admin().migrate().error()
+                                colorizedMessages.admin.migrate.error
                         );
                         return;
                     }
 
                     utils.sendMessage(
                             sender,
-                            colorizedMessages.admin().migrate().success()
+                            colorizedMessages.admin.migrate.success
                     );
                 });
             }

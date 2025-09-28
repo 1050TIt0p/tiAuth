@@ -41,8 +41,7 @@ public final class TiAuth extends Plugin {
     private SessionCache sessionCache;
     private BanCache banCache;
     private Utils utils;
-    @Setter
-    private ColorizedMessages colorizedMessages;
+    private final ColorizedMessages colorizedMessages = new ColorizedMessages();
     private TaskManager taskManager;
     private AuthManager authManager;
 
@@ -56,7 +55,7 @@ public final class TiAuth extends Plugin {
         initializeDatabase();
         startLimboServer();
         Utils.initializeColorizer(mainConfig.serializer);
-        colorizedMessages = ColorizedMessages.load(messagesConfig);
+        colorizedMessages.load(messagesConfig);
         utils = new Utils(colorizedMessages);
         sessionCache = new SessionCache(mainConfig.auth.sessionLifetimeMinutes);
         banCache = new BanCache(mainConfig.auth.banTime);
