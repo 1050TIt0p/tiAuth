@@ -154,7 +154,6 @@ public class AuthManager {
                 return;
             }
 
-            Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
             registerPlayer(player.getName(), password, player.getAddress().getAddress().getHostAddress(), success1 -> {
                 if (!success1) {
                     utils.kickPlayer(
