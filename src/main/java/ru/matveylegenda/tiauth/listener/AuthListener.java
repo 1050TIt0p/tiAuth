@@ -10,11 +10,11 @@ import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.BanCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
-import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.manager.TaskManager;
 import ru.matveylegenda.tiauth.util.Utils;
+import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
 
 import java.util.regex.Pattern;
 
@@ -25,10 +25,10 @@ public class AuthListener implements Listener {
     private final PremiumCache premiumCache;
     private final BanCache banCache;
     private final MainConfig mainConfig;
-    private final MessagesConfig messagesConfig;
     private final AuthManager authManager;
     private final TaskManager taskManager;
     private final Utils utils;
+    private final ColorizedMessages colorizedMessages;
     private final Pattern nickPattern;
 
     public AuthListener(TiAuth plugin) {
@@ -38,10 +38,10 @@ public class AuthListener implements Listener {
         this.premiumCache = plugin.getPremiumCache();
         this.banCache = plugin.getBanCache();
         this.mainConfig = plugin.getMainConfig();
-        this.messagesConfig = plugin.getMessagesConfig();
         this.authManager = plugin.getAuthManager();
         this.taskManager = plugin.getTaskManager();
         this.utils = plugin.getUtils();
+        this.colorizedMessages = plugin.getColorizedMessages();
         this.nickPattern = Pattern.compile(mainConfig.nickPattern);
     }
 
@@ -52,7 +52,7 @@ public class AuthListener implements Listener {
         if (!nickPattern.matcher(connection.getName()).matches()) {
             utils.kickPlayer(
                     event,
-                    messagesConfig.player.kick.invalidNickPattern
+                    colorizedMessages.player().kick().invalidNickPattern()
             );
             return;
         }
@@ -60,7 +60,7 @@ public class AuthListener implements Listener {
         if (banCache.isBanned(connection.getAddress().getAddress().getHostAddress())) {
             utils.kickPlayer(
                     event,
-                    messagesConfig.player.kick.ban
+                    colorizedMessages.player().kick().ban()
                             .replace("{time}", String.valueOf(banCache.getRemainingSeconds(connection.getAddress().getAddress().getHostAddress())))
             );
             return;
@@ -78,7 +78,7 @@ public class AuthListener implements Listener {
             if (!success) {
                 utils.kickPlayer(
                         event,
-                        messagesConfig.queryError
+                        colorizedMessages.queryError()
                 );
 
                 event.completeIntent(plugin);
@@ -114,7 +114,7 @@ public class AuthListener implements Listener {
                 !event.getTarget().getName().equals(mainConfig.servers.auth)) {
             utils.kickPlayer(
                     player,
-                    messagesConfig.player.kick.notAuth
+                    colorizedMessages.player().kick().notAuth()
             );
         }
     }

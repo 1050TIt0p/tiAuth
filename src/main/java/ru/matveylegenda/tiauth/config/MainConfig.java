@@ -8,10 +8,18 @@ import ru.matveylegenda.tiauth.database.DatabaseType;
 import ru.matveylegenda.tiauth.hash.HashType;
 import ru.matveylegenda.tiauth.util.BarColor;
 import ru.matveylegenda.tiauth.util.BarStyle;
+import ru.matveylegenda.tiauth.util.colorizer.Serializer;
 
 import java.util.List;
 
 public class MainConfig extends YamlSerializable {
+    @Comment({
+            @CommentValue(" Доступные варианты:"),
+            @CommentValue(" LEGACY - \"&fПример &#650dbdтекста\""),
+            @CommentValue(" MINIMESSAGE - \"<white>Пример</white> <color:#650dbd>текста</color>\" (https://webui.advntr.dev/)")
+    })
+    public Serializer serializer = Serializer.LEGACY;
+
     @Comment({
             @CommentValue(" Доступные языки: RU, EN")
     })

@@ -31,6 +31,9 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
     implementation("net.elytrium:serializer:1.1.1")
     implementation("com.github.1050TIt0p:NanoLimbo:1.9.9")
+    implementation("net.kyori:adventure-api:4.24.0")
+    implementation("net.kyori:adventure-text-minimessage:4.24.0")
+    implementation("net.kyori:adventure-text-serializer-legacy:4.24.0")
 }
 
 tasks.shadowJar {
@@ -49,6 +52,7 @@ tasks.shadowJar {
     relocate("net.kyori", "ru.matveylegenda.tiauth.thirdparty.net.kyori")
     relocate("io.leangen.geantyref", "ru.matveylegenda.tiauth.thirdparty.io.leangen.geantyref")
     relocate("com.grack.nanojson", "ru.matveylegenda.tiauth.thirdparty.com.grack.nanojson")
+    relocate("net.kyori", "ru.matveylegenda.tiauth.thirdparty.net.kyori")
 }
 
 def targetJavaVersion = 17

@@ -1,6 +1,7 @@
 package ru.matveylegenda.tiauth;
 
 import lombok.Getter;
+import lombok.Setter;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
@@ -20,6 +21,7 @@ import ru.matveylegenda.tiauth.listener.DialogListener;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.manager.TaskManager;
 import ru.matveylegenda.tiauth.util.Utils;
+import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
 import ua.nanit.limbo.server.LimboServer;
 
 import java.io.File;
@@ -39,6 +41,8 @@ public final class TiAuth extends Plugin {
     private SessionCache sessionCache;
     private BanCache banCache;
     private Utils utils;
+    @Setter
+    private ColorizedMessages colorizedMessages;
     private TaskManager taskManager;
     private AuthManager authManager;
 
@@ -51,7 +55,9 @@ public final class TiAuth extends Plugin {
         loadConfigs();
         initializeDatabase();
         startLimboServer();
-        utils = new Utils(messagesConfig);
+        Utils.initializeColorizer(mainConfig.serializer);
+        colorizedMessages = ColorizedMessages.load(messagesConfig);
+        utils = new Utils(colorizedMessages);
         sessionCache = new SessionCache(mainConfig.auth.sessionLifetimeMinutes);
         banCache = new BanCache(mainConfig.auth.banTime);
         taskManager = new TaskManager(this);

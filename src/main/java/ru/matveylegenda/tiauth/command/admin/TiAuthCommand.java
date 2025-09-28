@@ -6,18 +6,18 @@ import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
-import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.DatabaseMigrator;
 import ru.matveylegenda.tiauth.database.DatabaseType;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
+import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
 
 import java.io.File;
 
 public class TiAuthCommand extends Command {
     private final TiAuth plugin;
-    private final MessagesConfig messagesConfig;
     private final Utils utils;
+    private final ColorizedMessages colorizedMessages;
     private final AuthManager authManager;
     private final AuthCache authCache;
     private final SessionCache sessionCache;
@@ -25,8 +25,8 @@ public class TiAuthCommand extends Command {
     public TiAuthCommand(TiAuth plugin, String name, String... aliases) {
         super(name, null, aliases);
         this.plugin = plugin;
-        this.messagesConfig = plugin.getMessagesConfig();
         this.utils = plugin.getUtils();
+        this.colorizedMessages = plugin.getColorizedMessages();
         this.authManager = plugin.getAuthManager();
         this.authCache = plugin.getAuthCache();
         this.sessionCache = plugin.getSessionCache();
@@ -37,7 +37,7 @@ public class TiAuthCommand extends Command {
         if (args.length == 0) {
             utils.sendMessage(
                     sender,
-                    messagesConfig.admin.usage
+                    colorizedMessages.admin().usage()
             );
             return;
         }
@@ -47,15 +47,16 @@ public class TiAuthCommand extends Command {
                 if (!sender.hasPermission("tiauth.admin.commands.reload")) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.noPermission
+                            colorizedMessages.noPermission()
                     );
                     return;
                 }
 
                 plugin.loadConfigs();
+                plugin.setColorizedMessages(ColorizedMessages.load(plugin.getMessagesConfig()));
                 utils.sendMessage(
                         sender,
-                        messagesConfig.admin.config.reload
+                        colorizedMessages.admin().config().reload()
                 );
             }
 
@@ -63,7 +64,7 @@ public class TiAuthCommand extends Command {
                 if (!sender.hasPermission("tiauth.admin.commands.unregister")) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.noPermission
+                            colorizedMessages.noPermission()
                     );
                     return;
                 }
@@ -71,7 +72,7 @@ public class TiAuthCommand extends Command {
                 if (args.length < 2) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.admin.unregister.usage
+                            colorizedMessages.admin().unregister().usage()
                     );
                     return;
                 }
@@ -81,7 +82,7 @@ public class TiAuthCommand extends Command {
                     if (!success) {
                         utils.sendMessage(
                                 sender,
-                                messagesConfig.queryError
+                                colorizedMessages.queryError()
                         );
                         return;
                     }
@@ -92,13 +93,13 @@ public class TiAuthCommand extends Command {
 
                         utils.kickPlayer(
                                 player,
-                                messagesConfig.player.unregister.success
+                                colorizedMessages.player().unregister().success()
                         );
                     }
 
                     utils.sendMessage(
                             sender,
-                            messagesConfig.admin.unregister.success
+                            colorizedMessages.admin().unregister().success()
                                     .replace("{player}", playerName)
                     );
                 });
@@ -108,7 +109,7 @@ public class TiAuthCommand extends Command {
                 if (!sender.hasPermission("tiauth.admin.commands.changepassword")) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.noPermission
+                            colorizedMessages.noPermission()
                     );
                     return;
                 }
@@ -116,7 +117,7 @@ public class TiAuthCommand extends Command {
                 if (args.length < 3) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.admin.changePassword.usage
+                            colorizedMessages.admin().changePassword().usage()
                     );
                     return;
                 }
@@ -127,14 +128,14 @@ public class TiAuthCommand extends Command {
                     if (!success) {
                         utils.sendMessage(
                                 sender,
-                                messagesConfig.queryError
+                                colorizedMessages.queryError()
                         );
                         return;
                     }
 
                     utils.sendMessage(
                             sender,
-                            messagesConfig.admin.changePassword.success
+                            colorizedMessages.admin().changePassword().success()
                                     .replace("{player}", playerName)
                     );
                 });
@@ -144,7 +145,7 @@ public class TiAuthCommand extends Command {
                 if (!sender.hasPermission("tiauth.admin.commands.forcelogin")) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.noPermission
+                            colorizedMessages.noPermission()
                     );
                     return;
                 }
@@ -152,7 +153,7 @@ public class TiAuthCommand extends Command {
                 if (args.length < 2) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.admin.forceLogin.usage
+                            colorizedMessages.admin().forceLogin().usage()
                     );
                     return;
                 }
@@ -161,7 +162,7 @@ public class TiAuthCommand extends Command {
                 if (player == null) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.playerNotFound
+                            colorizedMessages.playerNotFound()
                     );
                     return;
                 }
@@ -169,7 +170,7 @@ public class TiAuthCommand extends Command {
                 if (authCache.isAuthenticated(player.getName())) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.admin.forceLogin.isAuthenticated
+                            colorizedMessages.admin().forceLogin().isAuthenticated()
                                     .replace("{player}", player.getName())
                     );
                     return;
@@ -178,7 +179,7 @@ public class TiAuthCommand extends Command {
                 authManager.loginPlayer(player, () -> {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.admin.forceLogin.success
+                            colorizedMessages.admin().forceLogin().success()
                                     .replace("{player}", player.getName())
                     );
                 });
@@ -188,7 +189,7 @@ public class TiAuthCommand extends Command {
                 if (!sender.hasPermission("tiauth.admin.commands.migrate")) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.noPermission
+                            colorizedMessages.noPermission()
                     );
                     return;
                 }
@@ -196,7 +197,7 @@ public class TiAuthCommand extends Command {
                 if (args.length < 3) {
                     utils.sendMessage(
                             sender,
-                            messagesConfig.admin.migrate.usage
+                            colorizedMessages.admin().migrate().usage()
                     );
                     return;
                 }
@@ -213,7 +214,7 @@ public class TiAuthCommand extends Command {
                         if (args.length < 4) {
                             utils.sendMessage(
                                     sender,
-                                    messagesConfig.admin.migrate.usage
+                                    colorizedMessages.admin().migrate().usage()
                             );
                             return;
                         }
@@ -225,7 +226,7 @@ public class TiAuthCommand extends Command {
                         if (args.length < 6) {
                             utils.sendMessage(
                                     sender,
-                                    messagesConfig.admin.migrate.usage
+                                    colorizedMessages.admin().migrate().usage()
                             );
                             return;
                         }
@@ -243,7 +244,7 @@ public class TiAuthCommand extends Command {
                         if (args.length < 8) {
                             utils.sendMessage(
                                     sender,
-                                    messagesConfig.admin.migrate.usage
+                                    colorizedMessages.admin().migrate().usage()
                             );
                             return;
                         }
@@ -264,14 +265,14 @@ public class TiAuthCommand extends Command {
                     if (!success) {
                         utils.sendMessage(
                                 sender,
-                                messagesConfig.admin.migrate.error
+                                colorizedMessages.admin().migrate().error()
                         );
                         return;
                     }
 
                     utils.sendMessage(
                             sender,
-                            messagesConfig.admin.migrate.success
+                            colorizedMessages.admin().migrate().success()
                     );
                 });
             }

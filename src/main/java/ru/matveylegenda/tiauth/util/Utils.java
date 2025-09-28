@@ -1,47 +1,27 @@
 package ru.matveylegenda.tiauth.util;
 
-import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PreLoginEvent;
-import ru.matveylegenda.tiauth.config.MessagesConfig;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static net.md_5.bungee.api.ChatColor.COLOR_CHAR;
+import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
+import ru.matveylegenda.tiauth.util.colorizer.Colorizer;
+import ru.matveylegenda.tiauth.util.colorizer.Serializer;
+import ru.matveylegenda.tiauth.util.colorizer.impl.LegacyColorizer;
+import ru.matveylegenda.tiauth.util.colorizer.impl.MiniMessageColorizer;
 
 public class Utils {
-    private final MessagesConfig messagesConfig;
-    private static final Pattern HEX_PATTERN = Pattern.compile("&#([a-fA-F\\d]{6})");
+    private final ColorizedMessages colorizedMessages;
+    public static Colorizer COLORIZER;
 
-    public Utils(MessagesConfig messagesConfig) {
-        this.messagesConfig = messagesConfig;
+    public Utils(ColorizedMessages colorizedMessages) {
+        this.colorizedMessages = colorizedMessages;
     }
 
-    public static String colorize(String message) {
-        Matcher matcher = HEX_PATTERN.matcher(message);
-        StringBuilder builder = new StringBuilder(message.length() + 4 * 8);
-        while (matcher.find()) {
-            String group = matcher.group(1);
-            matcher.appendReplacement(builder,
-                    COLOR_CHAR + "x" +
-                            COLOR_CHAR + group.charAt(0) +
-                            COLOR_CHAR + group.charAt(1) +
-                            COLOR_CHAR + group.charAt(2) +
-                            COLOR_CHAR + group.charAt(3) +
-                            COLOR_CHAR + group.charAt(4) +
-                            COLOR_CHAR + group.charAt(5));
-        }
-        message = matcher.appendTail(builder).toString();
-
-        return ChatColor.translateAlternateColorCodes('&', message);
-    }
-
-    public static BaseComponent colorizeComponent(String message) {
-        return TextComponent.fromLegacy(colorize(message));
+    public static void initializeColorizer(Serializer serializer) {
+        COLORIZER = switch (serializer) {
+            case LEGACY -> new LegacyColorizer();
+            case MINIMESSAGE -> new MiniMessageColorizer();
+        };
     }
 
     public void sendMessage(CommandSender sender, String message) {
@@ -49,21 +29,15 @@ public class Utils {
             return;
         }
 
-        sender.sendMessage(
-                colorize(message.replace("{prefix}", messagesConfig.prefix))
-        );
+        sender.sendMessage(message.replace("{prefix}", colorizedMessages.prefix()));
     }
 
     public void kickPlayer(ProxiedPlayer player, String message) {
-        player.disconnect(
-                colorize(message.replace("{prefix}", messagesConfig.prefix))
-        );
+        player.disconnect(message.replace("{prefix}", colorizedMessages.prefix()));
     }
 
     public void kickPlayer(PreLoginEvent event, String message) {
-        event.setReason(
-                colorizeComponent(message.replace("{prefix}", messagesConfig.prefix))
-        );
+        event.setCancelReason(message.replace("{prefix}", colorizedMessages.prefix()));
         event.setCancelled(true);
     }
 }

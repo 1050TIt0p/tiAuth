@@ -4,19 +4,19 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.TiAuth;
-import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
+import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
 
 public class PremiumCommand extends Command {
-    private final MessagesConfig messagesConfig;
     private final Utils utils;
+    private final ColorizedMessages colorizedMessages;
     private final AuthManager authManager;
 
     public PremiumCommand(TiAuth plugin, String name) {
         super(name);
-        this.messagesConfig = plugin.getMessagesConfig();
         this.utils = plugin.getUtils();
+        this.colorizedMessages = plugin.getColorizedMessages();
         this.authManager = plugin.getAuthManager();
     }
 
@@ -25,7 +25,7 @@ public class PremiumCommand extends Command {
         if (!(sender instanceof ProxiedPlayer player)) {
             utils.sendMessage(
                     sender,
-                    messagesConfig.onlyPlayer
+                    colorizedMessages.onlyPlayer()
             );
 
            return;
