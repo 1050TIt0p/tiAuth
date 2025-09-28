@@ -16,9 +16,12 @@ import ru.matveylegenda.tiauth.manager.TaskManager;
 import ru.matveylegenda.tiauth.util.Utils;
 import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class AuthListener implements Listener {
+    private final Map<String, Integer> ipCounts = new HashMap<>();
     private final TiAuth plugin;
     private final Database database;
     private final AuthCache authCache;
@@ -57,11 +60,12 @@ public class AuthListener implements Listener {
             return;
         }
 
-        if (banCache.isBanned(connection.getAddress().getAddress().getHostAddress())) {
+        String ip = connection.getAddress().getAddress().getHostAddress();
+        if (banCache.isBanned(ip)) {
             utils.kickPlayer(
                     event,
                     colorizedMessages.player().kick().ban()
-                            .replace("{time}", String.valueOf(banCache.getRemainingSeconds(connection.getAddress().getAddress().getHostAddress())))
+                            .replace("{time}", String.valueOf(banCache.getRemainingSeconds(ip)))
             );
             return;
         }
@@ -71,6 +75,17 @@ public class AuthListener implements Listener {
             premiumCache.addPremium(connection.getName());
             return;
         }
+
+        int count = ipCounts.getOrDefault(ip, 0);
+
+        if (count >= mainConfig.maxPlayersPerIp) {
+            utils.kickPlayer(
+                    event,
+                    colorizedMessages.player().kick().ipLimitReached()
+            );
+            return;
+        }
+        ipCounts.put(ip, count + 1);
 
         event.registerIntent(plugin);
 
@@ -135,6 +150,9 @@ public class AuthListener implements Listener {
     @EventHandler
     public void onPlayerDisconnect(PlayerDisconnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
+
+        String ip = player.getAddress().getAddress().getHostAddress();
+        ipCounts.put(ip, ipCounts.getOrDefault(ip, 1) - 1);
 
         if (authCache.isAuthenticated(player.getName())) {
             authCache.logout(player.getName());

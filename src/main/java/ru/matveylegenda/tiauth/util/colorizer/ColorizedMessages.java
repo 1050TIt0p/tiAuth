@@ -114,7 +114,8 @@ public record ColorizedMessages(
                 String realname,
                 String tooManyAttempts,
                 String ban,
-                String invalidNickPattern
+                String invalidNickPattern,
+                String ipLimitReached
         ) {}
 
         public record Reminder(
@@ -236,7 +237,8 @@ public record ColorizedMessages(
                                 COLORIZER.colorize(config.player.kick.realname),
                                 COLORIZER.colorize(config.player.kick.tooManyAttempts),
                                 COLORIZER.colorize(config.player.kick.ban),
-                                COLORIZER.colorize(config.player.kick.invalidNickPattern)
+                                COLORIZER.colorize(config.player.kick.invalidNickPattern),
+                                COLORIZER.colorize(config.player.kick.ipLimitReached)
                         ),
                         new Player.Reminder(
                                 COLORIZER.colorize(config.player.reminder.login),

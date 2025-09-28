@@ -222,4 +222,5 @@ public class MainConfig extends YamlSerializable {
             @CommentValue(" Регулярное выражение для ника")
     })
     public String nickPattern = "^[a-zA-Z0-9_]{3,16}$";
+    public int maxPlayersPerIp = 10;
 }
