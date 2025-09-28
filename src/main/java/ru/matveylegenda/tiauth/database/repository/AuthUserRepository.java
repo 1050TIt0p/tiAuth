@@ -94,6 +94,26 @@ public class AuthUserRepository {
         });
     }
 
+    public void getUserCountByIp(String ip, Consumer<Integer> callback) {
+        executor.submit(() -> {
+            try {
+                int count = (int) authUserDao.queryBuilder()
+                        .where()
+                        .eq("lastIp", ip)
+                        .countOf();
+
+                if (callback != null) {
+                    callback.accept(count);
+                }
+            } catch (SQLException e) {
+                if (callback != null) {
+                    callback.accept(0);
+                }
+                TiAuth.logger.log(Level.WARNING, "Error during IP count query", e);
+            }
+        });
+    }
+
     public void updatePassword(String username, String newPassword, Consumer<Boolean> callback) {
         executor.submit(() -> {
             try {

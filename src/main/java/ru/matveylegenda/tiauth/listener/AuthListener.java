@@ -78,17 +78,16 @@ public class AuthListener implements Listener {
 
         int count = ipCounts.getOrDefault(ip, 0);
 
-        if (count >= mainConfig.maxPlayersPerIp) {
+        if (count >= mainConfig.maxOnlineAccountsPerIp) {
             utils.kickPlayer(
                     event,
-                    colorizedMessages.player().kick().ipLimitReached()
+                    colorizedMessages.player().kick().ipLimitOnlineReached()
             );
             return;
         }
         ipCounts.put(ip, count + 1);
 
         event.registerIntent(plugin);
-
         database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
             if (!success) {
                 utils.kickPlayer(
@@ -100,7 +99,18 @@ public class AuthListener implements Listener {
                 return;
             }
 
-            if (user != null && user.isPremium()) {
+            if (user == null) {
+                database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
+                    if (count1 >= mainConfig.maxRegisteredAccountsPerIp) {
+                        utils.kickPlayer(
+                                event,
+                                colorizedMessages.player().kick().ipLimitRegisteredReached()
+                        );
+                    }
+                    event.completeIntent(plugin);
+                });
+                return;
+            } else if (user.isPremium()) {
                 connection.setOnlineMode(true);
                 premiumCache.addPremium(connection.getName());
             }

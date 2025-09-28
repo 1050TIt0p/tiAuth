@@ -4,9 +4,6 @@ import ru.matveylegenda.tiauth.config.MessagesConfig;
 
 import static ru.matveylegenda.tiauth.util.Utils.COLORIZER;
 
-/*
- Господи прости за это
- */
 public record ColorizedMessages(
         String prefix,
         String onlyPlayer,
@@ -115,7 +112,8 @@ public record ColorizedMessages(
                 String tooManyAttempts,
                 String ban,
                 String invalidNickPattern,
-                String ipLimitReached
+                String ipLimitOnlineReached,
+                String ipLimitRegisteredReached
         ) {}
 
         public record Reminder(
@@ -238,7 +236,8 @@ public record ColorizedMessages(
                                 COLORIZER.colorize(config.player.kick.tooManyAttempts),
                                 COLORIZER.colorize(config.player.kick.ban),
                                 COLORIZER.colorize(config.player.kick.invalidNickPattern),
-                                COLORIZER.colorize(config.player.kick.ipLimitReached)
+                                COLORIZER.colorize(config.player.kick.ipLimitOnlineReached),
+                                COLORIZER.colorize(config.player.kick.ipLimitRegisteredReached)
                         ),
                         new Player.Reminder(
                                 COLORIZER.colorize(config.player.reminder.login),

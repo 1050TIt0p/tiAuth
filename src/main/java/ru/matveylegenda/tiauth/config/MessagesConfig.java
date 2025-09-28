@@ -127,7 +127,8 @@ public class MessagesConfig extends YamlSerializable {
             public String tooManyAttempts;
             public String ban;
             public String invalidNickPattern;
-            public String ipLimitReached;
+            public String ipLimitOnlineReached;
+            public String ipLimitRegisteredReached;
         }
 
         @NewLine
@@ -228,7 +229,8 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.tooManyAttempts = "{prefix} &fВы превысили количество попыток для ввода пароля";
                 player.kick.ban = "{prefix} &fВаш аккаунт заблокирован на &#8833EC{time} &fсекунд за превышение попыток ввода пароля";
                 player.kick.invalidNickPattern = "{prefix} &fВаш ник содержит запрещенные символы";
-                player.kick.ipLimitReached = "{prefix} &fПревышен лимит по количеству игроков с одного IP";
+                player.kick.ipLimitOnlineReached = "{prefix} &fС этого IP-адреса играет максимальное количество аккаунтов";
+                player.kick.ipLimitRegisteredReached = "{prefix} &fС этого IP-адреса зарегистрировано слишком много аккаунтов";
                 player.reminder.login = "{prefix} &fАвторизируйтесь командой &#8833EC/login <пароль>";
                 player.reminder.register = "{prefix} &fЗарегистрируйтесь командой &#8833EC/register <пароль> <пароль>";
                 player.dialog.register.title = "Регистрация";
@@ -295,7 +297,8 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.tooManyAttempts = "{prefix} &fYou exceeded the number of password attempts";
                 player.kick.ban = "{prefix} &fYour account has been locked for &#8833EC{time} &fseconds due to exceeding password attempts";
                 player.kick.invalidNickPattern = "{prefix} &fYour nickname contains invalid characters";
-                player.kick.ipLimitReached = "{prefix} &fPlayer limit from one IP has been exceeded";
+                player.kick.ipLimitOnlineReached = "{prefix} &fToo many accounts are currently playing from this IP address";
+                player.kick.ipLimitRegisteredReached = "{prefix} &fToo many accounts registered from this IP address";
                 player.reminder.login = "{prefix} &fAuthenticate using &#8833EC/login <password>";
                 player.reminder.register = "{prefix} &fRegister using &#8833EC/register <password> <password>";
                 player.dialog.register.title = "Registration";
