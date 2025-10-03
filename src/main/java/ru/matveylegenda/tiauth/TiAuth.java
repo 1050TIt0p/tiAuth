@@ -1,7 +1,6 @@
 package ru.matveylegenda.tiauth;
 
 import lombok.Getter;
-import lombok.Setter;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
