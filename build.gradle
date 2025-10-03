@@ -30,7 +30,7 @@ dependencies {
     compileOnly("org.postgresql:postgresql:42.7.7")
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
     implementation("net.elytrium:serializer:1.1.1")
-    implementation("com.github.1050TIt0p:NanoLimbo:1.9.9")
+    implementation("com.github.1050TIt0p:NanoLimbo:1.9.10")
     implementation("net.kyori:adventure-api:4.24.0")
     implementation("net.kyori:adventure-text-minimessage:4.24.0")
     implementation("net.kyori:adventure-text-serializer-legacy:4.24.0")
