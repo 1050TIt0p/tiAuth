@@ -113,7 +113,7 @@ public class TaskManager {
         bossBar.setHealth(1.0f);
         bossBar.setColor(mainConfig.bossBar.color.getId());
         bossBar.setDivision(mainConfig.bossBar.style.getId());
-        bossBar.setFlags((byte)0);
+        bossBar.setFlags((byte) 0);
         player.unsafe().sendPacket(bossBar);
     }
 

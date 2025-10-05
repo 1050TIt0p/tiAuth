@@ -28,7 +28,7 @@ public class LoginCommand extends Command {
                     colorizedMessages.onlyPlayer
             );
 
-           return;
+            return;
         }
 
         if (args.length != 1) {
