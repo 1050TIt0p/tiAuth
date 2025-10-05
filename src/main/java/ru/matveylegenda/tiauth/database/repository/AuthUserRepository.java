@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public class AuthUserRepository {
-    private ExecutorService executor;
+    private final ExecutorService executor;
     private final Dao<AuthUser, String> authUserDao;
 
     public AuthUserRepository(ConnectionSource connectionSource, ExecutorService executor) throws SQLException {

@@ -20,7 +20,7 @@ public class Database {
     private final HikariDataSource dataSource;
     @Getter
     private final AuthUserRepository authUserRepository;
-    private ExecutorService executor;
+    private final ExecutorService executor;
 
     private Database(ConnectionSource connectionSource) throws SQLException {
         this.connectionSource = connectionSource;
