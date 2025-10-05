@@ -1,5 +1,7 @@
 package ru.matveylegenda.tiauth.listener;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.*;
@@ -21,7 +23,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public class AuthListener implements Listener {
-    private final Map<String, Integer> ipCounts = new HashMap<>();
+    private final Object2IntOpenHashMap<String> ipCounts = new Object2IntOpenHashMap<>();
     private final TiAuth plugin;
     private final Database database;
     private final AuthCache authCache;
@@ -84,7 +86,7 @@ public class AuthListener implements Listener {
             );
             return;
         }
-        ipCounts.put(ip, count + 1);
+        ipCounts.addTo(ip, 1);
 
         event.registerIntent(plugin);
         database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
@@ -161,7 +163,9 @@ public class AuthListener implements Listener {
         ProxiedPlayer player = event.getPlayer();
 
         String ip = player.getAddress().getAddress().getHostAddress();
-        ipCounts.put(ip, ipCounts.getOrDefault(ip, 1) - 1);
+        if (ipCounts.addTo(ip, -1) == 0) {
+            ipCounts.removeInt(player.getName());
+        }
 
         if (authCache.isAuthenticated(player.getName())) {
             authCache.logout(player.getName());
