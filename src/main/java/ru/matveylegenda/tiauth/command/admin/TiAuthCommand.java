@@ -56,7 +56,7 @@ public class TiAuthCommand extends Command {
                     return;
                 }
 
-                plugin.loadConfigs();
+                plugin.loadConfigs(plugin.getDataFolder());
                 colorizedMessages.load(plugin.getMessagesConfig());
                 utils.sendMessage(
                         sender,

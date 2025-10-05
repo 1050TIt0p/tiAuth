@@ -47,12 +47,13 @@ public final class TiAuth extends Plugin {
     @Override
     public void onEnable() {
         logger = getLogger();
-        if (!getDataFolder().exists()) {
-            getDataFolder().mkdir();
+        File dataFolder = getDataFolder();
+        if (!dataFolder.exists()) {
+            dataFolder.mkdir();
         }
-        loadConfigs();
-        initializeDatabase();
-        startLimboServer();
+        loadConfigs(dataFolder);
+        initializeDatabase(dataFolder);
+        startLimboServer(dataFolder);
         Utils.initializeColorizer(mainConfig.serializer);
         colorizedMessages.load(messagesConfig);
         utils = new Utils(colorizedMessages);
@@ -79,24 +80,24 @@ public final class TiAuth extends Plugin {
         }
     }
 
-    public void loadConfigs() {
-        mainConfig.reload(Path.of(getDataFolder().getAbsolutePath(), "config.yml"));
+    public void loadConfigs(File dataFolder) {
+        mainConfig.reload(Path.of(dataFolder.getAbsolutePath(), "config.yml"));
 
-        Path messagesConfigPath = Path.of(getDataFolder().getAbsolutePath(), "lang", "messages_en.yml");
-        switch (mainConfig.lang) {
-            case RU -> messagesConfigPath = Path.of(getDataFolder().getAbsolutePath(), "lang", "messages_ru.yml");
-        }
+        Path messagesConfigPath = switch (mainConfig.lang) {
+            case RU -> Path.of(dataFolder.getAbsolutePath(), "lang", "messages_ru.yml");
+            case EN -> Path.of(dataFolder.getAbsolutePath(), "lang", "messages_en.yml");
+        };
 
         messagesConfig.loadLang(mainConfig.lang);
         messagesConfig.reload(messagesConfigPath);
     }
 
-    private void initializeDatabase() {
+    private void initializeDatabase(File dataFolder) {
         try {
             switch (mainConfig.database.type) {
-                case SQLITE -> database = Database.forSQLite(new File(getDataFolder(), "auth.db"));
+                case SQLITE -> database = Database.forSQLite(new File(dataFolder, "auth.db"));
                 case H2 -> database = Database.forH2(
-                        new File(getDataFolder(), "auth-v2"),
+                        new File(dataFolder, "auth-v2"),
                         mainConfig.database.connectionTimeoutMs,
                         mainConfig.database.idleTimeoutMs,
                         mainConfig.database.maxLifetimeMs,
@@ -134,10 +135,10 @@ public final class TiAuth extends Plugin {
         }
     }
 
-    private void startLimboServer() {
+    private void startLimboServer(File dataFolder) {
         if (mainConfig.servers.useVirtualServer) {
             try {
-                Path limboPath = getDataFolder().toPath().resolve("limbo");
+                Path limboPath = dataFolder.toPath().resolve("limbo");
                 if (!limboPath.toFile().exists()) {
                     limboPath.toFile().mkdir();
                 }
