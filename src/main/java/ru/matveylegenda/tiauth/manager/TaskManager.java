@@ -76,7 +76,7 @@ public class TaskManager {
     public void startDisplayTimerTask(ProxiedPlayer player) {
         AtomicInteger counter = new AtomicInteger(mainConfig.auth.timeoutSeconds);
 
-        UUID barId = UUID.randomUUID();
+        UUID barId = mainConfig.bossBar.enabled ? UUID.randomUUID() : null;
         if (mainConfig.bossBar.enabled) createBossBar(player, counter.get(), barId);
 
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
@@ -113,7 +113,7 @@ public class TaskManager {
         bossBar.setHealth(1.0f);
         bossBar.setColor(mainConfig.bossBar.color.getId());
         bossBar.setDivision(mainConfig.bossBar.style.getId());
-        bossBar.setFlags((byte)0);
+        bossBar.setFlags((byte) 0);
         player.unsafe().sendPacket(bossBar);
     }
 
@@ -161,8 +161,10 @@ public class TaskManager {
     private void clearDisplays(ProxiedPlayer player, UUID barId) {
         player.sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(""));
 
-        BossBar remove = new BossBar(barId, 1);
-        player.unsafe().sendPacket(remove);
+        if (barId != null) {
+            BossBar remove = new BossBar(barId, 1);
+            player.unsafe().sendPacket(remove);
+        }
     }
 
     public void cancelTasks(ProxiedPlayer player) {

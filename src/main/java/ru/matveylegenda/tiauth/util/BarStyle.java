@@ -1,5 +1,8 @@
 package ru.matveylegenda.tiauth.util;
 
+import lombok.Getter;
+
+@Getter
 public enum BarStyle {
     SOLID(0),
     SEGMENTED_6(1),
@@ -13,7 +16,4 @@ public enum BarStyle {
         this.id = id;
     }
 
-    public int getId() {
-        return id;
-    }
 }

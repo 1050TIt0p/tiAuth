@@ -30,7 +30,7 @@ public class ChatListener implements Listener {
         }
 
         if (event.isCommand() || event.isProxyCommand()) {
-            String command = event.getMessage().split(" ")[0].toLowerCase(Locale.ROOT);
+            String command = cutCommand(event.getMessage()).toLowerCase(Locale.ROOT);
 
             if (!mainConfig.auth.allowedCommands.contains(command)) {
                 event.setCancelled(true);
@@ -40,5 +40,10 @@ public class ChatListener implements Listener {
         }
 
         event.setCancelled(true);
+    }
+
+    private String cutCommand(String str) {
+        int index = str.indexOf(' ');
+        return index == -1 ? str : str.substring(0, index);
     }
 }

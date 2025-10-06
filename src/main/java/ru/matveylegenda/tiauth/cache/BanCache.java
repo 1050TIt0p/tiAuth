@@ -6,7 +6,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.TimeUnit;
 
 public class BanCache {
-    private int banTime;
+    private final int banTime;
     private final Cache<String, Long> bans;
 
     public BanCache(int banTime) {

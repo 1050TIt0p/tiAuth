@@ -28,7 +28,7 @@ public class PremiumCommand extends Command {
                     colorizedMessages.onlyPlayer
             );
 
-           return;
+            return;
         }
 
         authManager.togglePremium(player);

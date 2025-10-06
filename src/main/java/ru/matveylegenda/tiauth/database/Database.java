@@ -20,7 +20,7 @@ public class Database {
     private final HikariDataSource dataSource;
     @Getter
     private final AuthUserRepository authUserRepository;
-    private ExecutorService executor;
+    private final ExecutorService executor;
 
     private Database(ConnectionSource connectionSource) throws SQLException {
         this.connectionSource = connectionSource;
@@ -48,7 +48,7 @@ public class Database {
     }
 
     public static Database forH2(File file,
-                                    long connectionTimeout, long idleTimeout, long maxLifetime, int maxPoolSize, int minIdle) throws SQLException {
+                                 long connectionTimeout, long idleTimeout, long maxLifetime, int maxPoolSize, int minIdle) throws SQLException {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:h2:" + file.getAbsolutePath());
         config.setConnectionTimeout(connectionTimeout);
@@ -86,7 +86,7 @@ public class Database {
     }
 
     public static Database forPostgreSQL(String host, int port, String database, String user, String password,
-                                    long connectionTimeout, long idleTimeout, long maxLifetime, int maxPoolSize, int minIdle) throws SQLException {
+                                         long connectionTimeout, long idleTimeout, long maxLifetime, int maxPoolSize, int minIdle) throws SQLException {
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:postgresql://" + host + ":" + port + "/" + database);
