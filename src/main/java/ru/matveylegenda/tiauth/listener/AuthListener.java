@@ -7,6 +7,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.*;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
+import net.md_5.bungee.event.EventPriority;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.BanCache;
@@ -18,11 +19,30 @@ import ru.matveylegenda.tiauth.manager.TaskManager;
 import ru.matveylegenda.tiauth.util.Utils;
 import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
 
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 public class AuthListener implements Listener {
+    private static Field UNIQUE_ID_FIELD;
+
+    static {
+        try {
+            Class<?> INITIAL_HANDLER_CLASS = Class.forName("net.md_5.bungee.connection.InitialHandler");
+
+            UNIQUE_ID_FIELD = INITIAL_HANDLER_CLASS.getDeclaredField("uniqueId");
+            UNIQUE_ID_FIELD.setAccessible(true);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+    }
+
     private final Object2IntOpenHashMap<String> ipCounts = new Object2IntOpenHashMap<>();
     private final TiAuth plugin;
     private final Database database;
@@ -118,6 +138,20 @@ public class AuthListener implements Listener {
 
             event.completeIntent(plugin);
         });
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onLogin(LoginEvent event) {
+        PendingConnection connection = event.getConnection();
+
+        try {
+            UUID offlineId = UUID.nameUUIDFromBytes(
+                    ("OfflinePlayer:" + connection.getName()).getBytes(StandardCharsets.UTF_8)
+            );
+            UNIQUE_ID_FIELD.set(connection, offlineId);
+        } catch (IllegalAccessException e) {
+            TiAuth.logger.log(Level.WARNING, "Failed to set offline UUID for player " + connection.getName(), e);
+        }
     }
 
     @EventHandler
