@@ -85,7 +85,7 @@ public class DatabaseMigrator {
                                             resultSet.getString("LOWERCASENICKNAME"),
                                             resultSet.getString("NICKNAME"),
                                             resultSet.getString("HASH"),
-                                            resultSet.getString("PREMIUMUUID") != null,
+                                            resultSet.getString("PREMIUMUUID") != null && !resultSet.getString("PREMIUMUUID").isEmpty(),
                                             resultSet.getString("LOGINIP"),
                                             resultSet.getString("IP"),
                                             resultSet.getLong("LOGINDATE"),
