@@ -1,6 +1,8 @@
 package ru.matveylegenda.tiauth;
 
 import lombok.Getter;
+import net.byteflux.libby.BungeeLibraryManager;
+import net.byteflux.libby.Library;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
@@ -45,13 +47,22 @@ public final class TiAuth extends Plugin {
     private AuthManager authManager;
 
     @Override
+    public void onLoad() {
+        File dataFolder = getDataFolder();
+        if (!dataFolder.exists()) {
+            dataFolder.mkdir();
+        }
+        loadConfigs(dataFolder);
+        loadLibraries();
+    }
+
+    @Override
     public void onEnable() {
         logger = getLogger();
         File dataFolder = getDataFolder();
         if (!dataFolder.exists()) {
             dataFolder.mkdir();
         }
-        loadConfigs(dataFolder);
         initializeDatabase(dataFolder);
         startLimboServer(dataFolder);
         Utils.initializeColorizer(mainConfig.serializer);
@@ -90,6 +101,39 @@ public final class TiAuth extends Plugin {
 
         messagesConfig.loadLang(mainConfig.lang);
         messagesConfig.reload(messagesConfigPath);
+    }
+
+    private void loadLibraries() {
+        Library sqliteJdbc = Library.builder()
+                .groupId("org{}xerial")
+                .artifactId("sqlite-jdbc")
+                .version(mainConfig.libraries.sqlite.version)
+                .build();
+
+        Library h2Jdbc = Library.builder()
+                .groupId("com{}h2database")
+                .artifactId("h2")
+                .version(mainConfig.libraries.h2.version)
+                .build();
+
+        Library mysqlJdbc = Library.builder()
+                .groupId("com{}mysql")
+                .artifactId("mysql-connector-j")
+                .version(mainConfig.libraries.mysql.version)
+                .build();
+
+        Library postgresqlJdbc = Library.builder()
+                .groupId("org{}postgresql")
+                .artifactId("postgresql")
+                .version(mainConfig.libraries.postgresql.version)
+                .build();
+
+        BungeeLibraryManager libraryManager = new BungeeLibraryManager(this);
+        libraryManager.addMavenCentral();
+        libraryManager.loadLibrary(sqliteJdbc);
+        libraryManager.loadLibrary(h2Jdbc);
+        libraryManager.loadLibrary(mysqlJdbc);
+        libraryManager.loadLibrary(postgresqlJdbc);
     }
 
     private void initializeDatabase(File dataFolder) {
