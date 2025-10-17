@@ -8,9 +8,9 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.scheduler.ScheduledTask;
 import net.md_5.bungee.protocol.packet.BossBar;
 import ru.matveylegenda.tiauth.TiAuth;
+import ru.matveylegenda.tiauth.config.CachedMessages;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.util.Utils;
-import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
 
 import java.util.Map;
 import java.util.UUID;
@@ -24,15 +24,9 @@ public class TaskManager {
     private final Map<String, ScheduledTask> displayTimerTasks = new ConcurrentHashMap<>();
     private final Map<String, UUID> bossBars = new ConcurrentHashMap<>();
     private final TiAuth plugin;
-    private final MainConfig mainConfig;
-    private final Utils utils;
-    private final ColorizedMessages colorizedMessages;
 
     public TaskManager(TiAuth plugin) {
         this.plugin = plugin;
-        this.mainConfig = plugin.getMainConfig();
-        this.utils = plugin.getUtils();
-        this.colorizedMessages = plugin.getColorizedMessages();
     }
 
     public void startAuthTimeoutTask(ProxiedPlayer player) {
@@ -45,11 +39,9 @@ public class TaskManager {
                 return;
             }
 
-            utils.kickPlayer(
-                    player,
-                    colorizedMessages.player.kick.timeout
-            );
-        }, mainConfig.auth.timeoutSeconds, TimeUnit.SECONDS);
+            player.disconnect(CachedMessages.IMP.player.kick.timeout);
+
+        }, MainConfig.IMP.auth.timeoutSeconds, TimeUnit.SECONDS);
 
         authTimeoutTasks.put(player.getName(), task);
     }
@@ -64,20 +56,20 @@ public class TaskManager {
                 return;
             }
 
-            utils.sendMessage(
+            Utils.sendMessage(
                     player,
                     reminderMessage
             );
-        }, 0, mainConfig.auth.reminderInterval, TimeUnit.SECONDS);
+        }, 0, MainConfig.IMP.auth.reminderInterval, TimeUnit.SECONDS);
 
         authReminderTasks.put(player.getName(), task);
     }
 
     public void startDisplayTimerTask(ProxiedPlayer player) {
-        AtomicInteger counter = new AtomicInteger(mainConfig.auth.timeoutSeconds);
+        AtomicInteger counter = new AtomicInteger(MainConfig.IMP.auth.timeoutSeconds);
 
-        UUID barId = mainConfig.bossBar.enabled ? UUID.randomUUID() : null;
-        if (mainConfig.bossBar.enabled) createBossBar(player, counter.get(), barId);
+        UUID barId = MainConfig.IMP.bossBar.enabled ? UUID.randomUUID() : null;
+        if (MainConfig.IMP.bossBar.enabled) createBossBar(player, counter.get(), barId);
 
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
             if (counter.get() <= 0 || !player.isConnected()) {
@@ -89,9 +81,9 @@ public class TaskManager {
                 return;
             }
 
-            if (mainConfig.title.enabled) sendTitle(player, counter.get());
-            if (mainConfig.actionBar.enabled) sendActionBar(player, counter.get());
-            if (mainConfig.bossBar.enabled) updateBossBar(player, counter.get(), barId);
+            if (MainConfig.IMP.title.enabled) sendTitle(player, counter.get());
+            if (MainConfig.IMP.actionBar.enabled) sendActionBar(player, counter.get());
+            if (MainConfig.IMP.bossBar.enabled) updateBossBar(player, counter.get(), barId);
 
             counter.getAndDecrement();
         }, 0, 1, TimeUnit.SECONDS);
@@ -105,27 +97,25 @@ public class TaskManager {
         BossBar bossBar = new BossBar(barId, 0);
         bossBar.setTitle(
                 TextComponent.fromLegacy(
-                        colorizedMessages.player.bossBar.message
-                                .replace("{prefix}", colorizedMessages.prefix)
+                        CachedMessages.IMP.player.bossBar.message
                                 .replace("{time}", String.valueOf(counter))
                 )
         );
         bossBar.setHealth(1.0f);
-        bossBar.setColor(mainConfig.bossBar.color.getId());
-        bossBar.setDivision(mainConfig.bossBar.style.getId());
+        bossBar.setColor(MainConfig.IMP.bossBar.color.getId());
+        bossBar.setDivision(MainConfig.IMP.bossBar.style.getId());
         bossBar.setFlags((byte) 0);
         player.unsafe().sendPacket(bossBar);
     }
 
     private void updateBossBar(ProxiedPlayer player, int counter, UUID barId) {
         BossBar updateHealth = new BossBar(barId, 2);
-        updateHealth.setHealth((float) counter / mainConfig.auth.timeoutSeconds);
+        updateHealth.setHealth((float) counter / MainConfig.IMP.auth.timeoutSeconds);
         player.unsafe().sendPacket(updateHealth);
 
         BossBar updateTitle = new BossBar(barId, 3);
         updateTitle.setTitle(TextComponent.fromLegacy(
-                colorizedMessages.player.bossBar.message
-                        .replace("{prefix}", colorizedMessages.prefix)
+                CachedMessages.IMP.player.bossBar.message
                         .replace("{time}", String.valueOf(counter))
         ));
         player.unsafe().sendPacket(updateTitle);
@@ -134,13 +124,11 @@ public class TaskManager {
     private void sendTitle(ProxiedPlayer player, int counter) {
         Title title = ProxyServer.getInstance().createTitle();
         title.title(TextComponent.fromLegacy(
-                colorizedMessages.player.title.title
-                        .replace("{prefix}", colorizedMessages.prefix)
+                CachedMessages.IMP.player.title.title
                         .replace("{time}", String.valueOf(counter))
         ));
         title.subTitle(TextComponent.fromLegacy(
-                colorizedMessages.player.title.subTitle
-                        .replace("{prefix}", colorizedMessages.prefix)
+                CachedMessages.IMP.player.title.subTitle
                         .replace("{time}", String.valueOf(counter))
         ));
         title.fadeIn(0);
@@ -152,8 +140,7 @@ public class TaskManager {
 
     private void sendActionBar(ProxiedPlayer player, int counter) {
         player.sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(
-                colorizedMessages.player.actionBar.message
-                        .replace("{prefix}", colorizedMessages.prefix)
+                CachedMessages.IMP.player.actionBar.message
                         .replace("{time}", String.valueOf(counter))
         ));
     }
@@ -168,24 +155,25 @@ public class TaskManager {
     }
 
     public void cancelTasks(ProxiedPlayer player) {
+        String playerName = player.getName();
         ScheduledTask task;
 
-        task = authTimeoutTasks.remove(player.getName());
+        task = authTimeoutTasks.remove(playerName);
         if (task != null) {
             task.cancel();
         }
 
-        task = authReminderTasks.remove(player.getName());
+        task = authReminderTasks.remove(playerName);
         if (task != null) {
             task.cancel();
         }
 
-        task = displayTimerTasks.remove(player.getName());
+        task = displayTimerTasks.remove(playerName);
         if (task != null) {
             task.cancel();
         }
 
-        UUID barId = bossBars.remove(player.getName());
+        UUID barId = bossBars.remove(playerName);
         if (barId != null) {
             BossBar remove = new BossBar(barId, 1);
             player.unsafe().sendPacket(remove);

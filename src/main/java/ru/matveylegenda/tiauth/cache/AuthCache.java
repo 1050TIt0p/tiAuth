@@ -1,9 +1,12 @@
 package ru.matveylegenda.tiauth.cache;
 
+import lombok.experimental.UtilityClass;
+
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+@UtilityClass
 public class AuthCache {
     private final Set<String> authenticated = ConcurrentHashMap.newKeySet();
 

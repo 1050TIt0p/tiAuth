@@ -6,12 +6,14 @@ import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.TiAuth;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
+import ru.matveylegenda.tiauth.config.CachedMessages;
+import ru.matveylegenda.tiauth.config.MainConfig;
+import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.DatabaseMigrator;
 import ru.matveylegenda.tiauth.database.DatabaseType;
 import ru.matveylegenda.tiauth.manager.AuthManager;
 import ru.matveylegenda.tiauth.util.Utils;
-import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
 
 import java.io.File;
 import java.util.Locale;
@@ -19,29 +21,21 @@ import java.util.Locale;
 public class TiAuthCommand extends Command {
     private final TiAuth plugin;
     private final Database database;
-    private final Utils utils;
-    private final ColorizedMessages colorizedMessages;
     private final AuthManager authManager;
-    private final AuthCache authCache;
-    private final SessionCache sessionCache;
 
     public TiAuthCommand(TiAuth plugin, String name, String... aliases) {
         super(name, null, aliases);
         this.plugin = plugin;
         this.database = plugin.getDatabase();
-        this.utils = plugin.getUtils();
-        this.colorizedMessages = plugin.getColorizedMessages();
         this.authManager = plugin.getAuthManager();
-        this.authCache = plugin.getAuthCache();
-        this.sessionCache = plugin.getSessionCache();
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            utils.sendMessage(
+            Utils.sendMessage(
                     sender,
-                    colorizedMessages.admin.usage
+                    CachedMessages.IMP.admin.usage
             );
             return;
         }
@@ -49,34 +43,35 @@ public class TiAuthCommand extends Command {
         switch (args[0].toLowerCase()) {
             case "reload" -> {
                 if (!sender.hasPermission("tiauth.admin.commands.reload")) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission
+                            CachedMessages.IMP.noPermission
                     );
                     return;
                 }
 
-                plugin.loadConfigs(plugin.getDataFolder());
-                colorizedMessages.load(plugin.getMessagesConfig());
-                utils.sendMessage(
+                MainConfig.IMP.reload();
+                MessagesConfig.IMP.reload();
+                CachedMessages.IMP = new CachedMessages(MessagesConfig.IMP);
+                Utils.sendMessage(
                         sender,
-                        colorizedMessages.admin.config.reload
+                        CachedMessages.IMP.admin.config.reload
                 );
             }
 
             case "unregister", "unreg" -> {
                 if (!sender.hasPermission("tiauth.admin.commands.unregister")) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission
+                            CachedMessages.IMP.noPermission
                     );
                     return;
                 }
 
                 if (args.length < 2) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.admin.unregister.usage
+                            CachedMessages.IMP.admin.unregister.usage
                     );
                     return;
                 }
@@ -84,26 +79,22 @@ public class TiAuthCommand extends Command {
                 String playerName = args[1];
                 authManager.unregisterPlayer(playerName, success -> {
                     if (!success) {
-                        utils.sendMessage(
+                        Utils.sendMessage(
                                 sender,
-                                colorizedMessages.queryError
+                                CachedMessages.IMP.queryError
                         );
                         return;
                     }
 
                     ProxiedPlayer player = plugin.getProxy().getPlayer(playerName);
                     if (player != null) {
-                        sessionCache.removePlayer(playerName);
-
-                        utils.kickPlayer(
-                                player,
-                                colorizedMessages.player.unregister.success
-                        );
+                        SessionCache.removePlayer(playerName);
+                        player.disconnect(CachedMessages.IMP.player.unregister.success);
                     }
 
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.admin.unregister.success
+                            CachedMessages.IMP.admin.unregister.success
                                     .replace("{player}", playerName)
                     );
                 });
@@ -111,17 +102,17 @@ public class TiAuthCommand extends Command {
 
             case "changepassword", "changepass" -> {
                 if (!sender.hasPermission("tiauth.admin.commands.changepassword")) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission
+                            CachedMessages.IMP.noPermission
                     );
                     return;
                 }
 
                 if (args.length < 3) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.admin.changePassword.usage
+                            CachedMessages.IMP.admin.changePassword.usage
                     );
                     return;
                 }
@@ -130,16 +121,16 @@ public class TiAuthCommand extends Command {
                 String password = args[2];
                 authManager.changePasswordPlayer(playerName, password, success -> {
                     if (!success) {
-                        utils.sendMessage(
+                        Utils.sendMessage(
                                 sender,
-                                colorizedMessages.queryError
+                                CachedMessages.IMP.queryError
                         );
                         return;
                     }
 
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.admin.changePassword.success
+                            CachedMessages.IMP.admin.changePassword.success
                                     .replace("{player}", playerName)
                     );
                 });
@@ -147,43 +138,43 @@ public class TiAuthCommand extends Command {
 
             case "forcelogin" -> {
                 if (!sender.hasPermission("tiauth.admin.commands.forcelogin")) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission
+                            CachedMessages.IMP.noPermission
                     );
                     return;
                 }
 
                 if (args.length < 2) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.admin.forceLogin.usage
+                            CachedMessages.IMP.admin.forceLogin.usage
                     );
                     return;
                 }
 
                 ProxiedPlayer player = plugin.getProxy().getPlayer(args[1]);
                 if (player == null) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.playerNotFound
+                            CachedMessages.IMP.playerNotFound
                     );
                     return;
                 }
 
-                if (authCache.isAuthenticated(player.getName())) {
-                    utils.sendMessage(
+                if (AuthCache.isAuthenticated(player.getName())) {
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.admin.forceLogin.isAuthenticated
+                            CachedMessages.IMP.admin.forceLogin.isAuthenticated
                                     .replace("{player}", player.getName())
                     );
                     return;
                 }
 
                 authManager.loginPlayer(player, () -> {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.admin.forceLogin.success
+                            CachedMessages.IMP.admin.forceLogin.success
                                     .replace("{player}", player.getName())
                     );
                 });
@@ -192,17 +183,17 @@ public class TiAuthCommand extends Command {
             case "forceregister" -> {
                 // /auth forceregister <игрок> <пароль>
                 if (!sender.hasPermission("tiauth.admin.commands.forceregister")) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission
+                            CachedMessages.IMP.noPermission
                     );
                     return;
                 }
 
                 if (args.length < 3) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.admin.forceRegister.usage
+                            CachedMessages.IMP.admin.forceRegister.usage
                     );
                     return;
                 }
@@ -212,17 +203,17 @@ public class TiAuthCommand extends Command {
 
                 database.getAuthUserRepository().getUser(playerName.toLowerCase(Locale.ROOT), (user, success) -> {
                     if (!success) {
-                        utils.sendMessage(
+                        Utils.sendMessage(
                                 sender,
-                                colorizedMessages.queryError
+                                CachedMessages.IMP.queryError
                         );
                         return;
                     }
 
                     if (user != null) {
-                        utils.sendMessage(
+                        Utils.sendMessage(
                                 sender,
-                                colorizedMessages.admin.forceRegister.alreadyRegistered
+                                CachedMessages.IMP.admin.forceRegister.alreadyRegistered
                                         .replace("{player}", playerName)
                         );
                         return;
@@ -230,16 +221,16 @@ public class TiAuthCommand extends Command {
 
                     authManager.registerPlayer(playerName, password, null, success1 -> {
                         if (!success1) {
-                            utils.sendMessage(
+                            Utils.sendMessage(
                                     sender,
-                                    colorizedMessages.queryError
+                                    CachedMessages.IMP.queryError
                             );
                             return;
                         }
 
-                        utils.sendMessage(
+                        Utils.sendMessage(
                                 sender,
-                                colorizedMessages.admin.forceRegister.success
+                                CachedMessages.IMP.admin.forceRegister.success
                                         .replace("{player}", playerName)
                         );
                     });
@@ -248,17 +239,17 @@ public class TiAuthCommand extends Command {
 
             case "migrate" -> {
                 if (!sender.hasPermission("tiauth.admin.commands.migrate")) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.noPermission
+                            CachedMessages.IMP.noPermission
                     );
                     return;
                 }
 
                 if (args.length < 3) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.admin.migrate.usage
+                            CachedMessages.IMP.admin.migrate.usage
                     );
                     return;
                 }
@@ -273,9 +264,9 @@ public class TiAuthCommand extends Command {
                 switch (sourceDatabase) {
                     case SQLITE -> {
                         if (args.length < 4) {
-                            utils.sendMessage(
+                            Utils.sendMessage(
                                     sender,
-                                    colorizedMessages.admin.migrate.usage
+                                    CachedMessages.IMP.admin.migrate.usage
                             );
                             return;
                         }
@@ -285,9 +276,9 @@ public class TiAuthCommand extends Command {
 
                     case H2 -> {
                         if (args.length < 6) {
-                            utils.sendMessage(
+                            Utils.sendMessage(
                                     sender,
-                                    colorizedMessages.admin.migrate.usage
+                                    CachedMessages.IMP.admin.migrate.usage
                             );
                             return;
                         }
@@ -303,9 +294,9 @@ public class TiAuthCommand extends Command {
 
                     case MYSQL, POSTGRESQL -> {
                         if (args.length < 8) {
-                            utils.sendMessage(
+                            Utils.sendMessage(
                                     sender,
-                                    colorizedMessages.admin.migrate.usage
+                                    CachedMessages.IMP.admin.migrate.usage
                             );
                             return;
                         }
@@ -324,16 +315,16 @@ public class TiAuthCommand extends Command {
 
                 databaseMigrator.migrate(success -> {
                     if (!success) {
-                        utils.sendMessage(
+                        Utils.sendMessage(
                                 sender,
-                                colorizedMessages.admin.migrate.error
+                                CachedMessages.IMP.admin.migrate.error
                         );
                         return;
                     }
 
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             sender,
-                            colorizedMessages.admin.migrate.success
+                            CachedMessages.IMP.admin.migrate.success
                     );
                 });
             }

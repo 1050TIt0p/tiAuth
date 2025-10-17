@@ -2,18 +2,17 @@ package ru.matveylegenda.tiauth.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import lombok.experimental.UtilityClass;
+import ru.matveylegenda.tiauth.config.MainConfig;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+@UtilityClass
 public class SessionCache {
-    private final Cache<String, String> sessions;
-
-    public SessionCache(int sessionLifetime) {
-        this.sessions = Caffeine.newBuilder()
-                .expireAfterWrite(sessionLifetime, TimeUnit.MINUTES)
-                .build();
-    }
+    private final Cache<String, String> sessions = Caffeine.newBuilder()
+            .expireAfterWrite(MainConfig.IMP.auth.sessionLifetimeMinutes, TimeUnit.MINUTES)
+            .build();
 
     public void addPlayer(String name, String ip) {
         sessions.put(name.toLowerCase(Locale.ROOT), ip);

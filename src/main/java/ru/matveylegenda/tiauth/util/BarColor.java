@@ -1,5 +1,8 @@
 package ru.matveylegenda.tiauth.util;
 
+import lombok.Getter;
+
+@Getter
 public enum BarColor {
     PINK(0),
     BLUE(1),
@@ -15,7 +18,4 @@ public enum BarColor {
         this.id = id;
     }
 
-    public int getId() {
-        return id;
-    }
 }

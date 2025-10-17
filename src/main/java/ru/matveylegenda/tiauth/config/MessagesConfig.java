@@ -1,9 +1,38 @@
 package ru.matveylegenda.tiauth.config;
 
+import net.elytrium.serializer.NameStyle;
+import net.elytrium.serializer.SerializerConfig;
 import net.elytrium.serializer.annotations.NewLine;
+import net.elytrium.serializer.annotations.Transient;
 import net.elytrium.serializer.language.object.YamlSerializable;
 
+import java.nio.file.Path;
+
 public class MessagesConfig extends YamlSerializable {
+
+    @Transient
+    private static final SerializerConfig CONFIG = new SerializerConfig.Builder()
+            .setCommentValueIndent(1)
+            .setFieldNameStyle(NameStyle.MACRO_CASE)
+            .setNodeNameStyle(NameStyle.KEBAB_CASE)
+            .build();
+
+    @Transient
+    public static final MessagesConfig IMP = new MessagesConfig(getMessageConfigPath());
+
+    public MessagesConfig(Path path) {
+        super(path, CONFIG);
+        this.admin = new Admin();
+        this.player = new Player();
+        loadLang(MainConfig.IMP.lang);
+    }
+
+    private static Path getMessageConfigPath() {
+        return switch (MainConfig.IMP.lang) {
+            case RU -> Path.of("plugins/tiAuth", "lang", "messages_ru.yml");
+            case EN -> Path.of("plugins/tiAuth", "lang", "messages_en.yml");
+        };
+    }
 
     public String prefix;
     public String onlyPlayer;
@@ -12,8 +41,8 @@ public class MessagesConfig extends YamlSerializable {
     public String playerNotFound;
     public String noPermission;
 
-    public Admin admin = new Admin();
-    public Player player = new Player();
+    public Admin admin;
+    public Player player;
 
     @NewLine
     public static class Admin {

@@ -1,8 +1,11 @@
 package ru.matveylegenda.tiauth.config;
 
+import net.elytrium.serializer.NameStyle;
+import net.elytrium.serializer.SerializerConfig;
 import net.elytrium.serializer.annotations.Comment;
 import net.elytrium.serializer.annotations.CommentValue;
 import net.elytrium.serializer.annotations.NewLine;
+import net.elytrium.serializer.annotations.Transient;
 import net.elytrium.serializer.language.object.YamlSerializable;
 import ru.matveylegenda.tiauth.database.DatabaseType;
 import ru.matveylegenda.tiauth.hash.HashType;
@@ -10,9 +13,31 @@ import ru.matveylegenda.tiauth.util.BarColor;
 import ru.matveylegenda.tiauth.util.BarStyle;
 import ru.matveylegenda.tiauth.util.colorizer.Serializer;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 public class MainConfig extends YamlSerializable {
+
+    @Transient
+    private static final SerializerConfig CONFIG = new SerializerConfig.Builder()
+            .setCommentValueIndent(1)
+            .setFieldNameStyle(NameStyle.MACRO_CASE)
+            .setNodeNameStyle(NameStyle.KEBAB_CASE)
+            .build();
+
+    @Transient
+    public static final MainConfig IMP = new MainConfig();
+
+    public MainConfig() {
+        super(Paths.get("plugins/tiAuth/config.yml"), CONFIG);
+        this.servers = new Servers();
+        this.database = new Database();
+        this.auth = new Auth();
+        this.bossBar = new BossBar();
+        this.title = new Title();
+        this.actionBar = new ActionBar();
+    }
+
     @Comment({
             @CommentValue(" Доступные варианты:"),
             @CommentValue(" LEGACY - \"&fПример &#650dbdтекста\""),
@@ -25,7 +50,7 @@ public class MainConfig extends YamlSerializable {
     })
     public MessagesConfig.Lang lang = MessagesConfig.Lang.RU;
 
-    public Servers servers = new Servers();
+    public Servers servers;
 
     @NewLine
     public static class Servers {
@@ -49,7 +74,7 @@ public class MainConfig extends YamlSerializable {
         public String backend = "hub";
     }
 
-    public Database database = new Database();
+    public Database database;
 
     @NewLine
     public static class Database {
@@ -69,23 +94,17 @@ public class MainConfig extends YamlSerializable {
                 @CommentValue(" Параметры пула соединений (H2, MySQL, PostgreSQL")
         })
         @Comment(
-                value = {
-                        @CommentValue(" Максимальное время ожидания соединения из пула")
-                },
+                value = @CommentValue(" Максимальное время ожидания соединения из пула"),
                 at = Comment.At.SAME_LINE
         )
         public long connectionTimeoutMs = 30000;
         @Comment(
-                value = {
-                        @CommentValue(" Максимальное время простоя соединения в пуле. Применяется только если min-idle меньше max-pool-size")
-                },
+                value = @CommentValue(" Максимальное время простоя соединения в пуле. Применяется только если min-idle меньше max-pool-size"),
                 at = Comment.At.SAME_LINE
         )
         public long idleTimeoutMs = 600000;
         @Comment(
-                value = {
-                        @CommentValue(" Максимальное время жизни соединения в пуле. После этого соединение будет закрыто и открыто новое, если требуется")
-                },
+                value = @CommentValue(" Максимальное время жизни соединения в пуле. После этого соединение будет закрыто и открыто новое, если требуется"),
                 at = Comment.At.SAME_LINE
         )
         public long maxLifetimeMs = 1800000;
@@ -107,7 +126,7 @@ public class MainConfig extends YamlSerializable {
         public int minIdle = -1;
     }
 
-    public Auth auth = new Auth();
+    public Auth auth;
 
     @NewLine
     public static class Auth {
@@ -182,35 +201,31 @@ public class MainConfig extends YamlSerializable {
         public boolean useDialogs = true;
     }
 
-    public BossBar bossBar = new BossBar();
+    public BossBar bossBar;
 
     @NewLine
     public static class BossBar {
         public boolean enabled = true;
         @Comment(
-                value = {
-                        @CommentValue(" PINK / BLUE / RED / GREEN / YELLOW / PURPLE / WHITE"),
-                },
+                value = @CommentValue(" PINK / BLUE / RED / GREEN / YELLOW / PURPLE / WHITE"),
                 at = Comment.At.SAME_LINE
         )
         public BarColor color = BarColor.PURPLE;
         @Comment(
-                value = {
-                        @CommentValue(" SOLID / SEGMENTED_6 / SEGMENTED_10 / SEGMENTED_12 / SEGMENTED_20"),
-                },
+                value = @CommentValue(" SOLID / SEGMENTED_6 / SEGMENTED_10 / SEGMENTED_12 / SEGMENTED_20"),
                 at = Comment.At.SAME_LINE
         )
         public BarStyle style = BarStyle.SEGMENTED_12;
     }
 
-    public Title title = new Title();
+    public Title title;
 
     @NewLine
     public static class Title {
         public boolean enabled = false;
     }
 
-    public ActionBar actionBar = new ActionBar();
+    public ActionBar actionBar;
 
     @NewLine
     public static class ActionBar {

@@ -2,19 +2,17 @@ package ru.matveylegenda.tiauth.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import lombok.experimental.UtilityClass;
+import ru.matveylegenda.tiauth.config.MainConfig;
 
 import java.util.concurrent.TimeUnit;
 
+@UtilityClass
 public class BanCache {
-    private final int banTime;
-    private final Cache<String, Long> bans;
-
-    public BanCache(int banTime) {
-        this.banTime = banTime;
-        this.bans = Caffeine.newBuilder()
-                .expireAfterWrite(banTime, TimeUnit.SECONDS)
-                .build();
-    }
+    private final Cache<String, Long> bans = Caffeine.newBuilder()
+            .expireAfterWrite(MainConfig.IMP.auth.banTime, TimeUnit.SECONDS)
+            .build();
+    ;
 
     public void addPlayer(String ip) {
         bans.put(ip, System.currentTimeMillis());
@@ -30,6 +28,6 @@ public class BanCache {
 
         if (startTime == null) return 0;
 
-        return (int) (banTime - TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime));
+        return (int) (MainConfig.IMP.auth.banTime - TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime));
     }
 }

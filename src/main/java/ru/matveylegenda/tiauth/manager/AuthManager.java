@@ -16,13 +16,13 @@ import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.BanCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
+import ru.matveylegenda.tiauth.config.CachedMessages;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.util.Utils;
-import ru.matveylegenda.tiauth.util.colorizer.ColorizedMessages;
 
 import java.util.List;
 import java.util.Map;
@@ -37,40 +37,26 @@ public class AuthManager {
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
     private final TiAuth plugin;
     private final Database database;
-    private final AuthCache authCache;
-    private final PremiumCache premiumCache;
-    private final SessionCache sessionCache;
-    private final BanCache banCache;
-    private final MainConfig mainConfig;
-    private final Utils utils;
-    private final ColorizedMessages colorizedMessages;
     private final TaskManager taskManager;
     private final Pattern passwordPattern;
 
     public AuthManager(TiAuth plugin) {
         this.plugin = plugin;
         this.database = plugin.getDatabase();
-        this.authCache = plugin.getAuthCache();
-        this.premiumCache = plugin.getPremiumCache();
-        this.sessionCache = plugin.getSessionCache();
-        this.banCache = plugin.getBanCache();
-        this.mainConfig = plugin.getMainConfig();
-        this.utils = plugin.getUtils();
-        this.colorizedMessages = plugin.getColorizedMessages();
         this.taskManager = plugin.getTaskManager();
-        this.passwordPattern = Pattern.compile(mainConfig.auth.passwordPattern);
+        this.passwordPattern = Pattern.compile(MainConfig.IMP.auth.passwordPattern);
     }
 
     public void registerPlayer(ProxiedPlayer player, String password, String repeatPassword) {
         if (!password.equals(repeatPassword)) {
-            utils.sendMessage(
+            Utils.sendMessage(
                     player,
-                    colorizedMessages.player.register.mismatch
+                    CachedMessages.IMP.player.register.mismatch
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
-                        player, colorizedMessages.player.dialog.notifications.mismatch
+                        player, CachedMessages.IMP.player.dialog.notifications.mismatch
                 );
             }
 
@@ -78,36 +64,36 @@ public class AuthManager {
         }
 
         if (password.isEmpty()) {
-            utils.sendMessage(
+            Utils.sendMessage(
                     player,
-                    colorizedMessages.player.checkPassword.passwordEmpty
+                    CachedMessages.IMP.player.checkPassword.passwordEmpty
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player.dialog.notifications.passwordEmpty
+                        CachedMessages.IMP.player.dialog.notifications.passwordEmpty
                 );
             }
 
             return;
         }
 
-        if (password.length() < mainConfig.auth.minPasswordLength ||
-                password.length() > mainConfig.auth.maxPasswordLength) {
-            utils.sendMessage(
+        if (password.length() < MainConfig.IMP.auth.minPasswordLength ||
+                password.length() > MainConfig.IMP.auth.maxPasswordLength) {
+            Utils.sendMessage(
                     player,
-                    colorizedMessages.player.checkPassword.invalidLength
-                            .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
-                            .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+                    CachedMessages.IMP.player.checkPassword.invalidLength
+                            .replace("{min}", String.valueOf(MainConfig.IMP.auth.minPasswordLength))
+                            .replace("{max}", String.valueOf(MainConfig.IMP.auth.maxPasswordLength))
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player.dialog.notifications.invalidLength
-                                .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
-                                .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+                        CachedMessages.IMP.player.dialog.notifications.invalidLength
+                                .replace("{min}", String.valueOf(MainConfig.IMP.auth.minPasswordLength))
+                                .replace("{max}", String.valueOf(MainConfig.IMP.auth.maxPasswordLength))
                 );
             }
 
@@ -115,15 +101,15 @@ public class AuthManager {
         }
 
         if (!passwordPattern.matcher(password).matches()) {
-            utils.sendMessage(
+            Utils.sendMessage(
                     player,
-                    colorizedMessages.player.checkPassword.invalidPattern
+                    CachedMessages.IMP.player.checkPassword.invalidPattern
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player.dialog.notifications.invalidPattern
+                        CachedMessages.IMP.player.dialog.notifications.invalidPattern
                 );
             }
 
@@ -136,18 +122,15 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                utils.kickPlayer(
-                        player,
-                        colorizedMessages.queryError
-                );
+                player.disconnect(CachedMessages.IMP.queryError);
                 endProcess(player);
                 return;
             }
 
             if (user != null) {
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.player.register.alreadyRegistered
+                        CachedMessages.IMP.player.register.alreadyRegistered
                 );
                 endProcess(player);
                 return;
@@ -155,21 +138,18 @@ public class AuthManager {
 
             registerPlayer(player.getName(), password, player.getAddress().getAddress().getHostAddress(), success1 -> {
                 if (!success1) {
-                    utils.kickPlayer(
-                            player,
-                            colorizedMessages.queryError
-                    );
+                    player.disconnect(CachedMessages.IMP.queryError);
                     endProcess(player);
                     return;
                 }
 
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.player.register.success
+                        CachedMessages.IMP.player.register.success
                 );
-                authCache.setAuthenticated(player.getName());
+                AuthCache.setAuthenticated(player.getName());
 
-                sessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
+                SessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
                 taskManager.cancelTasks(player);
 
                 connectToBackend(player);
@@ -180,7 +160,7 @@ public class AuthManager {
     }
 
     public void registerPlayer(String playerName, String password, String ip, Consumer<Boolean> callback) {
-        Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
+        Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
         database.getAuthUserRepository().registerUser(
                 new AuthUser(
                         playerName.toLowerCase(),
@@ -205,21 +185,21 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.queryError
+                        CachedMessages.IMP.queryError
                 );
                 endProcess(player);
                 return;
             }
 
-            Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
+            Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
             String hashedPassword = user.getPassword();
 
             if (!hash.verifyPassword(password, hashedPassword)) {
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.player.checkPassword.wrongPassword
+                        CachedMessages.IMP.player.checkPassword.wrongPassword
                 );
                 endProcess(player);
                 return;
@@ -227,20 +207,17 @@ public class AuthManager {
 
             unregisterPlayer(player.getName(), success1 -> {
                 if (!success1) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             player,
-                            colorizedMessages.queryError
+                            CachedMessages.IMP.queryError
                     );
                     endProcess(player);
                     return;
                 }
 
-                sessionCache.removePlayer(player.getName());
+                SessionCache.removePlayer(player.getName());
 
-                utils.kickPlayer(
-                        player,
-                        colorizedMessages.player.unregister.success
-                );
+                player.disconnect(CachedMessages.IMP.player.unregister.success);
 
                 endProcess(player);
             });
@@ -259,24 +236,24 @@ public class AuthManager {
     }
 
     public void loginPlayer(ProxiedPlayer player, String password) {
-        if (authCache.isAuthenticated(player.getName())) {
-            utils.sendMessage(
+        if (AuthCache.isAuthenticated(player.getName())) {
+            Utils.sendMessage(
                     player,
-                    colorizedMessages.player.login.alreadyLogged
+                    CachedMessages.IMP.player.login.alreadyLogged
             );
             return;
         }
 
         if (password.isEmpty()) {
-            utils.sendMessage(
+            Utils.sendMessage(
                     player,
-                    colorizedMessages.player.checkPassword.passwordEmpty
+                    CachedMessages.IMP.player.checkPassword.passwordEmpty
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player.dialog.notifications.passwordEmpty
+                        CachedMessages.IMP.player.dialog.notifications.passwordEmpty
                 );
             }
 
@@ -289,37 +266,31 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                utils.kickPlayer(
-                        player,
-                        colorizedMessages.queryError
-                );
+                player.disconnect(CachedMessages.IMP.queryError);
                 endProcess(player);
                 return;
             }
 
             if (user == null) {
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.player.login.notRegistered
+                        CachedMessages.IMP.player.login.notRegistered
                 );
                 endProcess(player);
                 return;
             }
 
-            Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
+            Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
             String hashedPassword = user.getPassword();
 
             if (!hash.verifyPassword(password, hashedPassword)) {
                 int attempts = loginAttempts.merge(player.getName(), 1, Integer::sum);
 
-                if (attempts >= mainConfig.auth.loginAttempts) {
-                    utils.kickPlayer(
-                            player,
-                            colorizedMessages.player.kick.tooManyAttempts
-                    );
+                if (attempts >= MainConfig.IMP.auth.loginAttempts) {
+                    player.disconnect(CachedMessages.IMP.player.kick.tooManyAttempts);
 
-                    if (mainConfig.auth.banPlayer) {
-                        banCache.addPlayer(player.getAddress().getAddress().getHostAddress());
+                    if (MainConfig.IMP.auth.banPlayer) {
+                        BanCache.addPlayer(player.getAddress().getAddress().getHostAddress());
                     }
 
                     loginAttempts.remove(player.getName());
@@ -327,17 +298,17 @@ public class AuthManager {
                     return;
                 }
 
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.player.login.wrongPassword
-                                .replace("{attempts}", String.valueOf(mainConfig.auth.loginAttempts - attempts))
+                        CachedMessages.IMP.player.login.wrongPassword
+                                .replace("{attempts}", String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts))
                 );
 
                 if (supportDialog(player)) {
                     showLoginDialog(
                             player,
-                            colorizedMessages.player.dialog.notifications.wrongPassword
-                                    .replace("{attempts}", String.valueOf(mainConfig.auth.loginAttempts - attempts))
+                            CachedMessages.IMP.player.dialog.notifications.wrongPassword
+                                    .replace("{attempts}", String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts))
                     );
                 }
                 endProcess(player);
@@ -345,9 +316,9 @@ public class AuthManager {
             }
 
             loginPlayer(player, () -> {
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.player.login.success
+                        CachedMessages.IMP.player.login.success
                 );
 
                 loginAttempts.remove(player.getName());
@@ -359,10 +330,10 @@ public class AuthManager {
     public void loginPlayer(ProxiedPlayer player, Runnable callback) {
         String ip = player.getAddress().getAddress().getHostAddress();
 
-        authCache.setAuthenticated(player.getName());
+        AuthCache.setAuthenticated(player.getName());
         database.getAuthUserRepository().updateLastLogin(player.getName());
         database.getAuthUserRepository().updateLastIp(player.getName(), ip);
-        sessionCache.addPlayer(player.getName(), ip);
+        SessionCache.addPlayer(player.getName(), ip);
         taskManager.cancelTasks(player);
 
         connectToBackend(player);
@@ -372,35 +343,35 @@ public class AuthManager {
 
     public void changePasswordPlayer(ProxiedPlayer player, String oldPassword, String newPassword) {
         if (oldPassword.isEmpty() || newPassword.isEmpty()) {
-            utils.sendMessage(
+            Utils.sendMessage(
                     player,
-                    colorizedMessages.player.checkPassword.passwordEmpty
+                    CachedMessages.IMP.player.checkPassword.passwordEmpty
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player.dialog.notifications.passwordEmpty
+                        CachedMessages.IMP.player.dialog.notifications.passwordEmpty
                 );
             }
 
             return;
         }
 
-        if (newPassword.length() < mainConfig.auth.minPasswordLength || newPassword.length() > mainConfig.auth.maxPasswordLength) {
-            utils.sendMessage(
+        if (newPassword.length() < MainConfig.IMP.auth.minPasswordLength || newPassword.length() > MainConfig.IMP.auth.maxPasswordLength) {
+            Utils.sendMessage(
                     player,
-                    colorizedMessages.player.checkPassword.invalidLength
-                            .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
-                            .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+                    CachedMessages.IMP.player.checkPassword.invalidLength
+                            .replace("{min}", String.valueOf(MainConfig.IMP.auth.minPasswordLength))
+                            .replace("{max}", String.valueOf(MainConfig.IMP.auth.maxPasswordLength))
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player.dialog.notifications.invalidLength
-                                .replace("{min}", String.valueOf(mainConfig.auth.minPasswordLength))
-                                .replace("{max}", String.valueOf(mainConfig.auth.maxPasswordLength))
+                        CachedMessages.IMP.player.dialog.notifications.invalidLength
+                                .replace("{min}", String.valueOf(MainConfig.IMP.auth.minPasswordLength))
+                                .replace("{max}", String.valueOf(MainConfig.IMP.auth.maxPasswordLength))
                 );
             }
 
@@ -408,15 +379,15 @@ public class AuthManager {
         }
 
         if (!passwordPattern.matcher(newPassword).matches()) {
-            utils.sendMessage(
+            Utils.sendMessage(
                     player,
-                    colorizedMessages.player.checkPassword.invalidPattern
+                    CachedMessages.IMP.player.checkPassword.invalidPattern
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(
                         player,
-                        colorizedMessages.player.dialog.notifications.invalidPattern
+                        CachedMessages.IMP.player.dialog.notifications.invalidPattern
                 );
             }
 
@@ -429,21 +400,21 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.queryError
+                        CachedMessages.IMP.queryError
                 );
                 endProcess(player);
                 return;
             }
 
-            Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
+            Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
             String hashedPassword = user.getPassword();
 
             if (!hash.verifyPassword(oldPassword, hashedPassword)) {
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.player.checkPassword.wrongPassword
+                        CachedMessages.IMP.player.checkPassword.wrongPassword
                 );
                 endProcess(player);
                 return;
@@ -451,17 +422,17 @@ public class AuthManager {
 
             changePasswordPlayer(player.getName(), newPassword, success1 -> {
                 if (!success1) {
-                    utils.sendMessage(
+                    Utils.sendMessage(
                             player,
-                            colorizedMessages.queryError
+                            CachedMessages.IMP.queryError
                     );
                     endProcess(player);
                     return;
                 }
 
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.player.changePassword.success
+                        CachedMessages.IMP.player.changePassword.success
                 );
 
                 endProcess(player);
@@ -470,7 +441,7 @@ public class AuthManager {
     }
 
     public void changePasswordPlayer(String playerName, String password, Consumer<Boolean> callback) {
-        Hash hash = HashFactory.create(mainConfig.auth.hashAlgorithm);
+        Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
         String hashedPassword = hash.hashPassword(password);
 
         database.getAuthUserRepository().updatePassword(playerName, hashedPassword, success -> {
@@ -485,8 +456,8 @@ public class AuthManager {
 
     public void logoutPlayer(ProxiedPlayer player) {
         taskManager.cancelTasks(player);
-        authCache.logout(player.getName());
-        sessionCache.removePlayer(player.getName());
+        AuthCache.logout(player.getName());
+        SessionCache.removePlayer(player.getName());
     }
 
     public void togglePremium(ProxiedPlayer player) {
@@ -494,34 +465,34 @@ public class AuthManager {
             return;
         }
 
-        boolean isPremium = premiumCache.isPremium(player.getName());
+        boolean isPremium = PremiumCache.isPremium(player.getName());
 
         database.getAuthUserRepository().setPremium(player.getName(), !isPremium, success -> {
             if (!success) {
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.queryError
+                        CachedMessages.IMP.queryError
                 );
                 endProcess(player);
                 return;
             }
 
             if (isPremium) {
-                premiumCache.removePremium(player.getName());
+                PremiumCache.removePremium(player.getName());
 
-                utils.sendMessage(
+                Utils.sendMessage(
                         player,
-                        colorizedMessages.player.premium.disabled
+                        CachedMessages.IMP.player.premium.disabled
                 );
                 endProcess(player);
                 return;
             }
 
-            premiumCache.addPremium(player.getName());
+            PremiumCache.addPremium(player.getName());
 
-            utils.sendMessage(
+            Utils.sendMessage(
                     player,
-                    colorizedMessages.player.premium.enabled
+                    CachedMessages.IMP.player.premium.enabled
             );
 
             endProcess(player);
@@ -536,29 +507,24 @@ public class AuthManager {
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             try {
                 if (!success) {
-                    utils.kickPlayer(
-                            player,
-                            colorizedMessages.queryError
-                    );
+                    player.disconnect(CachedMessages.IMP.queryError);
                     return;
                 }
 
                 if (user != null && !player.getName().equals(user.getRealName())) {
-                    utils.kickPlayer(
-                            player,
-                            colorizedMessages.player.kick.realname
-                                    .replace("{realname}", user.getRealName())
-                                    .replace("{name}", player.getName())
+                    player.disconnect(CachedMessages.IMP.player.kick.realname
+                            .replace("{realname}", user.getRealName())
+                            .replace("{name}", player.getName())
                     );
 
                     return;
                 }
 
-                String sessionIP = sessionCache.getIP(player.getName());
+                String sessionIP = SessionCache.getIP(player.getName());
 
-                if (premiumCache.isPremium(player.getName()) ||
+                if (PremiumCache.isPremium(player.getName()) ||
                         (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
-                    authCache.setAuthenticated(player.getName());
+                    AuthCache.setAuthenticated(player.getName());
                     connectToBackend(player);
 
                     return;
@@ -571,8 +537,8 @@ public class AuthManager {
                 }
 
                 String reminderMessage = (user != null)
-                        ? colorizedMessages.player.reminder.login
-                        : colorizedMessages.player.reminder.register;
+                        ? CachedMessages.IMP.player.reminder.login
+                        : CachedMessages.IMP.player.reminder.register;
 
                 taskManager.startAuthTimeoutTask(player);
                 taskManager.startAuthReminderTask(player, reminderMessage);
@@ -589,7 +555,7 @@ public class AuthManager {
     }
 
     public void showLoginDialog(ProxiedPlayer player, String noticeMessage) {
-        if (!mainConfig.auth.useDialogs) {
+        if (!MainConfig.IMP.auth.useDialogs) {
             return;
         }
 
@@ -599,38 +565,35 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                utils.kickPlayer(
-                        player,
-                        colorizedMessages.queryError
-                );
+                player.disconnect(CachedMessages.IMP.queryError);
                 return;
             }
 
             Dialog dialog;
             if (user != null) {
-                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(colorizedMessages.player.dialog.login.title))
+                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.title))
                         .inputs(
                                 List.of(
-                                        new TextInput("password", TextComponent.fromLegacy(colorizedMessages.player.dialog.login.passwordField))
+                                        new TextInput("password", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.passwordField))
                                 )
                         ))
                         .action(
                                 new ActionButton(
-                                        TextComponent.fromLegacy(colorizedMessages.player.dialog.login.confirmButton),
+                                        TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.confirmButton),
                                         new CustomClickAction("tiauth_login")
                                 )
                         );
             } else {
-                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(colorizedMessages.player.dialog.register.title))
+                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.title))
                         .inputs(
                                 List.of(
-                                        new TextInput("password", TextComponent.fromLegacy(colorizedMessages.player.dialog.register.passwordField)),
-                                        new TextInput("repeatPassword", TextComponent.fromLegacy(colorizedMessages.player.dialog.register.repeatPasswordField))
+                                        new TextInput("password", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.passwordField)),
+                                        new TextInput("repeatPassword", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.repeatPasswordField))
                                 )
                         ))
                         .action(
                                 new ActionButton(
-                                        TextComponent.fromLegacy(colorizedMessages.player.dialog.register.confirmButton),
+                                        TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.confirmButton),
                                         new CustomClickAction("tiauth_register")
                                 )
                         );
@@ -651,13 +614,13 @@ public class AuthManager {
     }
 
     private void connectToAuthServer(PostLoginEvent event) {
-        ServerInfo authServer = plugin.getProxy().getServerInfo(mainConfig.servers.auth);
+        ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
         event.setTarget(authServer);
     }
 
     private void connectToAuthServer(ProxiedPlayer player) {
         ServerInfo currentServer = player.getServer().getInfo();
-        ServerInfo authServer = plugin.getProxy().getServerInfo(mainConfig.servers.auth);
+        ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
 
         if (currentServer == null || !currentServer.equals(authServer)) {
             player.connect(authServer);
@@ -666,7 +629,7 @@ public class AuthManager {
 
     private void connectToBackend(ProxiedPlayer player) {
         ServerInfo currentServer = player.getServer().getInfo();
-        ServerInfo backendServer = plugin.getProxy().getServerInfo(mainConfig.servers.backend);
+        ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
 
         if (currentServer == null || !currentServer.equals(backendServer)) {
             player.connect(backendServer);
@@ -679,7 +642,7 @@ public class AuthManager {
 
     private boolean beginProcess(ProxiedPlayer player) {
         if (!inProcess.add(player.getName())) {
-            utils.sendMessage(player, colorizedMessages.processing);
+            Utils.sendMessage(player, CachedMessages.IMP.processing);
             return false;
         }
 
