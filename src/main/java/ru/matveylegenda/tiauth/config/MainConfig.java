@@ -245,4 +245,33 @@ public class MainConfig extends YamlSerializable {
             @CommentValue(" Максимальное количество зарегистрированных аккаунтов с одного IP")
     })
     public int maxRegisteredAccountsPerIp = 10;
+
+    public Libraries libraries = new Libraries();
+
+    @NewLine
+    public static class Libraries {
+        public SQLite sqlite = new SQLite();
+
+        public static class SQLite {
+            public String version = "3.50.3.0";
+        }
+
+        public H2 h2 = new H2();
+
+        public static class H2 {
+            public String version = "2.3.232";
+        }
+
+        public MySQL mysql = new MySQL();
+
+        public static class MySQL {
+            public String version = "9.4.0";
+        }
+
+        public PostgreSQL postgresql = new PostgreSQL();
+
+        public static class PostgreSQL {
+            public String version = "42.7.7";
+        }
+    }
 }
