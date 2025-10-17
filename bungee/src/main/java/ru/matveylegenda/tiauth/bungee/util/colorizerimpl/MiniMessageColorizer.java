@@ -1,0 +1,20 @@
+package ru.matveylegenda.tiauth.bungee.util.colorizerimpl;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import ru.matveylegenda.tiauth.util.colorizer.Colorizer;
+
+public class MiniMessageColorizer implements Colorizer {
+
+    @Override
+    public String colorize(String message) {
+        Component component = MiniMessage.miniMessage().deserialize(message);
+        return LegacyComponentSerializer.builder()
+                .character('§')
+                .hexColors()
+                .useUnusualXRepeatedCharacterHexFormat()
+                .build()
+                .serialize(component);
+    }
+}
