@@ -1,4 +1,4 @@
-rootProject.name = 'tiauth'
+rootProject.name = 'tiAuth'
 
 include 'common'
 include 'bungee'
