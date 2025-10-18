@@ -121,7 +121,6 @@ public class TaskManager {
                     .matchLiteral("{time}")
                     .replacement(String.valueOf(counter))));
             bar.progress((float) counter / (float) MainConfig.IMP.auth.timeoutSeconds);
-//            player.showBossBar(bar);
         }
     }
 
