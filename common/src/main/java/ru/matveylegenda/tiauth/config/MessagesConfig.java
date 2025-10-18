@@ -158,7 +158,6 @@ public class MessagesConfig extends YamlSerializable {
 
         @NewLine
         public static class Kick {
-            public String notAuth;
             public String timeout;
             public String realname;
             public String tooManyAttempts;
@@ -263,7 +262,6 @@ public class MessagesConfig extends YamlSerializable {
                 player.logout.logoutByPremium = "{prefix} &fВы не можете разлогиниться из-за &#8833ECпремиум режима";
                 player.premium.enabled = "{prefix} &fПремиум режим &#8833ECвключен\n&fЕсли у вас нет лицензии Minecraft, выключите режим прописав /premium, иначе вы не сможете войти на сервер";
                 player.premium.disabled = "{prefix} &fПремиум режим &#8833ECвыключен";
-                player.kick.notAuth = "{prefix} &fВы не авторизованы";
                 player.kick.timeout = "{prefix} &fВы не успели авторизоваться";
                 player.kick.realname = "{prefix} &fПравильный ник: &#8833EC{realname}\n&fВаш ник: &#8833EC{name}";
                 player.kick.tooManyAttempts = "{prefix} &fВы превысили количество попыток для ввода пароля";
@@ -334,7 +332,6 @@ public class MessagesConfig extends YamlSerializable {
                 player.logout.logoutByPremium = "{prefix} &fYou cannot log out due to &#8833ECpremium mode";
                 player.premium.enabled = "{prefix} &fPremium mode &#8833ECenabled\n&fIf you don't have a Minecraft license, disable it using /premium, otherwise you won't be able to join the server";
                 player.premium.disabled = "{prefix} &fPremium mode &#8833ECdisabled";
-                player.kick.notAuth = "{prefix} &fYou are not authenticated";
                 player.kick.timeout = "{prefix} &fYou did not authenticate in time";
                 player.kick.realname = "{prefix} &fCorrect nickname: &#8833EC{realname}\n&fYour nickname: &#8833EC{name}";
                 player.kick.tooManyAttempts = "{prefix} &fYou exceeded the number of password attempts";

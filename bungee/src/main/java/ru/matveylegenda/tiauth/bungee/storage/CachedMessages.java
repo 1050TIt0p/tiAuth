@@ -2,7 +2,7 @@ package ru.matveylegenda.tiauth.bungee.storage;
 
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 
-import static ru.matveylegenda.tiauth.bungee.util.Utils.COLORIZER;
+import static ru.matveylegenda.tiauth.util.Utils.COLORIZER;
 
 public class CachedMessages {
 
@@ -120,7 +120,6 @@ public class CachedMessages {
         }
 
         public static class Kick {
-            public String notAuth;
             public String timeout;
             public String realname;
             public String tooManyAttempts;
@@ -250,7 +249,6 @@ public class CachedMessages {
         player.premium.disabled = COLORIZER.colorize(getPrefixed(config.player.premium.disabled, prefix));
 
         player.kick = new Player.Kick();
-        player.kick.notAuth = COLORIZER.colorize(getPrefixed(config.player.kick.notAuth, prefix));
         player.kick.timeout = COLORIZER.colorize(getPrefixed(config.player.kick.timeout, prefix));
         player.kick.realname = COLORIZER.colorize(getPrefixed(config.player.kick.realname, prefix));
         player.kick.tooManyAttempts = COLORIZER.colorize(getPrefixed(config.player.kick.tooManyAttempts, prefix));

@@ -8,14 +8,14 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 import ru.matveylegenda.tiauth.bungee.TiAuth;
+import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
+import ru.matveylegenda.tiauth.bungee.manager.TaskManager;
+import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.BanCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
-import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.database.Database;
-import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
-import ru.matveylegenda.tiauth.bungee.manager.TaskManager;
 
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -82,7 +82,6 @@ public class AuthListener implements Listener {
             event.setCancelled(true);
             return;
         }
-        ipCounts.addTo(ip, 1);
 
         event.registerIntent(plugin);
         database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
@@ -100,6 +99,7 @@ public class AuthListener implements Listener {
                         event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitRegisteredReached);
                         event.setCancelled(true);
                     }
+                    ipCounts.addTo(ip, 1);
                     event.completeIntent(plugin);
                 });
                 return;
@@ -108,6 +108,7 @@ public class AuthListener implements Listener {
                 PremiumCache.addPremium(connection.getName());
             }
 
+            ipCounts.addTo(ip, 1);
             event.completeIntent(plugin);
         });
     }
@@ -144,7 +145,7 @@ public class AuthListener implements Listener {
 
         if (!AuthCache.isAuthenticated(player.getName()) &&
                 !event.getTarget().getName().equals(MainConfig.IMP.servers.auth)) {
-            player.disconnect(CachedMessages.IMP.player.kick.notAuth);
+            event.setCancelled(true);
         }
     }
 

@@ -9,14 +9,15 @@ import net.md_5.bungee.api.plugin.PluginManager;
 import org.bstats.bungeecord.Metrics;
 import ru.matveylegenda.tiauth.bungee.command.admin.TiAuthCommand;
 import ru.matveylegenda.tiauth.bungee.command.player.*;
-import ru.matveylegenda.tiauth.config.MainConfig;
-import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.bungee.listener.AuthListener;
 import ru.matveylegenda.tiauth.bungee.listener.ChatListener;
 import ru.matveylegenda.tiauth.bungee.listener.DialogListener;
 import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
 import ru.matveylegenda.tiauth.bungee.manager.TaskManager;
-import ru.matveylegenda.tiauth.bungee.util.Utils;
+import ru.matveylegenda.tiauth.config.MainConfig;
+import ru.matveylegenda.tiauth.config.MessagesConfig;
+import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.util.Utils;
 import ua.nanit.limbo.server.LimboServer;
 
 import java.io.File;
@@ -48,6 +49,8 @@ public final class TiAuth extends Plugin {
         if (!dataFolder.exists()) {
             dataFolder.mkdir();
         }
+        MainConfig.IMP.reload();
+        MessagesConfig.IMP.reload();
         initializeDatabase(dataFolder);
         startLimboServer(dataFolder);
         Utils.initializeColorizer(MainConfig.IMP.serializer);
@@ -97,12 +100,33 @@ public final class TiAuth extends Plugin {
                 .version(MainConfig.IMP.libraries.postgresql.version)
                 .build();
 
+        Library adventureApi = Library.builder()
+                .groupId("net.kyori")
+                .artifactId("adventure-api")
+                .version("4.24.0")
+                .build();
+
+        Library adventureMinimessage = Library.builder()
+                .groupId("net.kyori")
+                .artifactId("adventure-text-minimessage")
+                .version("4.24.0")
+                .build();
+
+        Library adventureLegacy = Library.builder()
+                .groupId("net.kyori")
+                .artifactId("adventure-text-serializer-legacy")
+                .version("4.24.0")
+                .build();
+
         BungeeLibraryManager libraryManager = new BungeeLibraryManager(this);
         libraryManager.addMavenCentral();
         libraryManager.loadLibrary(sqliteJdbc);
         libraryManager.loadLibrary(h2Jdbc);
         libraryManager.loadLibrary(mysqlJdbc);
         libraryManager.loadLibrary(postgresqlJdbc);
+        libraryManager.loadLibrary(adventureApi);
+        libraryManager.loadLibrary(adventureMinimessage);
+        libraryManager.loadLibrary(adventureLegacy);
     }
 
     private void initializeDatabase(File dataFolder) {

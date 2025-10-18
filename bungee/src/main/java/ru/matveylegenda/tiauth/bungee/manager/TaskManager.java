@@ -9,8 +9,8 @@ import net.md_5.bungee.api.scheduler.ScheduledTask;
 import net.md_5.bungee.protocol.packet.BossBar;
 import ru.matveylegenda.tiauth.bungee.TiAuth;
 import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
+import ru.matveylegenda.tiauth.bungee.util.BungeeUtils;
 import ru.matveylegenda.tiauth.config.MainConfig;
-import ru.matveylegenda.tiauth.bungee.util.Utils;
 
 import java.util.Map;
 import java.util.UUID;
@@ -56,7 +56,7 @@ public class TaskManager {
                 return;
             }
 
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     reminderMessage
             );

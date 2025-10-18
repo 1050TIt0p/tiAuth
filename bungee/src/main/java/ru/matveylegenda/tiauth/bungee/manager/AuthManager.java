@@ -12,17 +12,17 @@ import net.md_5.bungee.api.dialog.body.PlainMessageBody;
 import net.md_5.bungee.api.dialog.input.TextInput;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import ru.matveylegenda.tiauth.bungee.TiAuth;
+import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
+import ru.matveylegenda.tiauth.bungee.util.BungeeUtils;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.BanCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
-import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
-import ru.matveylegenda.tiauth.bungee.util.Utils;
 
 import java.util.List;
 import java.util.Map;
@@ -49,7 +49,7 @@ public class AuthManager {
 
     public void registerPlayer(ProxiedPlayer player, String password, String repeatPassword) {
         if (!password.equals(repeatPassword)) {
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.register.mismatch
             );
@@ -64,7 +64,7 @@ public class AuthManager {
         }
 
         if (password.isEmpty()) {
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.checkPassword.passwordEmpty
             );
@@ -81,7 +81,7 @@ public class AuthManager {
 
         if (password.length() < MainConfig.IMP.auth.minPasswordLength ||
                 password.length() > MainConfig.IMP.auth.maxPasswordLength) {
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.checkPassword.invalidLength
                             .replace("{min}", String.valueOf(MainConfig.IMP.auth.minPasswordLength))
@@ -101,7 +101,7 @@ public class AuthManager {
         }
 
         if (!passwordPattern.matcher(password).matches()) {
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.checkPassword.invalidPattern
             );
@@ -128,7 +128,7 @@ public class AuthManager {
             }
 
             if (user != null) {
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.player.register.alreadyRegistered
                 );
@@ -143,7 +143,7 @@ public class AuthManager {
                     return;
                 }
 
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.player.register.success
                 );
@@ -185,7 +185,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.queryError
                 );
@@ -197,7 +197,7 @@ public class AuthManager {
             String hashedPassword = user.getPassword();
 
             if (!hash.verifyPassword(password, hashedPassword)) {
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.player.checkPassword.wrongPassword
                 );
@@ -207,7 +207,7 @@ public class AuthManager {
 
             unregisterPlayer(player.getName(), success1 -> {
                 if (!success1) {
-                    Utils.sendMessage(
+                    BungeeUtils.sendMessage(
                             player,
                             CachedMessages.IMP.queryError
                     );
@@ -237,7 +237,7 @@ public class AuthManager {
 
     public void loginPlayer(ProxiedPlayer player, String password) {
         if (AuthCache.isAuthenticated(player.getName())) {
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.login.alreadyLogged
             );
@@ -245,7 +245,7 @@ public class AuthManager {
         }
 
         if (password.isEmpty()) {
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.checkPassword.passwordEmpty
             );
@@ -272,7 +272,7 @@ public class AuthManager {
             }
 
             if (user == null) {
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.player.login.notRegistered
                 );
@@ -298,7 +298,7 @@ public class AuthManager {
                     return;
                 }
 
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.player.login.wrongPassword
                                 .replace("{attempts}", String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts))
@@ -316,7 +316,7 @@ public class AuthManager {
             }
 
             loginPlayer(player, () -> {
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.player.login.success
                 );
@@ -343,7 +343,7 @@ public class AuthManager {
 
     public void changePasswordPlayer(ProxiedPlayer player, String oldPassword, String newPassword) {
         if (oldPassword.isEmpty() || newPassword.isEmpty()) {
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.checkPassword.passwordEmpty
             );
@@ -359,7 +359,7 @@ public class AuthManager {
         }
 
         if (newPassword.length() < MainConfig.IMP.auth.minPasswordLength || newPassword.length() > MainConfig.IMP.auth.maxPasswordLength) {
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.checkPassword.invalidLength
                             .replace("{min}", String.valueOf(MainConfig.IMP.auth.minPasswordLength))
@@ -379,7 +379,7 @@ public class AuthManager {
         }
 
         if (!passwordPattern.matcher(newPassword).matches()) {
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.checkPassword.invalidPattern
             );
@@ -400,7 +400,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.queryError
                 );
@@ -412,7 +412,7 @@ public class AuthManager {
             String hashedPassword = user.getPassword();
 
             if (!hash.verifyPassword(oldPassword, hashedPassword)) {
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.player.checkPassword.wrongPassword
                 );
@@ -422,7 +422,7 @@ public class AuthManager {
 
             changePasswordPlayer(player.getName(), newPassword, success1 -> {
                 if (!success1) {
-                    Utils.sendMessage(
+                    BungeeUtils.sendMessage(
                             player,
                             CachedMessages.IMP.queryError
                     );
@@ -430,7 +430,7 @@ public class AuthManager {
                     return;
                 }
 
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.player.changePassword.success
                 );
@@ -469,7 +469,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().setPremium(player.getName(), !isPremium, success -> {
             if (!success) {
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.queryError
                 );
@@ -480,7 +480,7 @@ public class AuthManager {
             if (isPremium) {
                 PremiumCache.removePremium(player.getName());
 
-                Utils.sendMessage(
+                BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.player.premium.disabled
                 );
@@ -490,7 +490,7 @@ public class AuthManager {
 
             PremiumCache.addPremium(player.getName());
 
-            Utils.sendMessage(
+            BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.premium.enabled
             );
@@ -642,7 +642,7 @@ public class AuthManager {
 
     private boolean beginProcess(ProxiedPlayer player) {
         if (!inProcess.add(player.getName())) {
-            Utils.sendMessage(player, CachedMessages.IMP.processing);
+            BungeeUtils.sendMessage(player, CachedMessages.IMP.processing);
             return false;
         }
 
