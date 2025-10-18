@@ -73,7 +73,7 @@ public final class TiAuth {
         registerListeners();
         registerCommands();
 
-        metricsFactory.make(this, 26921);
+        metricsFactory.make(this, 27629);
     }
 
     @Subscribe
