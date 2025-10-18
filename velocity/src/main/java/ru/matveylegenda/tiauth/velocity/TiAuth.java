@@ -222,11 +222,11 @@ public final class TiAuth {
 
     private void registerCommands() {
         CommandManager commandManager = server.getCommandManager();
-        commandManager.register(commandManager.metaBuilder("tiauth").build(), new TiAuthCommand(this));
-        commandManager.register(commandManager.metaBuilder("login").build(), new LoginCommand(this));
-        commandManager.register(commandManager.metaBuilder("register").build(), new RegisterCommand(this));
-        commandManager.register(commandManager.metaBuilder("unregister").build(), new UnregisterCommand(this));
-        commandManager.register(commandManager.metaBuilder("changepassword").build(), new ChangePasswordCommand(this));
+        commandManager.register(commandManager.metaBuilder("tiauth").aliases("auth").build(), new TiAuthCommand(this));
+        commandManager.register(commandManager.metaBuilder("login").aliases("l").build(), new LoginCommand(this));
+        commandManager.register(commandManager.metaBuilder("register").aliases("reg").build(), new RegisterCommand(this));
+        commandManager.register(commandManager.metaBuilder("unregister").aliases("unreg").build(), new UnregisterCommand(this));
+        commandManager.register(commandManager.metaBuilder("changepassword").aliases("changepass").build(), new ChangePasswordCommand(this));
         commandManager.register(commandManager.metaBuilder("premium").build(), new PremiumCommand(this));
         commandManager.register(commandManager.metaBuilder("logout").build(), new LogoutCommand(this));
     }
