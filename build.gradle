@@ -12,6 +12,7 @@ allprojects {
         maven { url "https://libraries.minecraft.net" }
         maven { url 'https://jitpack.io' }
         maven { url 'https://repo.alessiodp.com/releases/' }
+        maven { url 'https://repo.papermc.io/repository/maven-public/' }
     }
 }
 
@@ -58,6 +59,7 @@ subprojects {
 dependencies {
     implementation(project(":common"))
     implementation(project(":bungee"))
+    implementation(project(":velocity"))
 }
 
 tasks.shadowJar {
