@@ -10,4 +10,4 @@ common/build/classes/java/test/
 common/velocity/classes/java/main/
 common/velocity/classes/java/test/
 # Idea
-/.idea/
+.idea/
