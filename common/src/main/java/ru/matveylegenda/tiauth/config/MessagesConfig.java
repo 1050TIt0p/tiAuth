@@ -1,6 +1,5 @@
 package ru.matveylegenda.tiauth.config;
 
-import net.elytrium.serializer.NameStyle;
 import net.elytrium.serializer.SerializerConfig;
 import net.elytrium.serializer.annotations.NewLine;
 import net.elytrium.serializer.annotations.Transient;
@@ -13,8 +12,6 @@ public class MessagesConfig extends YamlSerializable {
     @Transient
     private static final SerializerConfig CONFIG = new SerializerConfig.Builder()
             .setCommentValueIndent(1)
-            .setFieldNameStyle(NameStyle.MACRO_CASE)
-            .setNodeNameStyle(NameStyle.KEBAB_CASE)
             .build();
 
     @Transient
