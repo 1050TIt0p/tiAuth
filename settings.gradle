@@ -1,1 +1,5 @@
-rootProject.name = 'tiAuth'
+rootProject.name = 'tiauth'
+
+include 'common'
+include 'bungee'
+include 'velocity'

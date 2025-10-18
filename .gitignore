@@ -1,7 +1,13 @@
 # Project exclude paths
-/.gradle/
-/build/
-/build/classes/java/main/
-/build/classes/java/test/
+.gradle/
+build/
+build/classes/java/main/
+build/classes/java/test/
+bungee/build/classes/java/main/
+bungee/build/classes/java/test/
+common/build/classes/java/main/
+common/build/classes/java/test/
+common/velocity/classes/java/main/
+common/velocity/classes/java/test/
 # Idea
-/.idea/
+.idea/

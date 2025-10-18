@@ -3,41 +3,63 @@ plugins {
     id("com.gradleup.shadow") version "9.1.0"
 }
 
-group = 'ru.matveylegenda'
-version = '1.2.1'
+allprojects {
+    group = 'ru.matveylegenda'
+    version = '1.2.1'
 
-repositories {
-    mavenCentral()
-    maven {
-        url "https://libraries.minecraft.net"
+    repositories {
+        mavenCentral()
+        maven { url "https://libraries.minecraft.net" }
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://repo.alessiodp.com/releases/' }
+        maven { url 'https://repo.papermc.io/repository/maven-public/' }
     }
-    maven {
-        url 'https://jitpack.io'
+}
+
+subprojects {
+    apply plugin: "java"
+
+    dependencies {
+        implementation("com.github.1050TIt0p:NanoLimbo:1.9.10")
+        implementation("com.j256.ormlite:ormlite-jdbc:6.1")
+        implementation("com.zaxxer:HikariCP:7.0.1")
+        implementation("at.favre.lib:bcrypt:0.10.2")
+        implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
+        implementation("net.elytrium:serializer:1.1.1")
+        implementation("net.kyori:adventure-api:4.24.0")
+        implementation("net.kyori:adventure-text-minimessage:4.24.0")
+        implementation("net.kyori:adventure-text-serializer-legacy:4.24.0")
+
+        compileOnly("org.xerial:sqlite-jdbc:3.50.3.0")
+        compileOnly("com.h2database:h2:2.3.232")
+        compileOnly("com.mysql:mysql-connector-j:9.4.0")
+        compileOnly("org.postgresql:postgresql:42.7.7")
+        compileOnly("org.projectlombok:lombok:1.18.42")
+        annotationProcessor("org.projectlombok:lombok:1.18.42")
     }
-    maven {
-        url 'https://repo.alessiodp.com/releases/'
+
+    def targetJavaVersion = 17
+    java {
+        def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+        if (JavaVersion.current() < javaVersion) {
+            toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+            options.release.set(targetJavaVersion)
+        }
     }
 }
 
 dependencies {
-    compileOnly("net.md-5:bungeecord-api:1.21-R0.3")
-    implementation("org.bstats:bstats-bungeecord:3.0.2")
-    implementation("com.j256.ormlite:ormlite-jdbc:6.1")
-    implementation("com.zaxxer:HikariCP:7.0.1")
-    compileOnly("org.projectlombok:lombok:1.18.38")
-    annotationProcessor("org.projectlombok:lombok:1.18.38")
-    implementation("at.favre.lib:bcrypt:0.10.2")
-    compileOnly("org.xerial:sqlite-jdbc:3.50.3.0")
-    compileOnly("com.h2database:h2:2.3.232")
-    compileOnly("com.mysql:mysql-connector-j:9.4.0")
-    compileOnly("org.postgresql:postgresql:42.7.7")
-    implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
-    implementation("net.elytrium:serializer:1.1.1")
-    implementation("com.github.1050TIt0p:NanoLimbo:1.9.10")
-    implementation("net.kyori:adventure-api:4.24.0")
-    implementation("net.kyori:adventure-text-minimessage:4.24.0")
-    implementation("net.kyori:adventure-text-serializer-legacy:4.24.0")
-    implementation("net.byteflux:libby-bungee:1.3.1")
+    implementation(project(":common"))
+    implementation(project(":bungee"))
+    implementation(project(":velocity"))
 }
 
 tasks.shadowJar {
@@ -53,37 +75,12 @@ tasks.shadowJar {
     relocate("net.elytrium.serializer", "ru.matveylegenda.tiauth.thirdparty.net.elytrium.serializer")
     relocate("ua.nanit.limbo", "ru.matveylegenda.tiauth.thirdparty.ua.nanit.limbo")
     relocate("org.spongepowered.configurate", "ru.matveylegenda.tiauth.thirdparty.org.spongepowered.configurate")
-    relocate("net.kyori", "ru.matveylegenda.tiauth.thirdparty.net.kyori")
     relocate("io.leangen.geantyref", "ru.matveylegenda.tiauth.thirdparty.io.leangen.geantyref")
     relocate("com.grack.nanojson", "ru.matveylegenda.tiauth.thirdparty.com.grack.nanojson")
-    relocate("net.kyori", "ru.matveylegenda.tiauth.thirdparty.net.kyori")
     relocate("net.byteflux", "ru.matveylegenda.tiauth.thirdparty.net.byteflux")
+
+    mergeServiceFiles()
 }
 
-def targetJavaVersion = 17
-java {
-    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaVersion
-    if (JavaVersion.current() < javaVersion) {
-        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-
-    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-        options.release.set(targetJavaVersion)
-    }
-}
-
-processResources {
-    def props = [version: version]
-    inputs.properties props
-    expand props
-    filteringCharset 'UTF-8'
-    filesMatching('bungee.yml') {
-        expand props
-    }
-}
+tasks.jar.enabled = false
+tasks.build.dependsOn tasks.shadowJar
