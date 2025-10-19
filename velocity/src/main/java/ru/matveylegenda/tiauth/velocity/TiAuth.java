@@ -6,7 +6,6 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
-import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.Getter;
 import net.byteflux.libby.Library;
@@ -51,10 +50,10 @@ public final class TiAuth {
     private AuthManager authManager;
 
     @Inject
-    public TiAuth(ProxyServer server, Logger logger, Metrics.Factory metricsFactory, @DataDirectory Path dataFolder) {
+    public TiAuth(ProxyServer server, Logger logger, Metrics.Factory metricsFactory) {
         this.server = server;
         this.logger = logger;
-        this.dataFolder = dataFolder;
+        this.dataFolder = Path.of("plugins/tiAuth/");
         this.metricsFactory = metricsFactory;
     }
 
