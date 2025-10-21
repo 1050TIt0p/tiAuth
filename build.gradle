@@ -5,7 +5,7 @@ plugins {
 
 allprojects {
     group = 'ru.matveylegenda'
-    version = '1.2.1'
+    version = '1.3.0'
 
     repositories {
         mavenCentral()
@@ -79,7 +79,19 @@ tasks.shadowJar {
     relocate("com.grack.nanojson", "ru.matveylegenda.tiauth.thirdparty.com.grack.nanojson")
     relocate("net.byteflux", "ru.matveylegenda.tiauth.thirdparty.net.byteflux")
 
+    exclude("net/kyori/**")
+    exclude("org/slf4j/**")
+    exclude("META-INF/maven/**")
+
     mergeServiceFiles()
+
+    minimize {
+        exclude(project(":common"))
+        exclude(project(":bungee"))
+        exclude(project(":velocity"))
+
+        exclude("ru/matveylegenda/.*")
+    }
 }
 
 tasks.jar.enabled = false
