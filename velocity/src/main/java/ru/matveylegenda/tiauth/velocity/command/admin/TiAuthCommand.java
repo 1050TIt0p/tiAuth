@@ -13,8 +13,8 @@ import ru.matveylegenda.tiauth.database.DatabaseMigrator;
 import ru.matveylegenda.tiauth.database.DatabaseType;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
-import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
+import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
 import java.io.File;
 import java.util.Locale;
@@ -82,7 +82,7 @@ public class TiAuthCommand implements SimpleCommand {
                             sender,
                             CachedComponents.IMP.admin.unregister.success
                                     .replaceText(builder -> builder
-                                            .matchLiteral("{player}")
+                                            .match(VelocityUtils.PLAYER)
                                             .replacement(playerName))
                     );
                 });
@@ -111,7 +111,7 @@ public class TiAuthCommand implements SimpleCommand {
                             sender,
                             CachedComponents.IMP.admin.changePassword.success
                                     .replaceText(builder -> builder
-                                            .matchLiteral("{player}")
+                                            .match(VelocityUtils.PLAYER)
                                             .replacement(playerName))
                     );
                 });
@@ -139,7 +139,7 @@ public class TiAuthCommand implements SimpleCommand {
                             sender,
                             CachedComponents.IMP.admin.forceLogin.isAuthenticated
                                     .replaceText(builder -> builder
-                                            .matchLiteral("{player}")
+                                            .match(VelocityUtils.PLAYER)
                                             .replacement(player.getUsername()))
                     );
                     return;
@@ -150,7 +150,7 @@ public class TiAuthCommand implements SimpleCommand {
                             sender,
                             CachedComponents.IMP.admin.forceLogin.success
                                     .replaceText(builder -> builder
-                                            .matchLiteral("{player}")
+                                            .match(VelocityUtils.PLAYER)
                                             .replacement(player.getUsername()))
                     );
                 });
@@ -181,7 +181,7 @@ public class TiAuthCommand implements SimpleCommand {
                                 sender,
                                 CachedComponents.IMP.admin.forceRegister.alreadyRegistered
                                         .replaceText(builder -> builder
-                                                .matchLiteral("{player}")
+                                                .match(VelocityUtils.PLAYER)
                                                 .replacement(playerName))
                         );
                         return;
@@ -197,7 +197,7 @@ public class TiAuthCommand implements SimpleCommand {
                                 sender,
                                 CachedComponents.IMP.admin.forceRegister.success
                                         .replaceText(builder -> builder
-                                                .matchLiteral("{player}")
+                                                .match(VelocityUtils.PLAYER)
                                                 .replacement(playerName))
                         );
                     });

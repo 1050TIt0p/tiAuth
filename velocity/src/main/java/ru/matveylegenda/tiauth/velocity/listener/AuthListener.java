@@ -21,6 +21,7 @@ import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
+import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
 import java.util.regex.Pattern;
 
@@ -51,7 +52,7 @@ public class AuthListener {
 
         if (BanCache.isBanned(ip)) {
             Component kickMessage = CachedComponents.IMP.player.kick.ban.replaceText(builder -> builder
-                    .matchLiteral("{time}")
+                    .match(VelocityUtils.TIME)
                     .replacement(String.valueOf(BanCache.getRemainingSeconds(ip))));
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(kickMessage));
             return;

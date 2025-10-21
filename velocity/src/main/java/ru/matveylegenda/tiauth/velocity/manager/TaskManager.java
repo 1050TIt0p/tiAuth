@@ -8,6 +8,7 @@ import net.kyori.adventure.title.Title;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
+import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
 import java.util.Map;
 import java.util.UUID;
@@ -95,10 +96,10 @@ public class TaskManager {
     private void sendTitle(Player player, int counter) {
         Title componentTitle = Title.title(
                 CachedComponents.IMP.player.title.title.replaceText(builder -> builder
-                        .matchLiteral("{time}")
+                        .match(VelocityUtils.TIME)
                         .replacement(String.valueOf(counter))),
                 CachedComponents.IMP.player.title.subTitle.replaceText(builder -> builder
-                        .matchLiteral("{time}")
+                        .match(VelocityUtils.TIME)
                         .replacement(String.valueOf(counter))),
                 0,
                 21,
@@ -108,7 +109,7 @@ public class TaskManager {
 
     private void sendActionBar(Player player, int counter) {
         Component comp = CachedComponents.IMP.player.actionBar.message.replaceText(builder -> builder
-                .matchLiteral("{time}")
+                .match(VelocityUtils.TIME)
                 .replacement(String.valueOf(counter)));
         player.sendActionBar(comp);
     }
@@ -118,7 +119,7 @@ public class TaskManager {
         BossBar bar = bossBars.get(pid);
         if (bar != null) {
             bar.name(CachedComponents.IMP.player.bossBar.message.replaceText(builder -> builder
-                    .matchLiteral("{time}")
+                    .match(VelocityUtils.TIME)
                     .replacement(String.valueOf(counter))));
             bar.progress((float) counter / (float) MainConfig.IMP.auth.timeoutSeconds);
         }
