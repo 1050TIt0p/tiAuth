@@ -14,6 +14,7 @@ import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
+import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
 import java.util.Map;
 import java.util.Set;
@@ -65,9 +66,10 @@ public class AuthManager {
             player.sendMessage(
                     CachedComponents.IMP.player.checkPassword.invalidLength
                             .replaceText(builder -> builder
-                                    .matchLiteral("{min}")
-                                    .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength))
-                                    .matchLiteral("{max}")
+                                    .match(VelocityUtils.MIN)
+                                    .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
+                            .replaceText(builder -> builder
+                                    .match(VelocityUtils.MAX)
                                     .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
             );
 
@@ -75,9 +77,10 @@ public class AuthManager {
                 showLoginDialog(player,
                         CachedComponents.IMP.player.dialog.notifications.invalidLength
                                 .replaceText(builder -> builder
-                                        .matchLiteral("{min}")
-                                        .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength))
-                                        .matchLiteral("{max}")
+                                        .match(VelocityUtils.MIN)
+                                        .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
+                                .replaceText(builder -> builder
+                                        .match(VelocityUtils.MAX)
                                         .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
                 );
             }
@@ -258,14 +261,14 @@ public class AuthManager {
 
                 player.sendMessage(
                         CachedComponents.IMP.player.login.wrongPassword.replaceText(builder -> builder
-                                .matchLiteral("{attempts}")
+                                .match(VelocityUtils.ATTEMPTS)
                                 .replacement(String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts)))
                 );
 
                 if (supportDialog(player)) {
                     showLoginDialog(player,
                             CachedComponents.IMP.player.dialog.notifications.wrongPassword.replaceText(builder -> builder
-                                    .matchLiteral("{attempts}")
+                                    .match(VelocityUtils.ATTEMPTS)
                                     .replacement(String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts)))
                     );
                 }
@@ -313,19 +316,22 @@ public class AuthManager {
             player.sendMessage(
                     CachedComponents.IMP.player.checkPassword.invalidLength
                             .replaceText(builder -> builder
-                                    .matchLiteral("{min}")
-                                    .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength))
-                                    .matchLiteral("{max}")
+                                    .match(VelocityUtils.MIN)
+                                    .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
+                            .replaceText(builder -> builder
+                                    .match(VelocityUtils.MAX)
                                     .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
             );
 
             if (supportDialog(player)) {
                 showLoginDialog(player,
-                        CachedComponents.IMP.player.dialog.notifications.invalidLength.replaceText(builder -> builder
-                                .matchLiteral("{min}")
-                                .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength))
-                                .matchLiteral("{max}")
-                                .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
+                        CachedComponents.IMP.player.dialog.notifications.invalidLength
+                                .replaceText(builder -> builder
+                                        .match(VelocityUtils.MIN)
+                                        .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
+                                .replaceText(builder -> builder
+                                        .match(VelocityUtils.MAX)
+                                        .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
                 );
             }
             return;
@@ -435,11 +441,13 @@ public class AuthManager {
             }
 
             if (user != null && !player.getUsername().equals(user.getRealName())) {
-                player.disconnect(CachedComponents.IMP.player.kick.realname.replaceText(builder -> builder
-                        .matchLiteral("{realname}")
-                        .replacement(user.getRealName())
-                        .matchLiteral("{name}")
-                        .replacement(player.getUsername())));
+                player.disconnect(CachedComponents.IMP.player.kick.realname
+                        .replaceText(builder -> builder
+                                .match(VelocityUtils.REAL_NAME)
+                                .replacement(user.getRealName()))
+                        .replaceText(builder -> builder
+                                .match(VelocityUtils.NAME)
+                                .replacement(player.getUsername())));
                 return;
             }
 

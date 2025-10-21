@@ -33,9 +33,8 @@ import java.sql.SQLException;
 @Plugin(
         id = "tiauth",
         name = "tiAuth",
-        version = "1.2.1",
-        authors = {"1050TI_top"},
-        description = "Authentication system for Velocity"
+        version = "1.3.0",
+        authors = {"1050TI_top", "OverwriteMC"}
 )
 public final class TiAuth {
 

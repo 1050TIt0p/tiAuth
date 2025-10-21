@@ -26,10 +26,10 @@ subprojects {
         implementation("at.favre.lib:bcrypt:0.10.2")
         implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
         implementation("net.elytrium:serializer:1.1.1")
-        implementation("net.kyori:adventure-api:4.24.0")
-        implementation("net.kyori:adventure-text-minimessage:4.24.0")
-        implementation("net.kyori:adventure-text-serializer-legacy:4.24.0")
 
+        compileOnly("net.kyori:adventure-api:4.24.0")
+        compileOnly("net.kyori:adventure-text-minimessage:4.24.0")
+        compileOnly("net.kyori:adventure-text-serializer-legacy:4.24.0")
         compileOnly("org.xerial:sqlite-jdbc:3.50.3.0")
         compileOnly("com.h2database:h2:2.3.232")
         compileOnly("com.mysql:mysql-connector-j:9.4.0")
@@ -80,6 +80,7 @@ tasks.shadowJar {
     relocate("net.byteflux", "ru.matveylegenda.tiauth.thirdparty.net.byteflux")
 
     mergeServiceFiles()
+    minimize()
 }
 
 tasks.jar.enabled = false

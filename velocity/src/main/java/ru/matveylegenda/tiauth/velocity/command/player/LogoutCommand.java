@@ -7,8 +7,8 @@ import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
-import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
+import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
 public class LogoutCommand implements SimpleCommand {
     private final AuthManager authManager;
