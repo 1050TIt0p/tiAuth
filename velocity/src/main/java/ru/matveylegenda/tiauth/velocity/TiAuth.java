@@ -34,7 +34,7 @@ import java.sql.SQLException;
         id = "tiauth",
         name = "tiAuth",
         version = "1.3.0",
-        authors = {"1050TI_top"}
+        authors = {"1050TI_top", "OverwriteMC"}
 )
 public final class TiAuth {
 
