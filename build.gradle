@@ -5,7 +5,7 @@ plugins {
 
 allprojects {
     group = 'ru.matveylegenda'
-    version = '1.2.1'
+    version = '1.3.0'
 
     repositories {
         mavenCentral()
@@ -79,7 +79,25 @@ tasks.shadowJar {
     relocate("com.grack.nanojson", "ru.matveylegenda.tiauth.thirdparty.com.grack.nanojson")
     relocate("net.byteflux", "ru.matveylegenda.tiauth.thirdparty.net.byteflux")
 
+    exclude("net/kyori/**")
+    exclude("org/slf4j/**")
+
     mergeServiceFiles()
+
+    minimize {
+        exclude(project(":common"))
+        exclude(project(":bungee"))
+        exclude(project(":velocity"))
+
+        exclude(dependency("com.j256.ormlite:ormlite-jdbc:.*"))
+        exclude(dependency("com.zaxxer:HikariCP:.*"))
+        exclude(dependency("at.favre.lib:bcrypt:.*"))
+        exclude(dependency("com.github.benmanes.caffeine:caffeine:.*"))
+        exclude(dependency("net.elytrium:serializer:.*"))
+        exclude(dependency("com.github.1050TIt0p:NanoLimbo:.*"))
+
+        exclude("ru/matveylegenda/.*")
+    }
 }
 
 tasks.jar.enabled = false
