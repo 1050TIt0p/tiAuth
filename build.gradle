@@ -80,7 +80,6 @@ tasks.shadowJar {
     relocate("net.byteflux", "ru.matveylegenda.tiauth.thirdparty.net.byteflux")
 
     mergeServiceFiles()
-    minimize()
 }
 
 tasks.jar.enabled = false
