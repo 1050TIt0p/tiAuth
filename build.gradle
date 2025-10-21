@@ -81,6 +81,7 @@ tasks.shadowJar {
 
     exclude("net/kyori/**")
     exclude("org/slf4j/**")
+    exclude("META-INF/maven/**")
 
     mergeServiceFiles()
 
