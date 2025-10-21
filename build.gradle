@@ -90,13 +90,6 @@ tasks.shadowJar {
         exclude(project(":bungee"))
         exclude(project(":velocity"))
 
-        exclude(dependency("com.j256.ormlite:ormlite-jdbc:.*"))
-        exclude(dependency("com.zaxxer:HikariCP:.*"))
-        exclude(dependency("at.favre.lib:bcrypt:.*"))
-        exclude(dependency("com.github.benmanes.caffeine:caffeine:.*"))
-        exclude(dependency("net.elytrium:serializer:.*"))
-        exclude(dependency("com.github.1050TIt0p:NanoLimbo:.*"))
-
         exclude("ru/matveylegenda/.*")
     }
 }
