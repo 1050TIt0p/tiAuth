@@ -1,5 +1,5 @@
 # tiAuth [![CodeFactor](https://www.codefactor.io/repository/github/1050tit0p/tiauth/badge)](https://www.codefactor.io/repository/github/1050tit0p/tiauth)
-Authorization plugin for BungeeCord
+Authorization plugin for BungeeCord and Velocity
 
 ---
 
