@@ -3,6 +3,7 @@ package ru.matveylegenda.tiauth.bungee;
 import lombok.Getter;
 import net.byteflux.libby.BungeeLibraryManager;
 import net.byteflux.libby.Library;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
@@ -44,6 +45,13 @@ public final class TiAuth extends Plugin {
 
     @Override
     public void onEnable() {
+        if (!isSupportedVersion()) {
+            logger.warning("*** ВНИМАНИЕ ***");
+            logger.warning("tiAuth поддерживает BungeeCord версии 1.21 и выше!");
+            logger.warning("Вы пытаетесь запустить плагин на версии " + ProxyServer.getInstance().getVersion());
+            logger.warning("Обновите прокси, если хотите использовать tiAuth.");
+            return;
+        }
         logger = getLogger();
         File dataFolder = getDataFolder();
         if (!dataFolder.exists()) {
@@ -62,6 +70,10 @@ public final class TiAuth extends Plugin {
         registerCommands(pluginManager);
 
         new Metrics(this, 26921);
+    }
+
+    private boolean isSupportedVersion() {
+        return Integer.parseInt(ProxyServer.getInstance().getVersion().split("-")[0].split("\\.")[1]) >= 21;
     }
 
     @Override
