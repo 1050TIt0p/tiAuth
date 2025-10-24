@@ -111,24 +111,6 @@ public final class TiAuth {
                 .version(MainConfig.IMP.libraries.postgresql.version)
                 .build();
 
-        Library adventureApi = Library.builder()
-                .groupId("net.kyori")
-                .artifactId("adventure-api")
-                .version("4.24.0")
-                .build();
-
-        Library adventureMinimessage = Library.builder()
-                .groupId("net.kyori")
-                .artifactId("adventure-text-minimessage")
-                .version("4.24.0")
-                .build();
-
-        Library adventureLegacy = Library.builder()
-                .groupId("net.kyori")
-                .artifactId("adventure-text-serializer-legacy")
-                .version("4.24.0")
-                .build();
-
         VelocityLibraryManager<TiAuth> libraryManager = new VelocityLibraryManager<>(
                 logger,
                 dataFolder,
@@ -142,9 +124,6 @@ public final class TiAuth {
         libraryManager.loadLibrary(h2Jdbc);
         libraryManager.loadLibrary(mysqlJdbc);
         libraryManager.loadLibrary(postgresqlJdbc);
-        libraryManager.loadLibrary(adventureApi);
-        libraryManager.loadLibrary(adventureMinimessage);
-        libraryManager.loadLibrary(adventureLegacy);
     }
 
     private void initializeDatabase(File dataFolder) {
