@@ -9,9 +9,9 @@ import ru.matveylegenda.tiauth.util.colorizer.impl.MiniMessageColorizer;
 @UtilityClass
 public class Utils {
 
-    public static Colorizer COLORIZER;
+    public Colorizer COLORIZER;
 
-    public static void initializeColorizer(Serializer serializer) {
+    public void initializeColorizer(Serializer serializer) {
         COLORIZER = switch (serializer) {
             case LEGACY -> new LegacyColorizer();
             case MINIMESSAGE -> new MiniMessageColorizer();
