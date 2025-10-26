@@ -14,9 +14,11 @@ import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.DatabaseMigrator;
 import ru.matveylegenda.tiauth.database.DatabaseType;
+import ru.matveylegenda.tiauth.hash.HashFactory;
 
 import java.io.File;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 public class TiAuthCommand extends Command {
     private final TiAuth plugin;
@@ -52,6 +54,8 @@ public class TiAuthCommand extends Command {
 
                 MainConfig.IMP.reload();
                 MessagesConfig.IMP.reload();
+                plugin.getAuthManager().setPasswordPattern(Pattern.compile(MainConfig.IMP.auth.passwordPattern));
+                plugin.getAuthManager().setHash(HashFactory.create(MainConfig.IMP.auth.hashAlgorithm));
                 CachedMessages.IMP = new CachedMessages(MessagesConfig.IMP);
                 BungeeUtils.sendMessage(
                         sender,

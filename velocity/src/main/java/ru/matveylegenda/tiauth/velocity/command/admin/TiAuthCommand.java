@@ -11,6 +11,7 @@ import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.DatabaseMigrator;
 import ru.matveylegenda.tiauth.database.DatabaseType;
+import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
@@ -18,6 +19,7 @@ import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
 import java.io.File;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 public class TiAuthCommand implements SimpleCommand {
     private final TiAuth plugin;
@@ -51,6 +53,8 @@ public class TiAuthCommand implements SimpleCommand {
 
                 MainConfig.IMP.reload();
                 MessagesConfig.IMP.reload();
+                plugin.getAuthManager().setPasswordPattern(Pattern.compile(MainConfig.IMP.auth.passwordPattern));
+                plugin.getAuthManager().setHash(HashFactory.create(MainConfig.IMP.auth.hashAlgorithm));
                 CachedComponents.IMP = new CachedComponents(MessagesConfig.IMP);
                 VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.config.reload);
             }

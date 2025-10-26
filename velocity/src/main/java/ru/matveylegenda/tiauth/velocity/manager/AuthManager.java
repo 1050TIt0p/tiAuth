@@ -2,6 +2,7 @@ package ru.matveylegenda.tiauth.velocity.manager;
 
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.BanCache;
@@ -29,13 +30,18 @@ public class AuthManager {
     private final TiAuth plugin;
     private final Database database;
     private final TaskManager taskManager;
-    private final Pattern passwordPattern;
+
+    @Setter
+    private Pattern passwordPattern;
+    @Setter
+    private Hash hash;
 
     public AuthManager(TiAuth plugin) {
         this.plugin = plugin;
         this.database = plugin.getDatabase();
         this.taskManager = plugin.getTaskManager();
         this.passwordPattern = Pattern.compile(MainConfig.IMP.auth.passwordPattern);
+        this.hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
     }
 
     public void registerPlayer(Player player, String password, String repeatPassword) {
@@ -138,7 +144,7 @@ public class AuthManager {
     }
 
     public void registerPlayer(String playerName, String password, String ip, Consumer<Boolean> callback) {
-        Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
+
         database.getAuthUserRepository().registerUser(
                 new AuthUser(
                         playerName.toLowerCase(),
@@ -170,7 +176,7 @@ public class AuthManager {
                 return;
             }
 
-            Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
+
             String hashedPassword = user.getPassword();
 
             if (!hash.verifyPassword(password, hashedPassword)) {
@@ -240,7 +246,7 @@ public class AuthManager {
                 return;
             }
 
-            Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
+
             String hashedPassword = user.getPassword();
 
             if (!hash.verifyPassword(password, hashedPassword)) {
@@ -357,7 +363,7 @@ public class AuthManager {
                 return;
             }
 
-            Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
+
             String hashedPassword = user.getPassword();
 
             if (!hash.verifyPassword(oldPassword, hashedPassword)) {
@@ -381,7 +387,7 @@ public class AuthManager {
     }
 
     public void changePasswordPlayer(String playerName, String password, Consumer<Boolean> callback) {
-        Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
+
         String hashedPassword = hash.hashPassword(password);
 
         database.getAuthUserRepository().updatePassword(playerName, hashedPassword, success -> {
