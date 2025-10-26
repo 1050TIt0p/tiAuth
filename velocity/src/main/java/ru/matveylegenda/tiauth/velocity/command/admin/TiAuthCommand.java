@@ -149,15 +149,13 @@ public class TiAuthCommand implements SimpleCommand {
                     return;
                 }
 
-                authManager.loginPlayer(player, () -> {
-                    VelocityUtils.sendMessage(
-                            sender,
-                            CachedComponents.IMP.admin.forceLogin.success
-                                    .replaceText(builder -> builder
-                                            .match(VelocityUtils.PLAYER)
-                                            .replacement(player.getUsername()))
-                    );
-                });
+                authManager.loginPlayer(player, () -> VelocityUtils.sendMessage(
+                        sender,
+                        CachedComponents.IMP.admin.forceLogin.success
+                                .replaceText(builder -> builder
+                                        .match(VelocityUtils.PLAYER)
+                                        .replacement(player.getUsername()))
+                ));
             }
 
             case "forceregister" -> {

@@ -175,13 +175,11 @@ public class TiAuthCommand extends Command {
                     return;
                 }
 
-                authManager.loginPlayer(player, () -> {
-                    BungeeUtils.sendMessage(
-                            sender,
-                            CachedMessages.IMP.admin.forceLogin.success
-                                    .replace("{player}", player.getName())
-                    );
-                });
+                authManager.loginPlayer(player, () -> BungeeUtils.sendMessage(
+                        sender,
+                        CachedMessages.IMP.admin.forceLogin.success
+                                .replace("{player}", player.getName())
+                ));
             }
 
             case "forceregister" -> {

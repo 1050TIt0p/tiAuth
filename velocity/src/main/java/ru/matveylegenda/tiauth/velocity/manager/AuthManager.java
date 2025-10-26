@@ -502,9 +502,7 @@ public class AuthManager {
             if (!current.getServer().equals(authServer)) {
                 player.createConnectionRequest(authServer).connect();
             }
-        }, () -> {
-            player.createConnectionRequest(authServer).connect();
-        });
+        }, () -> player.createConnectionRequest(authServer).connect());
     }
 
     private void connectToBackend(Player player) {
@@ -519,9 +517,7 @@ public class AuthManager {
             if (!current.getServer().equals(backend)) {
                 player.createConnectionRequest(backend).connect();
             }
-        }, () -> {
-            player.createConnectionRequest(backend).connect();
-        });
+        }, () -> player.createConnectionRequest(backend).connect());
     }
 
     private boolean supportDialog(Player player) {

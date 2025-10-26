@@ -613,9 +613,7 @@ public class AuthManager {
                 );
             }
 
-            plugin.getProxy().getScheduler().schedule(plugin, () -> {
-                player.showDialog(dialog);
-            }, 50, TimeUnit.MILLISECONDS);
+            plugin.getProxy().getScheduler().schedule(plugin, () -> player.showDialog(dialog), 50, TimeUnit.MILLISECONDS);
         });
     }
 
