@@ -181,6 +181,13 @@ public class MainConfig extends YamlSerializable {
         public HashType hashAlgorithm = HashType.BCRYPT;
 
         @Comment({
+                @CommentValue("Сложность алгоритма bcrypt."),
+                @CommentValue("Чем больше значение - тем сложнее сбрутить пароль."),
+                @CommentValue("(БОльшие значения выдают бОльшую нагрузку!)")
+        })
+        public int bcryptCost = 12;
+
+        @Comment({
                 @CommentValue("Команды, которые можно использовать во время авторизации")
         })
         public List<String> allowedCommands = List.of(
