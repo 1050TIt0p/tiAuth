@@ -112,22 +112,42 @@ public final class TiAuth extends Plugin {
                 .version(MainConfig.IMP.libraries.postgresql.version)
                 .build();
 
+        String adventureVersion = "4.25.0";
+
         Library adventureApi = Library.builder()
                 .groupId("net.kyori")
                 .artifactId("adventure-api")
-                .version("4.24.0")
+                .version(adventureVersion)
                 .build();
 
         Library adventureMinimessage = Library.builder()
                 .groupId("net.kyori")
                 .artifactId("adventure-text-minimessage")
-                .version("4.24.0")
+                .version(adventureVersion)
                 .build();
 
         Library adventureLegacy = Library.builder()
                 .groupId("net.kyori")
                 .artifactId("adventure-text-serializer-legacy")
-                .version("4.24.0")
+                .version(adventureVersion)
+                .build();
+
+        Library adventureNBT = Library.builder()
+                .groupId("net.kyori")
+                .artifactId("adventure-nbt")
+                .version(adventureVersion)
+                .build();
+
+        Library kyoriExamination = Library.builder()
+                .groupId("net.kyori")
+                .artifactId("examination-api")
+                .version("1.3.0")
+                .build();
+
+        Library kyoriOption = Library.builder()
+                .groupId("net.kyori")
+                .artifactId("option")
+                .version("1.1.0")
                 .build();
 
         BungeeLibraryManager libraryManager = new BungeeLibraryManager(this);
@@ -139,6 +159,9 @@ public final class TiAuth extends Plugin {
         libraryManager.loadLibrary(adventureApi);
         libraryManager.loadLibrary(adventureMinimessage);
         libraryManager.loadLibrary(adventureLegacy);
+        libraryManager.loadLibrary(adventureNBT);
+        libraryManager.loadLibrary(kyoriExamination);
+        libraryManager.loadLibrary(kyoriOption);
     }
 
     private void initializeDatabase(File dataFolder) {
