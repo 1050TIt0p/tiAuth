@@ -6,6 +6,7 @@ import ru.matveylegenda.tiauth.database.model.AuthUser;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -125,6 +126,25 @@ public class DatabaseMigrator {
                             );
                         }
                     }
+
+                    case NLOGIN -> {
+                        ResultSet resultSet = statement.executeQuery("SELECT * FROM nlogin");
+
+                        while (resultSet.next()) {
+                            authUsers.add(
+                                    new AuthUser(
+                                            resultSet.getString("last_name").toLowerCase(Locale.ROOT),
+                                            resultSet.getString("last_name"),
+                                            resultSet.getString("password"),
+                                            false,
+                                            resultSet.getString("last_ip"),
+                                            resultSet.getString("last_ip"),
+                                            resultSet.getTimestamp("last_seen").getTime(),
+                                            resultSet.getTimestamp("creation_date").getTime()
+                                    )
+                            );
+                        }
+                    }
                 }
 
                 database.getAuthUserRepository().registerUsers(authUsers, callback);
@@ -192,6 +212,7 @@ public class DatabaseMigrator {
         TIAUTH,
         MCAUTH,
         LIMBOAUTH,
-        AUTHME
+        AUTHME,
+        NLOGIN
     }
 }
