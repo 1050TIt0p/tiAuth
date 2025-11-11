@@ -32,6 +32,7 @@ public class CachedComponents {
         public ChangePassword changePassword;
         public ForceLogin forceLogin;
         public ForceRegister forceRegister;
+        public ForcePremium forcePremium;
         public Migrate migrate;
 
         public static class Config {
@@ -58,6 +59,12 @@ public class CachedComponents {
             public Component usage;
             public Component alreadyRegistered;
             public Component success;
+        }
+
+        public static class ForcePremium {
+            public Component usage;
+            public Component enabled;
+            public Component disabled;
         }
 
         public static class Migrate {
@@ -213,6 +220,11 @@ public class CachedComponents {
         admin.forceRegister.usage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.forceRegister.usage, prefixRaw)));
         admin.forceRegister.alreadyRegistered = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.forceRegister.alreadyRegistered, prefixRaw)));
         admin.forceRegister.success = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.forceRegister.success, prefixRaw)));
+
+        admin.forcePremium = new Admin.ForcePremium();
+        admin.forcePremium.usage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.forcePremium.usage, prefixRaw)));
+        admin.forcePremium.enabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.forcePremium.enabled, prefixRaw)));
+        admin.forcePremium.disabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.forcePremium.disabled, prefixRaw)));
 
         admin.migrate = new Admin.Migrate();
         admin.migrate.usage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.migrate.usage, prefixRaw)));

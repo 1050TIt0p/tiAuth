@@ -8,6 +8,7 @@ import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
 import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
 import ru.matveylegenda.tiauth.bungee.util.BungeeUtils;
 import ru.matveylegenda.tiauth.cache.AuthCache;
+import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
@@ -235,6 +236,68 @@ public class TiAuthCommand extends Command {
                                 CachedMessages.IMP.admin.forceRegister.success
                                         .replace("{player}", playerName)
                         );
+                    });
+                });
+            }
+
+            case "forcepremium" -> {
+                if (!sender.hasPermission("tiauth.admin.commands.forcepremium")) {
+                    BungeeUtils.sendMessage(
+                            sender,
+                            CachedMessages.IMP.noPermission
+                    );
+                    return;
+                }
+
+                if (args.length < 2) {
+                    BungeeUtils.sendMessage(
+                            sender,
+                            CachedMessages.IMP.admin.forcePremium.usage
+                    );
+                    return;
+                }
+
+                database.getAuthUserRepository().getUser(args[1], (user, success) -> {
+                    if (!success) {
+                        BungeeUtils.sendMessage(
+                                sender,
+                                CachedMessages.IMP.queryError
+                        );
+                        return;
+                    }
+
+                    if (user == null) {
+                        BungeeUtils.sendMessage(
+                                sender,
+                                CachedMessages.IMP.playerNotFound
+                        );
+                        return;
+                    }
+
+                    database.getAuthUserRepository().setPremium(args[1], !user.isPremium(), success1 -> {
+                        if (!success1) {
+                            BungeeUtils.sendMessage(
+                                    sender,
+                                    CachedMessages.IMP.queryError
+                            );
+                            return;
+                        }
+
+                        if (user.isPremium()) {
+                            PremiumCache.removePremium(args[1]);
+                            BungeeUtils.sendMessage(
+                                    sender,
+                                    CachedMessages.IMP.admin.forcePremium.disabled
+                                            .replace("{player}", args[1])
+                            );
+                        } else {
+                            PremiumCache.addPremium(args[1]);
+                            BungeeUtils.sendMessage(
+                                    sender,
+                                    CachedMessages.IMP.admin.forcePremium.enabled
+                                            .replace("{player}", args[1])
+                            );
+                        }
                     });
                 });
             }

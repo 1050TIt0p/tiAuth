@@ -5,6 +5,7 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import ru.matveylegenda.tiauth.cache.AuthCache;
+import ru.matveylegenda.tiauth.cache.PremiumCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
@@ -202,6 +203,72 @@ public class TiAuthCommand implements SimpleCommand {
                                                 .match(VelocityUtils.PLAYER)
                                                 .replacement(playerName))
                         );
+                    });
+                });
+            }
+
+            case "forcepremium" -> {
+                if (!sender.hasPermission("tiauth.admin.commands.forcepremium")) {
+                    VelocityUtils.sendMessage(
+                            sender,
+                            CachedComponents.IMP.noPermission
+                    );
+                    return;
+                }
+
+                if (args.length < 2) {
+                    VelocityUtils.sendMessage(
+                            sender,
+                            CachedComponents.IMP.admin.forcePremium.usage
+                    );
+                    return;
+                }
+
+                database.getAuthUserRepository().getUser(args[1], (user, success) -> {
+                    if (!success) {
+                        VelocityUtils.sendMessage(
+                                sender,
+                                CachedComponents.IMP.queryError
+                        );
+                        return;
+                    }
+
+                    if (user == null) {
+                        VelocityUtils.sendMessage(
+                                sender,
+                                CachedComponents.IMP.playerNotFound
+                        );
+                        return;
+                    }
+
+                    database.getAuthUserRepository().setPremium(args[1], !user.isPremium(), success1 -> {
+                        if (!success1) {
+                            VelocityUtils.sendMessage(
+                                    sender,
+                                    CachedComponents.IMP.queryError
+                            );
+                            return;
+                        }
+
+                        if (user.isPremium()) {
+                            PremiumCache.removePremium(args[1]);
+                            VelocityUtils.sendMessage(
+                                    sender,
+                                    CachedComponents.IMP.admin.forcePremium.disabled
+                                            .replaceText(builder -> builder
+                                                    .match(VelocityUtils.PLAYER)
+                                                    .replacement(args[1]))
+                            );
+                        } else {
+                            PremiumCache.addPremium(args[1]);
+                            VelocityUtils.sendMessage(
+                                    sender,
+                                    CachedComponents.IMP.admin.forcePremium.enabled
+                                            .replaceText(builder -> builder
+                                                    .match(VelocityUtils.PLAYER)
+                                                    .replacement(args[1]))
+                            );
+                        }
                     });
                 });
             }

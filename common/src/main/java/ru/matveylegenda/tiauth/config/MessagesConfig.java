@@ -49,6 +49,7 @@ public class MessagesConfig extends YamlSerializable {
         public ChangePassword changePassword = new ChangePassword();
         public ForceLogin forceLogin = new ForceLogin();
         public ForceRegister forceRegister = new ForceRegister();
+        public ForcePremium forcePremium = new ForcePremium();
         public Migrate migrate = new Migrate();
 
         @NewLine
@@ -80,6 +81,13 @@ public class MessagesConfig extends YamlSerializable {
             public String usage;
             public String alreadyRegistered;
             public String success;
+        }
+
+        @NewLine
+        public static class ForcePremium {
+            public String usage;
+            public String enabled;
+            public String disabled;
         }
 
         @NewLine
@@ -235,6 +243,9 @@ public class MessagesConfig extends YamlSerializable {
                 admin.forceRegister.usage = "{prefix} &fИспользование: &#8833EC/tiauth forceregister <ник> <пароль>";
                 admin.forceRegister.alreadyRegistered = "{prefix} &fИгрок &#8833EC{player} &fуже зарегистрирован";
                 admin.forceRegister.success = "{prefix} &fВы успешно зарегистрировали аккаунт &#8833EC{player}";
+                admin.forcePremium.usage = "{prefix} &fИспользование: &#8833EC/tiauth forcepremium <ник>";
+                admin.forcePremium.enabled = "{prefix} &fВы успешно включили премиум-режим для игрока &#8833EC{player}";
+                admin.forcePremium.disabled = "{prefix} &fВы успешно выключили премиум-режим для игрока &#8833EC{player}";
                 admin.migrate.usage = "{prefix} &fИспользование: &#8833EC/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]";
                 admin.migrate.error = "{prefix} &fПроизошла ошибка при миграции базы данных";
                 admin.migrate.success = "{prefix} &fБаза данных успешно мигрирована";
@@ -305,6 +316,9 @@ public class MessagesConfig extends YamlSerializable {
                 admin.forceRegister.usage = "{prefix} &fUsage: &#8833EC/tiauth forceregister <username> <password>";
                 admin.forceRegister.alreadyRegistered = "{prefix} &fPlayer &#8833EC{player} &fis already registered";
                 admin.forceRegister.success = "{prefix} &fYou have successfully registered the account &#8833EC{player}";
+                admin.forcePremium.usage = "{prefix} &fUsage: &#8833EC/tiauth forcepremium <player>";
+                admin.forcePremium.enabled = "{prefix} &fYou have successfully enabled premium mode for player &#8833EC{player}";
+                admin.forcePremium.disabled = "{prefix} &fYou have successfully disabled premium mode for player &#8833EC{player}";
                 admin.migrate.usage = "{prefix} &Usage: &#8833EC/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]";
                 admin.migrate.error = "{prefix} &fAn error occurred during database migration";
                 admin.migrate.success = "{prefix} &fDatabase has been successfully migrated";

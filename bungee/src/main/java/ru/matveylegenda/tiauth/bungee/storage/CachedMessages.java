@@ -28,6 +28,7 @@ public class CachedMessages {
         public ChangePassword changePassword;
         public ForceLogin forceLogin;
         public ForceRegister forceRegister;
+        public ForcePremium forcePremium;
         public Migrate migrate;
 
         public static class Config {
@@ -54,6 +55,12 @@ public class CachedMessages {
             public String usage;
             public String alreadyRegistered;
             public String success;
+        }
+
+        public static class ForcePremium {
+            public String usage;
+            public String enabled;
+            public String disabled;
         }
 
         public static class Migrate {
@@ -206,6 +213,11 @@ public class CachedMessages {
         admin.forceRegister.usage = COLORIZER.colorize(getPrefixed(config.admin.forceRegister.usage, prefix));
         admin.forceRegister.alreadyRegistered = COLORIZER.colorize(getPrefixed(config.admin.forceRegister.alreadyRegistered, prefix));
         admin.forceRegister.success = COLORIZER.colorize(getPrefixed(config.admin.forceRegister.success, prefix));
+
+        admin.forcePremium = new Admin.ForcePremium();
+        admin.forcePremium.usage = COLORIZER.colorize(getPrefixed(config.admin.forcePremium.usage, prefix));
+        admin.forcePremium.enabled = COLORIZER.colorize(getPrefixed(config.admin.forcePremium.enabled, prefix));
+        admin.forcePremium.disabled = COLORIZER.colorize(getPrefixed(config.admin.forcePremium.disabled, prefix));
 
         admin.migrate = new Admin.Migrate();
         admin.migrate.usage = COLORIZER.colorize(getPrefixed(config.admin.migrate.usage, prefix));
