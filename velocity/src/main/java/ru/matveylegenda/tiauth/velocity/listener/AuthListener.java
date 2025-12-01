@@ -8,9 +8,9 @@ import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.UuidUtils;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.kyori.adventure.text.Component;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.BanCache;
@@ -31,13 +31,14 @@ public class AuthListener {
     private final AuthManager authManager;
     private final TaskManager taskManager;
     private final Pattern nickPattern;
-    private final Object2IntOpenHashMap<String> ipCounts = new Object2IntOpenHashMap<>();
+    private final ProxyServer proxyServer;
 
     public AuthListener(TiAuth plugin) {
         this.database = plugin.getDatabase();
         this.authManager = plugin.getAuthManager();
         this.taskManager = plugin.getTaskManager();
         this.nickPattern = Pattern.compile(MainConfig.IMP.nickPattern);
+        this.proxyServer = plugin.getServer();
     }
 
     @Subscribe
@@ -63,7 +64,7 @@ public class AuthListener {
             return;
         }
 
-        int count = ipCounts.getOrDefault(ip, 0);
+        int count = getPlayersCountByIp(ip);
         if (count >= MainConfig.IMP.maxOnlineAccountsPerIp) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitOnlineReached));
             return;
@@ -80,7 +81,6 @@ public class AuthListener {
                     if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
                         event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitRegisteredReached));
                     } else {
-                        ipCounts.addTo(ip, 1);
                         event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
                     }
                 });
@@ -88,7 +88,6 @@ public class AuthListener {
                 if (user.isPremium()) {
                     PremiumCache.addPremium(username);
                 }
-                ipCounts.addTo(ip, 1);
                 event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
             }
         });
@@ -135,16 +134,24 @@ public class AuthListener {
     public void onDisconnect(DisconnectEvent event) {
         Player player = event.getPlayer();
         String username = player.getUsername();
-        String ip = player.getRemoteAddress().getAddress().getHostAddress();
-
-        if (ipCounts.addTo(ip, -1) == 0) {
-            ipCounts.removeInt(ip);
-        }
 
         if (AuthCache.isAuthenticated(username)) {
             AuthCache.logout(username);
         }
 
         taskManager.cancelTasks(player);
+    }
+
+    public int getPlayersCountByIp(String ip) {
+        int count = 0;
+
+        for (Player player : proxyServer.getAllPlayers()) {
+            String playerIp = player.getRemoteAddress().getAddress().getHostAddress();
+            if (playerIp.equals(ip)) {
+                count++;
+            }
+        }
+
+        return count;
     }
 }

@@ -632,10 +632,12 @@ public class AuthManager {
     }
 
     private void connectToBackend(ProxiedPlayer player) {
+        System.out.println("[DEBUG] Start connecting to backend server");
         ServerInfo currentServer = player.getServer().getInfo();
         ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
 
         if (currentServer == null || !currentServer.equals(backendServer)) {
+            System.out.println("[DEBUG] Connecting to backend server...");
             player.connect(backendServer);
         }
     }

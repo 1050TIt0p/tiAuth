@@ -1,6 +1,6 @@
 package ru.matveylegenda.tiauth.bungee.listener;
 
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.*;
@@ -37,7 +37,6 @@ public class AuthListener implements Listener {
         }
     }
 
-    private final Object2IntOpenHashMap<String> ipCounts = new Object2IntOpenHashMap<>();
     private final TiAuth plugin;
     private final Database database;
     private final AuthManager authManager;
@@ -75,7 +74,7 @@ public class AuthListener implements Listener {
             return;
         }
 
-        int count = ipCounts.getOrDefault(ip, 0);
+        int count = getPlayersCountByIp(ip);
 
         if (count >= MainConfig.IMP.maxOnlineAccountsPerIp) {
             event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitOnlineReached);
@@ -99,7 +98,6 @@ public class AuthListener implements Listener {
                         event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitRegisteredReached);
                         event.setCancelled(true);
                     }
-                    ipCounts.addTo(ip, 1);
                     event.completeIntent(plugin);
                 });
                 return;
@@ -108,7 +106,6 @@ public class AuthListener implements Listener {
                 PremiumCache.addPremium(connection.getName());
             }
 
-            ipCounts.addTo(ip, 1);
             event.completeIntent(plugin);
         });
     }
@@ -166,15 +163,23 @@ public class AuthListener implements Listener {
     public void onPlayerDisconnect(PlayerDisconnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
 
-        String ip = player.getAddress().getAddress().getHostAddress();
-        if (ipCounts.addTo(ip, -1) == 0) {
-            ipCounts.removeInt(player.getName());
-        }
-
         if (AuthCache.isAuthenticated(player.getName())) {
             AuthCache.logout(player.getName());
         }
 
         taskManager.cancelTasks(player);
+    }
+
+    public int getPlayersCountByIp(String ip) {
+        int count = 0;
+
+        for (ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
+            String playerIp = player.getAddress().getAddress().getHostAddress();
+            if (playerIp.equals(ip)) {
+                count++;
+            }
+        }
+
+        return count;
     }
 }

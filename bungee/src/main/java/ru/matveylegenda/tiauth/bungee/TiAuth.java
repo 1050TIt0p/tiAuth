@@ -40,6 +40,8 @@ public final class TiAuth extends Plugin {
         if (!dataFolder.exists()) {
             dataFolder.mkdir();
         }
+        MainConfig.IMP.reload();
+        MessagesConfig.IMP.reload();
         loadLibraries();
     }
 
@@ -57,8 +59,6 @@ public final class TiAuth extends Plugin {
         if (!dataFolder.exists()) {
             dataFolder.mkdir();
         }
-        MainConfig.IMP.reload();
-        MessagesConfig.IMP.reload();
         initializeDatabase(dataFolder);
         startLimboServer(dataFolder);
         Utils.initializeColorizer(MainConfig.IMP.serializer);
