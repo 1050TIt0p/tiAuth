@@ -8,6 +8,7 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import org.bstats.bungeecord.Metrics;
+import ru.matveylegenda.tiauth.bungee.api.TiAuthAPI;
 import ru.matveylegenda.tiauth.bungee.command.admin.TiAuthCommand;
 import ru.matveylegenda.tiauth.bungee.command.player.*;
 import ru.matveylegenda.tiauth.bungee.listener.AuthListener;
@@ -47,13 +48,13 @@ public final class TiAuth extends Plugin {
 
     @Override
     public void onEnable() {
-        if (!isSupportedVersion()) {
-            logger.warning("*** ВНИМАНИЕ ***");
-            logger.warning("tiAuth поддерживает BungeeCord версии 1.21 и выше!");
-            logger.warning("Вы пытаетесь запустить плагин на версии " + ProxyServer.getInstance().getVersion());
-            logger.warning("Обновите прокси, если хотите использовать tiAuth.");
-            return;
-        }
+//        if (!isSupportedVersion()) {
+//            logger.warning("*** ВНИМАНИЕ ***");
+//            logger.warning("tiAuth поддерживает BungeeCord версии 1.21 и выше!");
+//            logger.warning("Вы пытаетесь запустить плагин на версии " + ProxyServer.getInstance().getVersion());
+//            logger.warning("Обновите прокси, если хотите использовать tiAuth.");
+//            return;
+//        }
         logger = getLogger();
         File dataFolder = getDataFolder();
         if (!dataFolder.exists()) {
@@ -70,6 +71,7 @@ public final class TiAuth extends Plugin {
         registerCommands(pluginManager);
 
         new Metrics(this, 26921);
+        new TiAuthAPI(this);
     }
 
     private boolean isSupportedVersion() {

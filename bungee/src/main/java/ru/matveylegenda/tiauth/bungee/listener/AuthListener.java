@@ -76,10 +76,12 @@ public class AuthListener implements Listener {
 
         int count = getPlayersCountByIp(ip);
 
-        if (count >= MainConfig.IMP.maxOnlineAccountsPerIp) {
-            event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitOnlineReached);
-            event.setCancelled(true);
-            return;
+        if (!MainConfig.IMP.excludedIps.contains(ip)) {
+            if (count >= MainConfig.IMP.maxOnlineAccountsPerIp) {
+                event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitOnlineReached);
+                event.setCancelled(true);
+                return;
+            }
         }
 
         event.registerIntent(plugin);
@@ -93,14 +95,16 @@ public class AuthListener implements Listener {
             }
 
             if (user == null) {
-                database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
-                    if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
-                        event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitRegisteredReached);
-                        event.setCancelled(true);
-                    }
-                    event.completeIntent(plugin);
-                });
-                return;
+                if (!MainConfig.IMP.excludedIps.contains(ip)) {
+                    database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
+                        if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
+                            event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitRegisteredReached);
+                            event.setCancelled(true);
+                        }
+                        event.completeIntent(plugin);
+                    });
+                    return;
+                }
             } else if (user.isPremium()) {
                 connection.setOnlineMode(true);
                 PremiumCache.addPremium(connection.getName());

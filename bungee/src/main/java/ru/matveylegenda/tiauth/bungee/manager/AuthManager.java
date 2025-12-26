@@ -13,6 +13,8 @@ import net.md_5.bungee.api.dialog.body.PlainMessageBody;
 import net.md_5.bungee.api.dialog.input.TextInput;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import ru.matveylegenda.tiauth.bungee.TiAuth;
+import ru.matveylegenda.tiauth.bungee.api.event.PlayerAuthEvent;
+import ru.matveylegenda.tiauth.bungee.api.event.PlayerRegisterEvent;
 import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
 import ru.matveylegenda.tiauth.bungee.util.BungeeUtils;
 import ru.matveylegenda.tiauth.cache.AuthCache;
@@ -158,7 +160,12 @@ public class AuthManager {
                 SessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
                 taskManager.cancelTasks(player);
 
-                connectToBackend(player);
+                PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
+                plugin.getProxy().getPluginManager().callEvent(playerRegisterEvent);
+
+                if (playerRegisterEvent.isMoveToBackendServer()) {
+                    connectToBackend(player);
+                }
 
                 endProcess(player);
             });
@@ -342,7 +349,12 @@ public class AuthManager {
         SessionCache.addPlayer(player.getName(), ip);
         taskManager.cancelTasks(player);
 
-        connectToBackend(player);
+        PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player);
+        plugin.getProxy().getPluginManager().callEvent(playerAuthEvent);
+
+        if (playerAuthEvent.isMoveToBackendServer()) {
+            connectToBackend(player);
+        }
 
         callback.run();
     }
@@ -531,7 +543,12 @@ public class AuthManager {
                 if (PremiumCache.isPremium(player.getName()) ||
                         (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
                     AuthCache.setAuthenticated(player.getName());
-                    connectToBackend(player);
+
+                    if (event != null) {
+                        connectToBackend(event);
+                    } else {
+                        connectToBackend(player);
+                    }
 
                     return;
                 }
@@ -629,6 +646,11 @@ public class AuthManager {
         if (currentServer == null || !currentServer.equals(authServer)) {
             player.connect(authServer);
         }
+    }
+
+    private void connectToBackend(PostLoginEvent event) {
+        ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
+        event.setTarget(backendServer);
     }
 
     private void connectToBackend(ProxiedPlayer player) {

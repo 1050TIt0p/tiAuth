@@ -15,13 +15,13 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Getter
 public class Database {
 
     public static final Logger LOGGER = Logger.getLogger("tiAuth-Database");
 
     private final ConnectionSource connectionSource;
     private final HikariDataSource dataSource;
-    @Getter
     private final AuthUserRepository authUserRepository;
     private final ExecutorService executor;
 

@@ -16,6 +16,7 @@ import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.util.Utils;
+import ru.matveylegenda.tiauth.velocity.api.TiAuthAPI;
 import ru.matveylegenda.tiauth.velocity.command.admin.TiAuthCommand;
 import ru.matveylegenda.tiauth.velocity.command.player.*;
 import ru.matveylegenda.tiauth.velocity.listener.AuthListener;
@@ -79,6 +80,8 @@ public final class TiAuth {
         registerCommands();
 
         metricsFactory.make(this, 27629);
+
+        new TiAuthAPI(this);
     }
 
     private boolean isSupportedVersion() {

@@ -14,6 +14,8 @@ import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
+import ru.matveylegenda.tiauth.velocity.api.event.PlayerAuthEvent;
+import ru.matveylegenda.tiauth.velocity.api.event.PlayerRegisterEvent;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
@@ -136,7 +138,12 @@ public class AuthManager {
                 SessionCache.addPlayer(name, ip);
                 taskManager.cancelTasks(player);
 
-                connectToBackend(player);
+                PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
+                plugin.getServer().getEventManager().fire(playerRegisterEvent).thenAccept(firedEvent -> {
+                    if (firedEvent.isMoveToBackendServer()) {
+                        connectToBackend(player);
+                    }
+                });
 
                 endProcess(name);
             });
@@ -301,7 +308,12 @@ public class AuthManager {
         SessionCache.addPlayer(name, ip);
         taskManager.cancelTasks(player);
 
-        connectToBackend(player);
+        PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player);
+        plugin.getServer().getEventManager().fire(playerAuthEvent).thenAccept(firedEvent -> {
+            if (firedEvent.isMoveToBackendServer()) {
+                connectToBackend(player);
+            }
+        });
 
         callback.run();
     }

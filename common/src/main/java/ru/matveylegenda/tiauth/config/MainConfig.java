@@ -250,6 +250,8 @@ public class MainConfig extends YamlSerializable {
     })
     public int maxRegisteredAccountsPerIp = 10;
 
+    public List<String> excludedIps = List.of("127.0.0.1");
+
     public Libraries libraries = new Libraries();
 
     @NewLine

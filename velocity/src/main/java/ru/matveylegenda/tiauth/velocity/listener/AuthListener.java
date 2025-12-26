@@ -65,9 +65,11 @@ public class AuthListener {
         }
 
         int count = getPlayersCountByIp(ip);
-        if (count >= MainConfig.IMP.maxOnlineAccountsPerIp) {
-            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitOnlineReached));
-            return;
+        if (!MainConfig.IMP.excludedIps.contains(ip)) {
+            if (count >= MainConfig.IMP.maxOnlineAccountsPerIp) {
+                event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitOnlineReached));
+                return;
+            }
         }
 
         database.getAuthUserRepository().getUser(username, (user, success) -> {
@@ -77,13 +79,17 @@ public class AuthListener {
             }
 
             if (user == null) {
-                database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
-                    if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
-                        event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitRegisteredReached));
-                    } else {
-                        event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
-                    }
-                });
+                if (!MainConfig.IMP.excludedIps.contains(ip)) {
+                    database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
+                        if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
+                            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitRegisteredReached));
+                        } else {
+                            event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
+                        }
+                    });
+                } else {
+                    event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
+                }
             } else {
                 if (user.isPremium()) {
                     PremiumCache.addPremium(username);
