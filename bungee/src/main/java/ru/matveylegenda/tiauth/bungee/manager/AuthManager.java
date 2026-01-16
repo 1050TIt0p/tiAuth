@@ -366,13 +366,6 @@ public class AuthManager {
                     CachedMessages.IMP.player.checkPassword.passwordEmpty
             );
 
-            if (supportDialog(player)) {
-                showLoginDialog(
-                        player,
-                        CachedMessages.IMP.player.dialog.notifications.passwordEmpty
-                );
-            }
-
             return;
         }
 
@@ -384,15 +377,6 @@ public class AuthManager {
                             .replace("{max}", String.valueOf(MainConfig.IMP.auth.maxPasswordLength))
             );
 
-            if (supportDialog(player)) {
-                showLoginDialog(
-                        player,
-                        CachedMessages.IMP.player.dialog.notifications.invalidLength
-                                .replace("{min}", String.valueOf(MainConfig.IMP.auth.minPasswordLength))
-                                .replace("{max}", String.valueOf(MainConfig.IMP.auth.maxPasswordLength))
-                );
-            }
-
             return;
         }
 
@@ -401,13 +385,6 @@ public class AuthManager {
                     player,
                     CachedMessages.IMP.player.checkPassword.invalidPattern
             );
-
-            if (supportDialog(player)) {
-                showLoginDialog(
-                        player,
-                        CachedMessages.IMP.player.dialog.notifications.invalidPattern
-                );
-            }
 
             return;
         }

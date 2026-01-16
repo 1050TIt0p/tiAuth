@@ -95,6 +95,8 @@ public class AuthListener implements Listener {
             }
 
             if (user == null) {
+                connection.setOnlineMode(false);
+
                 if (!MainConfig.IMP.excludedIps.contains(ip)) {
                     database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
                         if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
@@ -108,6 +110,8 @@ public class AuthListener implements Listener {
             } else if (user.isPremium()) {
                 connection.setOnlineMode(true);
                 PremiumCache.addPremium(connection.getName());
+            } else {
+                connection.setOnlineMode(false);
             }
 
             event.completeIntent(plugin);
@@ -117,6 +121,10 @@ public class AuthListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onLogin(LoginEvent event) {
         PendingConnection connection = event.getConnection();
+
+        if (!connection.isOnlineMode()) {
+            return;
+        }
 
         try {
             UUID offlineId = UUID.nameUUIDFromBytes(

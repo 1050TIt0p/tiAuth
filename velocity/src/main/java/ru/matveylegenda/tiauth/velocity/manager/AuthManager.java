@@ -324,9 +324,6 @@ public class AuthManager {
         if (oldPassword.isEmpty() || newPassword.isEmpty()) {
             player.sendMessage(CachedComponents.IMP.player.checkPassword.passwordEmpty);
 
-            if (supportDialog(player)) {
-                showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.passwordEmpty);
-            }
             return;
         }
 
@@ -341,26 +338,12 @@ public class AuthManager {
                                     .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
             );
 
-            if (supportDialog(player)) {
-                showLoginDialog(player,
-                        CachedComponents.IMP.player.dialog.notifications.invalidLength
-                                .replaceText(builder -> builder
-                                        .match(VelocityUtils.MIN)
-                                        .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
-                                .replaceText(builder -> builder
-                                        .match(VelocityUtils.MAX)
-                                        .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
-                );
-            }
             return;
         }
 
         if (!passwordPattern.matcher(newPassword).matches()) {
             player.sendMessage(CachedComponents.IMP.player.checkPassword.invalidPattern);
 
-            if (supportDialog(player)) {
-                showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.invalidPattern);
-            }
             return;
         }
 
