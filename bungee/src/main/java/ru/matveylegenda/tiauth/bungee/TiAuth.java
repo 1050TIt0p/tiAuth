@@ -140,6 +140,12 @@ public final class TiAuth extends Plugin {
                 .version(adventureVersion)
                 .build();
 
+        Library adventureKey = Library.builder()
+                .groupId("net.kyori")
+                .artifactId("adventure-key")
+                .version(adventureVersion)
+                .build();
+
         Library kyoriExamination = Library.builder()
                 .groupId("net.kyori")
                 .artifactId("examination-api")
@@ -162,6 +168,7 @@ public final class TiAuth extends Plugin {
         libraryManager.loadLibrary(adventureMinimessage);
         libraryManager.loadLibrary(adventureLegacy);
         libraryManager.loadLibrary(adventureNBT);
+        libraryManager.loadLibrary(adventureKey);
         libraryManager.loadLibrary(kyoriExamination);
         libraryManager.loadLibrary(kyoriOption);
     }

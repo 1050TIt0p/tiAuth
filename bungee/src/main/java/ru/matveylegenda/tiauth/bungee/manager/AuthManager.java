@@ -196,6 +196,17 @@ public class AuthManager {
             return;
         }
 
+        if (password.length() < MainConfig.IMP.auth.minPasswordLength || password.length() > MainConfig.IMP.auth.maxPasswordLength) {
+            BungeeUtils.sendMessage(
+                    player,
+                    CachedMessages.IMP.player.checkPassword.invalidLength
+                            .replace("{min}", String.valueOf(MainConfig.IMP.auth.minPasswordLength))
+                            .replace("{max}", String.valueOf(MainConfig.IMP.auth.maxPasswordLength))
+            );
+
+            return;
+        }
+
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
                 BungeeUtils.sendMessage(
@@ -369,7 +380,8 @@ public class AuthManager {
             return;
         }
 
-        if (newPassword.length() < MainConfig.IMP.auth.minPasswordLength || newPassword.length() > MainConfig.IMP.auth.maxPasswordLength) {
+        if ((oldPassword.length() < MainConfig.IMP.auth.minPasswordLength || oldPassword.length() > MainConfig.IMP.auth.maxPasswordLength) ||
+                (newPassword.length() < MainConfig.IMP.auth.minPasswordLength || newPassword.length() > MainConfig.IMP.auth.maxPasswordLength)) {
             BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.checkPassword.invalidLength

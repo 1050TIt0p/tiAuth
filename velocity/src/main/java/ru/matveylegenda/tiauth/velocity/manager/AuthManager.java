@@ -176,6 +176,20 @@ public class AuthManager {
             return;
         }
 
+        if (password.length() < MainConfig.IMP.auth.minPasswordLength || password.length() > MainConfig.IMP.auth.maxPasswordLength) {
+            player.sendMessage(
+                    CachedComponents.IMP.player.checkPassword.invalidLength
+                            .replaceText(builder -> builder
+                                    .match(VelocityUtils.MIN)
+                                    .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
+                            .replaceText(builder -> builder
+                                    .match(VelocityUtils.MAX)
+                                    .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
+            );
+
+            return;
+        }
+
         database.getAuthUserRepository().getUser(name, (user, success) -> {
             if (!success) {
                 player.sendMessage(CachedComponents.IMP.queryError);
@@ -327,7 +341,8 @@ public class AuthManager {
             return;
         }
 
-        if (newPassword.length() < MainConfig.IMP.auth.minPasswordLength || newPassword.length() > MainConfig.IMP.auth.maxPasswordLength) {
+        if ((oldPassword.length() < MainConfig.IMP.auth.minPasswordLength || oldPassword.length() > MainConfig.IMP.auth.maxPasswordLength) ||
+                (newPassword.length() < MainConfig.IMP.auth.minPasswordLength || newPassword.length() > MainConfig.IMP.auth.maxPasswordLength)) {
             player.sendMessage(
                     CachedComponents.IMP.player.checkPassword.invalidLength
                             .replaceText(builder -> builder

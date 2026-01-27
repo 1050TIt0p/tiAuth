@@ -5,6 +5,7 @@ import ru.matveylegenda.tiauth.bungee.TiAuth;
 import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
 import ru.matveylegenda.tiauth.database.Database;
 
+@Getter
 public class TiAuthAPI {
     @Getter
     private static TiAuthAPI instance;
