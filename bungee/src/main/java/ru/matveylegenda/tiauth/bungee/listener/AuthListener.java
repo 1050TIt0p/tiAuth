@@ -130,8 +130,6 @@ public class AuthListener implements Listener {
             return;
         }
 
-        event.registerIntent(plugin);
-
         try {
             UUID offlineId = UUID.nameUUIDFromBytes(
                     ("OfflinePlayer:" + connection.getName()).getBytes(StandardCharsets.UTF_8)
@@ -140,8 +138,6 @@ public class AuthListener implements Listener {
             REWRITE_ID_FIELD.set(connection, offlineId);
         } catch (IllegalAccessException e) {
             TiAuth.logger.log(Level.WARNING, "Failed to set offline UUID for player " + connection.getName(), e);
-        } finally {
-            event.completeIntent(plugin);
         }
     }
 
