@@ -231,7 +231,7 @@ public class MessagesConfig extends YamlSerializable {
                 playerNotFound = "{prefix} &fИгрок не найден";
                 noPermission = "{prefix} &fНедостаточно прав";
 
-                admin.usage = "{prefix} &fИспользование: &#8833EC/tiauth <reload|unregister|changepassword|forcelogin>";
+                admin.usage = "{prefix} &fИспользование: &#8833EC/tiauth <reload|unregister|changepassword|forcelogin|forcepremium>";
                 admin.config.reload = "{prefix} &fКонфиги перезагружены";
                 admin.unregister.usage = "{prefix} &fИспользование: &#8833EC/tiauth unregister";
                 admin.unregister.success = "{prefix} &fВы успешно удалили аккаунт игрока &#8833EC{player}";
@@ -304,7 +304,7 @@ public class MessagesConfig extends YamlSerializable {
                 playerNotFound = "{prefix} &fPlayer not found";
                 noPermission = "{prefix} &fInsufficient permissions";
 
-                admin.usage = "{prefix} &fUsage: &#8833EC/tiauth <reload|unregister|changepassword|forcelogin>";
+                admin.usage = "{prefix} &fUsage: &#8833EC/tiauth <reload|unregister|changepassword|forcelogin|forcepremium>";
                 admin.config.reload = "{prefix} &fConfigs reloaded";
                 admin.unregister.usage = "{prefix} &fUsage: &#8833EC/tiauth unregister";
                 admin.unregister.success = "{prefix} &fYou have successfully deleted the account of player &#8833EC{player}";
