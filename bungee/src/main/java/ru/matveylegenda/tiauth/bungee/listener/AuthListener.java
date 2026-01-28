@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 public class AuthListener implements Listener {
     private static Field UNIQUE_ID_FIELD;
+    private static Field REWRITE_ID_FIELD;
 
     static {
         try {
@@ -32,6 +33,9 @@ public class AuthListener implements Listener {
 
             UNIQUE_ID_FIELD = INITIAL_HANDLER_CLASS.getDeclaredField("uniqueId");
             UNIQUE_ID_FIELD.setAccessible(true);
+
+            REWRITE_ID_FIELD = INITIAL_HANDLER_CLASS.getDeclaredField("rewriteId");
+            REWRITE_ID_FIELD.setAccessible(true);
         } catch (ClassNotFoundException | NoSuchFieldException e) {
             e.printStackTrace();
         }
@@ -126,13 +130,18 @@ public class AuthListener implements Listener {
             return;
         }
 
+        event.registerIntent(plugin);
+
         try {
             UUID offlineId = UUID.nameUUIDFromBytes(
                     ("OfflinePlayer:" + connection.getName()).getBytes(StandardCharsets.UTF_8)
             );
             UNIQUE_ID_FIELD.set(connection, offlineId);
+            REWRITE_ID_FIELD.set(connection, offlineId);
         } catch (IllegalAccessException e) {
             TiAuth.logger.log(Level.WARNING, "Failed to set offline UUID for player " + connection.getName(), e);
+        } finally {
+            event.completeIntent(plugin);
         }
     }
 
