@@ -38,7 +38,7 @@ subprojects {
         annotationProcessor("org.projectlombok:lombok:1.18.42")
     }
 
-    def targetJavaVersion = 17
+    def targetJavaVersion = 21
     java {
         def javaVersion = JavaVersion.toVersion(targetJavaVersion)
         sourceCompatibility = javaVersion
@@ -60,6 +60,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":bungee"))
     implementation(project(":velocity"))
+    implementation(project(":bukkit"))
 }
 
 tasks.shadowJar {
@@ -89,6 +90,7 @@ tasks.shadowJar {
         exclude(project(":common"))
         exclude(project(":bungee"))
         exclude(project(":velocity"))
+        exclude(project(":bukkit"))
 
         exclude("ru/matveylegenda/.*")
     }
