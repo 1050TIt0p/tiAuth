@@ -26,11 +26,9 @@ public class RestrictionListener implements Listener {
         Location from = event.getFrom();
         Location to = event.getTo();
 
-        if (to == null) return;
+        if (from.getY() > to.getY()) return;
 
-        if (from.getX() != to.getX() || from.getZ() != to.getZ() || from.getY() != to.getY()) {
-            event.setTo(from);
-        }
+        event.setTo(from);
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -62,7 +60,7 @@ public class RestrictionListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onPickup(PlayerPickupItemEvent event) {
+    public void onPickup(PlayerAttemptPickupItemEvent event) {
         if (!AuthCache.isAuthenticated(event.getPlayer().getName())) {
             event.setCancelled(true);
         }
