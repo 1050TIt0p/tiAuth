@@ -60,7 +60,7 @@ public class RestrictionListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onPickup(PlayerAttemptPickupItemEvent event) {
+    public void onPickup(PlayerPickupItemEvent event) {
         if (!AuthCache.isAuthenticated(event.getPlayer().getName())) {
             event.setCancelled(true);
         }

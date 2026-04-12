@@ -24,10 +24,26 @@ public class BukkitUtils {
     }
 
     public void sendActionBar(Player player, String message) {
-        if (message == null) {
+        if (message == null || message.isBlank()) {
             return;
         }
-        player.sendActionBar(colorize(message));
+        
+        String colored = colorize(message);
+        
+        // Try Spigot API (1.11+)
+        try {
+            java.lang.reflect.Method method = Player.class.getMethod("sendActionBar", String.class);
+            method.invoke(player, colored);
+            return;
+        } catch (Exception ignored) {
+        }
+        
+        // Fallback to BungeeCord spigot API (works on most versions)
+        try {
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText(colored));
+        } catch (Exception ignored) {
+        }
     }
 
     public String colorize(String message) {
