@@ -27,9 +27,9 @@ subprojects {
         implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
         implementation("net.elytrium:serializer:1.1.1")
 
-        compileOnly("net.kyori:adventure-api:4.24.0")
-        compileOnly("net.kyori:adventure-text-minimessage:4.24.0")
-        compileOnly("net.kyori:adventure-text-serializer-legacy:4.24.0")
+        implementation("net.kyori:adventure-api:4.24.0")
+        implementation("net.kyori:adventure-text-minimessage:4.24.0")
+        implementation("net.kyori:adventure-text-serializer-legacy:4.24.0")
         compileOnly("org.xerial:sqlite-jdbc:3.50.3.0")
         compileOnly("com.h2database:h2:2.3.232")
         compileOnly("com.mysql:mysql-connector-j:9.4.0")
@@ -38,7 +38,7 @@ subprojects {
         annotationProcessor("org.projectlombok:lombok:1.18.42")
     }
 
-    def targetJavaVersion = 17
+    def targetJavaVersion = 21
     java {
         def javaVersion = JavaVersion.toVersion(targetJavaVersion)
         sourceCompatibility = javaVersion
@@ -60,6 +60,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":bungee"))
     implementation(project(":velocity"))
+    implementation(project(":bukkit"))
 }
 
 tasks.shadowJar {
@@ -78,8 +79,8 @@ tasks.shadowJar {
     relocate("io.leangen.geantyref", "ru.matveylegenda.tiauth.thirdparty.io.leangen.geantyref")
     relocate("com.grack.nanojson", "ru.matveylegenda.tiauth.thirdparty.com.grack.nanojson")
     relocate("net.byteflux", "ru.matveylegenda.tiauth.thirdparty.net.byteflux")
+    relocate("net.kyori", "ru.matveylegenda.tiauth.thirdparty.net.kyori")
 
-    exclude("net/kyori/**")
     exclude("org/slf4j/**")
     exclude("META-INF/maven/**")
 
@@ -89,6 +90,7 @@ tasks.shadowJar {
         exclude(project(":common"))
         exclude(project(":bungee"))
         exclude(project(":velocity"))
+        exclude(project(":bukkit"))
 
         exclude("ru/matveylegenda/.*")
     }
