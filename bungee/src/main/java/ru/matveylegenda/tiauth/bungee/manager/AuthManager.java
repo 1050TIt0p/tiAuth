@@ -208,6 +208,7 @@ public class AuthManager {
                             .replace("{max}", String.valueOf(MainConfig.IMP.auth.maxPasswordLength))
             );
 
+            endProcess(player);
             return;
         }
 
