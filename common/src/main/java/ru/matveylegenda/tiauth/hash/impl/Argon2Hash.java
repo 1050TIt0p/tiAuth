@@ -17,7 +17,7 @@ public class Argon2Hash implements Hash {
                     MainConfig.IMP.auth.argon2Iterations,
                     MainConfig.IMP.auth.argon2Memory,
                     MainConfig.IMP.auth.argon2Parallelism,
-                    password.toCharArray()
+                    chars
             );
         } finally {
             ARGON2.wipeArray(chars);
