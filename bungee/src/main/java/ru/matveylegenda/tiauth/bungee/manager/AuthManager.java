@@ -532,62 +532,70 @@ public class AuthManager {
     }
 
     public void forceAuth(ProxiedPlayer player, PostLoginEvent event) {
+        handleForcedHost(player, event);
+
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            processForceAuthUser(player, event, user, success);
+        });
+    }
+
+    private void handleForcedHost(ProxiedPlayer player, PostLoginEvent event) {
         if (MainConfig.IMP.servers.sendToForcedHost && event != null) {
             ServerInfo originalTarget = event.getTarget();
             if (originalTarget != null && !originalTarget.getName().equals(MainConfig.IMP.servers.auth)) {
                 forcedHostMap.put(player.getName().toLowerCase(), originalTarget.getName());
             }
         }
+    }
 
-        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
-            try {
-                if (!success) {
-                    player.disconnect(CachedMessages.IMP.queryError);
-                    return;
-                }
-
-                if (user != null && !player.getName().equals(user.getRealName())) {
-                    player.disconnect(CachedMessages.IMP.player.kick.realname
-                            .replace("{realname}", user.getRealName())
-                            .replace("{name}", player.getName())
-                    );
-
-                    return;
-                }
-
-                String sessionIP = SessionCache.getIP(player.getName());
-
-                if (PremiumCache.isPremium(player.getName()) ||
-                        (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
-                    AuthCache.setAuthenticated(player.getName());
-
-                    if (event != null) {
-                        connectToBackend(event);
-                    } else {
-                        connectToBackend(player);
-                    }
-
-                    return;
-                }
-
-                if (event != null) {
-                    connectToAuthServer(event);
-                } else {
-                    connectToAuthServer(player);
-                }
-
-                String reminderMessage = (user != null)
-                        ? CachedMessages.IMP.player.reminder.login
-                        : CachedMessages.IMP.player.reminder.register;
-
-                taskManager.startAuthTimeoutTask(player);
-                taskManager.startAuthReminderTask(player, reminderMessage);
-            } finally {
-                if (event != null) {
-                    event.completeIntent(plugin);
-                }
+    private void processForceAuthUser(ProxiedPlayer player, PostLoginEvent event, AuthUser user, boolean success) {
+        try {
+            if (!success) {
+                player.disconnect(CachedMessages.IMP.queryError);
+                return;
             }
-        });
+
+            if (user != null && !player.getName().equals(user.getRealName())) {
+                player.disconnect(CachedMessages.IMP.player.kick.realname
+                        .replace("{realname}", user.getRealName())
+                        .replace("{name}", player.getName())
+                );
+
+                return;
+            }
+
+            String sessionIP = SessionCache.getIP(player.getName());
+
+            if (PremiumCache.isPremium(player.getName()) ||
+                    (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
+                AuthCache.setAuthenticated(player.getName());
+
+                if (event != null) {
+                    connectToBackend(event);
+                } else {
+                    connectToBackend(player);
+                }
+
+                return;
+            }
+
+            if (event != null) {
+                connectToAuthServer(event);
+            } else {
+                connectToAuthServer(player);
+            }
+
+            String reminderMessage = (user != null)
+                    ? CachedMessages.IMP.player.reminder.login
+                    : CachedMessages.IMP.player.reminder.register;
+
+            taskManager.startAuthTimeoutTask(player);
+            taskManager.startAuthReminderTask(player, reminderMessage);
+        } finally {
+            if (event != null) {
+                event.completeIntent(plugin);
+            }
+        }
     }
 
     public void showLoginDialog(ProxiedPlayer player) {
