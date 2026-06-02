@@ -66,6 +66,7 @@ public class CachedMessages {
         public static class Migrate {
             public String usage;
             public String error;
+            public String invalidFileName;
             public String success;
         }
     }
@@ -224,6 +225,7 @@ public class CachedMessages {
         admin.migrate = new Admin.Migrate();
         admin.migrate.usage = COLORIZER.colorize(getPrefixed(config.admin.migrate.usage, prefix));
         admin.migrate.error = COLORIZER.colorize(getPrefixed(config.admin.migrate.error, prefix));
+        admin.migrate.invalidFileName = COLORIZER.colorize(getPrefixed(config.admin.migrate.invalidFileName, prefix));
         admin.migrate.success = COLORIZER.colorize(getPrefixed(config.admin.migrate.success, prefix));
 
         player = new Player();
