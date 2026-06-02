@@ -23,6 +23,8 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class TiAuthCommand implements SimpleCommand {
+    private static final Pattern FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9._-]+$");
+
     private final TiAuth plugin;
     private final ProxyServer proxy;
     private final Database database;
@@ -298,7 +300,13 @@ public class TiAuthCommand implements SimpleCommand {
                             return;
                         }
 
-                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder().toString(), args[3]).getAbsolutePath());
+                        String fileName = args[3];
+                        if (!isValidFileName(fileName)) {
+                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.invalidFileName);
+                            return;
+                        }
+
+                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder().toString(), fileName).getAbsolutePath());
                     }
 
                     case H2 -> {
@@ -307,7 +315,13 @@ public class TiAuthCommand implements SimpleCommand {
                             return;
                         }
 
-                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder().toString(), args[3]).getAbsolutePath());
+                        String fileName = args[3];
+                        if (!isValidFileName(fileName)) {
+                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.invalidFileName);
+                            return;
+                        }
+
+                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder().toString(), fileName).getAbsolutePath());
                         if (!args[4].equals("empty")) {
                             databaseMigrator.setSourceDatabaseUser(args[4]);
                         }
@@ -346,5 +360,9 @@ public class TiAuthCommand implements SimpleCommand {
 
             default -> VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.usage);
         }
+    }
+
+    public boolean isValidFileName(String fileName) {
+        return FILE_NAME_PATTERN.matcher(fileName).matches() && !fileName.contains("..");
     }
 }

@@ -22,6 +22,8 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class TiAuthCommand extends Command {
+    private static final Pattern FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9._-]+$");
+
     private final TiAuth plugin;
     private final Database database;
     private final AuthManager authManager;
@@ -336,7 +338,16 @@ public class TiAuthCommand extends Command {
                             return;
                         }
 
-                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder(), args[3]).getAbsolutePath());
+                        String fileName = args[3];
+                        if (!isValidFileName(fileName)) {
+                            BungeeUtils.sendMessage(
+                                    sender,
+                                    CachedMessages.IMP.admin.migrate.invalidFileName
+                            );
+                            return;
+                        }
+
+                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder(), fileName).getAbsolutePath());
                     }
 
                     case H2 -> {
@@ -348,7 +359,16 @@ public class TiAuthCommand extends Command {
                             return;
                         }
 
-                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder(), args[3]).getAbsolutePath());
+                        String fileName = args[3];
+                        if (!isValidFileName(fileName)) {
+                            BungeeUtils.sendMessage(
+                                    sender,
+                                    CachedMessages.IMP.admin.migrate.invalidFileName
+                            );
+                            return;
+                        }
+
+                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder(), fileName).getAbsolutePath());
                         if (!args[4].equals("empty")) {
                             databaseMigrator.setSourceDatabaseUser(args[4]);
                         }
@@ -394,5 +414,9 @@ public class TiAuthCommand extends Command {
                 });
             }
         }
+    }
+
+    public boolean isValidFileName(String fileName) {
+        return FILE_NAME_PATTERN.matcher(fileName).matches() && !fileName.contains("..");
     }
 }

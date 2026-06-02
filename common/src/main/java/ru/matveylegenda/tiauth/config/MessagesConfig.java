@@ -94,6 +94,7 @@ public class MessagesConfig extends YamlSerializable {
         public static class Migrate {
             public String usage;
             public String error;
+            public String invalidFileName;
             public String success;
         }
     }
@@ -250,6 +251,7 @@ public class MessagesConfig extends YamlSerializable {
                 admin.forcePremium.disabled = "{prefix} &fВы успешно выключили премиум-режим для игрока &#8833EC{player}";
                 admin.migrate.usage = "{prefix} &fИспользование: &#8833EC/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]";
                 admin.migrate.error = "{prefix} &fПроизошла ошибка при миграции базы данных";
+                admin.migrate.invalidFileName = "{prefix} &fНедопустимое имя файла";
                 admin.migrate.success = "{prefix} &fБаза данных успешно мигрирована";
 
                 player.checkPassword.wrongPassword = "{prefix} &fНеверный пароль";
@@ -325,6 +327,7 @@ public class MessagesConfig extends YamlSerializable {
                 admin.forcePremium.disabled = "{prefix} &fYou have successfully disabled premium mode for player &#8833EC{player}";
                 admin.migrate.usage = "{prefix} &Usage: &#8833EC/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]";
                 admin.migrate.error = "{prefix} &fAn error occurred during database migration";
+                admin.migrate.invalidFileName = "{prefix} &fInvalid file name";
                 admin.migrate.success = "{prefix} &fDatabase has been successfully migrated";
 
                 player.checkPassword.wrongPassword = "{prefix} &fWrong password";

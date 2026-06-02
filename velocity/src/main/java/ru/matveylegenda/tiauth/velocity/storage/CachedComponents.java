@@ -70,6 +70,7 @@ public class CachedComponents {
         public static class Migrate {
             public Component usage;
             public Component error;
+            public Component invalidFileName;
             public Component success;
         }
     }
@@ -231,6 +232,7 @@ public class CachedComponents {
         admin.migrate = new Admin.Migrate();
         admin.migrate.usage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.migrate.usage, prefixRaw)));
         admin.migrate.error = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.migrate.error, prefixRaw)));
+        admin.migrate.invalidFileName = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.migrate.invalidFileName, prefixRaw)));
         admin.migrate.success = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.migrate.success, prefixRaw)));
 
         player = new Player();
