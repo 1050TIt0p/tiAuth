@@ -6,7 +6,7 @@ import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.hash.Hash;
 
 public class Argon2Hash implements Hash {
-    private static final Argon2 ARGON2 = Argon2Factory.create();
+    private static final Argon2 ARGON2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id);
 
     @Override
     public String hashPassword(String password) {
