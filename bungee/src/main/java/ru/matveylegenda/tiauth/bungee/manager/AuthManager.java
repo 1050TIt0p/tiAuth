@@ -702,7 +702,7 @@ public class AuthManager {
 
     private ServerInfo resolveBackendServer(String playerName) {
         if (MainConfig.IMP.servers.sendToForcedHost) {
-            String forcedHost = forcedHostMap.remove(playerName.toLowerCase());
+            String forcedHost = forcedHostMap.get(playerName.toLowerCase());
             if (forcedHost != null) {
                 ServerInfo forcedServer = plugin.getProxy().getServerInfo(forcedHost);
                 if (forcedServer != null) {
