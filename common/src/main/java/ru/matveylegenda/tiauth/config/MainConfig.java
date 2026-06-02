@@ -175,8 +175,9 @@ public class MainConfig extends YamlSerializable {
         @Comment({
                 @CommentValue("Алгоритм хеширования пароля"),
                 @CommentValue("Доступные варианты:"),
-                @CommentValue("BCRYPT"),
-                @CommentValue("SHA256")
+                @CommentValue("BCRYPT (рекомендуемый)"),
+                @CommentValue("SHA256"),
+                @CommentValue("ARGON2")
         })
         public HashType hashAlgorithm = HashType.BCRYPT;
 
