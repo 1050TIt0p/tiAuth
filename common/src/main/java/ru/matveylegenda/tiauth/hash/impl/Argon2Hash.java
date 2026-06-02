@@ -10,6 +10,8 @@ public class Argon2Hash implements Hash {
 
     @Override
     public String hashPassword(String password) {
+        char[] chars = password.toCharArray();
+
         try {
             return ARGON2.hash(
                     MainConfig.IMP.auth.argon2Iterations,
@@ -18,19 +20,21 @@ public class Argon2Hash implements Hash {
                     password.toCharArray()
             );
         } finally {
-            ARGON2.wipeArray(password.toCharArray());
+            ARGON2.wipeArray(chars);
         }
     }
 
     @Override
     public boolean verifyPassword(String password, String hashedPassword) {
+        char[] chars = password.toCharArray();
+
         try {
             return ARGON2.verify(
                     hashedPassword,
-                    password.toCharArray()
+                    chars
             );
         } finally {
-            ARGON2.wipeArray(password.toCharArray());
+            ARGON2.wipeArray(chars);
         }
     }
 }
