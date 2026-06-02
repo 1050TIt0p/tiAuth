@@ -181,11 +181,18 @@ public class MainConfig extends YamlSerializable {
         public HashType hashAlgorithm = HashType.BCRYPT;
 
         @Comment({
-                @CommentValue("Сложность алгоритма bcrypt."),
-                @CommentValue("Чем больше значение - тем сложнее сбрутить пароль."),
-                @CommentValue("(БОльшие значения выдают бОльшую нагрузку!)")
+                @CommentValue("Сложность алгоритма Bcrypt"),
+                @CommentValue("Значение по умолчанию оптимально, не трогайте если не знаете как это работает!")
         })
         public int bcryptCost = 12;
+
+        @Comment({
+                @CommentValue("Настройки алгоритма Argon2"),
+                @CommentValue("Значения по умолчанию оптимальны, не трогайте если не знаете как это работает!")
+        })
+        public int argon2Iterations = 2;
+        public int argon2Memory = 65536;
+        public int argon2Parallelism = 1;
 
         @Comment({
                 @CommentValue("Команды, которые можно использовать во время авторизации")

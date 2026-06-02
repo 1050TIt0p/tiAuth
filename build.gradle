@@ -24,6 +24,7 @@ subprojects {
         implementation("com.j256.ormlite:ormlite-jdbc:6.1")
         implementation("com.zaxxer:HikariCP:7.0.1")
         implementation("at.favre.lib:bcrypt:0.10.2")
+        implementation("de.mkammerer:argon2-jvm:2.12")
         implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
         implementation("net.elytrium:serializer:1.1.1")
 
@@ -69,6 +70,7 @@ tasks.shadowJar {
     relocate("com.j256.ormlite", "ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite")
     relocate("com.zaxxer.hikari", "ru.matveylegenda.tiauth.thirdparty.com.zaxxer.hikari")
     relocate("at.favre.lib", "ru.matveylegenda.tiauth.thirdparty.at.favre.lib")
+    relocate("de.mkammerer.argon2", "ru.matveylegenda.tiauth.thirdparty.de.mkammerer.argon2")
     relocate("com.github.benmanes.caffeine", "ru.matveylegenda.tiauth.thirdparty.com.github.benmanes.caffeine")
     relocate("com.google.errorprone", "ru.matveylegenda.tiauth.thirdparty.com.google.errorprone")
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
