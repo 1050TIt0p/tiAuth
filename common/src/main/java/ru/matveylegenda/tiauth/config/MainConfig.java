@@ -69,6 +69,15 @@ public class MainConfig extends YamlSerializable {
                 @CommentValue("Бэкенд сервер на который будет перемещать игроков после регистрации/авторизации")
         })
         public String backend = "hub";
+
+        @NewLine
+        @Comment({
+                @CommentValue("Отправлять игроков на сервер из forced_hosts после авторизации"),
+                @CommentValue("Если включено, после регистрации/авторизации игрок будет отправлен на сервер,"),
+                @CommentValue("который был назначен через forced_hosts в конфигурации прокси-сервера,"),
+                @CommentValue("а не на сервер из настройки backend")
+        })
+        public boolean sendToForcedHost = false;
     }
 
     public Database database;

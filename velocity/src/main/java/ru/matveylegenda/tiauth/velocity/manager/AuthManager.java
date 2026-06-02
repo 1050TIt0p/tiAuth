@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 public class AuthManager {
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
+    private final Map<String, String> forcedHostMap = new ConcurrentHashMap<>();
 
     private final TiAuth plugin;
     private final Database database;
@@ -459,6 +460,14 @@ public class AuthManager {
         });
     }
 
+    public void setForcedHost(String playerName, String serverName) {
+        forcedHostMap.put(playerName.toLowerCase(), serverName);
+    }
+
+    public void removeForcedHost(String playerName) {
+        forcedHostMap.remove(playerName.toLowerCase());
+    }
+
     public void forceAuth(Player player) {
         forceAuth(player, null, null);
     }
@@ -468,6 +477,15 @@ public class AuthManager {
      */
     public void forceAuth(Player player, PlayerChooseInitialServerEvent event, CompletableFuture<Void> future) {
         String name = player.getUsername();
+
+        if (MainConfig.IMP.servers.sendToForcedHost && event != null) {
+            event.getInitialServer().ifPresent(server -> {
+                String serverName = server.getServerInfo().getName();
+                if (!serverName.equals(MainConfig.IMP.servers.auth)) {
+                    forcedHostMap.put(name.toLowerCase(), serverName);
+                }
+            });
+        }
 
         database.getAuthUserRepository().getUser(name, (user, success) -> {
             try {
@@ -495,8 +513,7 @@ public class AuthManager {
                     if (event == null && future == null) {
                         connectToBackend(player);
                     } else {
-                        Optional<RegisteredServer> backendOpt = plugin.getServer().getServer(MainConfig.IMP.servers.backend);
-                        backendOpt.ifPresent(event::setInitialServer);
+                        resolveBackendServer(name).ifPresent(event::setInitialServer);
                     }
                     return;
                 }
@@ -551,18 +568,26 @@ public class AuthManager {
     }
 
     private void connectToBackend(Player player) {
-        java.util.Optional<RegisteredServer> serverOpt = plugin.getServer().getServer(MainConfig.IMP.servers.backend);
-        if (serverOpt.isEmpty()) {
-            return;
-        }
+        resolveBackendServer(player.getUsername()).ifPresent(backend -> {
+            player.getCurrentServer().ifPresentOrElse(current -> {
+                if (!current.getServer().equals(backend)) {
+                    player.createConnectionRequest(backend).connect();
+                }
+            }, () -> player.createConnectionRequest(backend).connect());
+        });
+    }
 
-        RegisteredServer backend = serverOpt.get();
-
-        player.getCurrentServer().ifPresentOrElse(current -> {
-            if (!current.getServer().equals(backend)) {
-                player.createConnectionRequest(backend).connect();
+    private Optional<RegisteredServer> resolveBackendServer(String playerName) {
+        if (MainConfig.IMP.servers.sendToForcedHost) {
+            String forcedHost = forcedHostMap.remove(playerName.toLowerCase());
+            if (forcedHost != null) {
+                java.util.Optional<RegisteredServer> forcedServer = plugin.getServer().getServer(forcedHost);
+                if (forcedServer.isPresent()) {
+                    return forcedServer;
+                }
             }
-        }, () -> player.createConnectionRequest(backend).connect());
+        }
+        return plugin.getServer().getServer(MainConfig.IMP.servers.backend);
     }
 
     private boolean supportDialog(Player player) {

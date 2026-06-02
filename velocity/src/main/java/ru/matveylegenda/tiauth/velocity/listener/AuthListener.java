@@ -123,6 +123,16 @@ public class AuthListener {
     @Subscribe
     public EventTask onPlayerChooseInitialServer(PlayerChooseInitialServerEvent event) {
         Player player = event.getPlayer();
+
+        if (MainConfig.IMP.servers.sendToForcedHost) {
+            event.getInitialServer().ifPresent(server -> {
+                String serverName = server.getServerInfo().getName();
+                if (!serverName.equals(MainConfig.IMP.servers.auth)) {
+                    authManager.setForcedHost(player.getUsername(), serverName);
+                }
+            });
+        }
+
         CompletableFuture<Void> future = new CompletableFuture<>();
 
         authManager.forceAuth(player, event, future);
@@ -164,6 +174,7 @@ public class AuthListener {
         }
 
         taskManager.cancelTasks(player);
+        authManager.removeForcedHost(username);
     }
 
     public int getPlayersCountByIp(String ip) {

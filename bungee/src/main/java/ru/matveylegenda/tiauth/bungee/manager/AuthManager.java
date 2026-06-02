@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 public class AuthManager {
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
+    private final Map<String, String> forcedHostMap = new ConcurrentHashMap<>();
     private final TiAuth plugin;
     private final Database database;
     private final TaskManager taskManager;
@@ -531,6 +532,13 @@ public class AuthManager {
     }
 
     public void forceAuth(ProxiedPlayer player, PostLoginEvent event) {
+        if (MainConfig.IMP.servers.sendToForcedHost && event != null) {
+            ServerInfo originalTarget = event.getTarget();
+            if (originalTarget != null && !originalTarget.getName().equals(MainConfig.IMP.servers.auth)) {
+                forcedHostMap.put(player.getName().toLowerCase(), originalTarget.getName());
+            }
+        }
+
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             try {
                 if (!success) {
@@ -646,6 +654,14 @@ public class AuthManager {
         });
     }
 
+    public void setForcedHost(String playerName, String serverName) {
+        forcedHostMap.put(playerName.toLowerCase(), serverName);
+    }
+
+    public void removeForcedHost(String playerName) {
+        forcedHostMap.remove(playerName.toLowerCase());
+    }
+
     private void connectToAuthServer(PostLoginEvent event) {
         ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
         event.setTarget(authServer);
@@ -661,17 +677,32 @@ public class AuthManager {
     }
 
     private void connectToBackend(PostLoginEvent event) {
-        ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
-        event.setTarget(backendServer);
+        ServerInfo backendServer = resolveBackendServer(event.getPlayer().getName());
+        if (backendServer != null) {
+            event.setTarget(backendServer);
+        }
     }
 
     private void connectToBackend(ProxiedPlayer player) {
         ServerInfo currentServer = player.getServer().getInfo();
-        ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
+        ServerInfo backendServer = resolveBackendServer(player.getName());
 
-        if (currentServer == null || !currentServer.equals(backendServer)) {
+        if (backendServer != null && (currentServer == null || !currentServer.equals(backendServer))) {
             player.connect(backendServer);
         }
+    }
+
+    private ServerInfo resolveBackendServer(String playerName) {
+        if (MainConfig.IMP.servers.sendToForcedHost) {
+            String forcedHost = forcedHostMap.remove(playerName.toLowerCase());
+            if (forcedHost != null) {
+                ServerInfo forcedServer = plugin.getProxy().getServerInfo(forcedHost);
+                if (forcedServer != null) {
+                    return forcedServer;
+                }
+            }
+        }
+        return plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
     }
 
     private boolean supportDialog(ProxiedPlayer player) {
