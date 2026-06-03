@@ -540,7 +540,7 @@ public class AuthManager {
     }
 
     private void handleForcedHost(ProxiedPlayer player, PostLoginEvent event) {
-        if (MainConfig.IMP.servers.sendToForcedHost && event != null) {
+        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST && event != null) {
             ServerInfo originalTarget = event.getTarget();
             if (originalTarget != null && !originalTarget.getName().equals(MainConfig.IMP.servers.auth)) {
                 forcedHostMap.put(player.getName().toLowerCase(), originalTarget.getName());
@@ -701,7 +701,7 @@ public class AuthManager {
     }
 
     private ServerInfo resolveBackendServer(String playerName) {
-        if (MainConfig.IMP.servers.sendToForcedHost) {
+        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
             String forcedHost = forcedHostMap.get(playerName.toLowerCase());
             if (forcedHost != null) {
                 ServerInfo forcedServer = plugin.getProxy().getServerInfo(forcedHost);

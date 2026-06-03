@@ -158,7 +158,7 @@ public class AuthListener implements Listener {
         ProxiedPlayer player = event.getPlayer();
 
         if (event.getReason() == ServerConnectEvent.Reason.JOIN_PROXY) {
-            if (MainConfig.IMP.servers.sendToForcedHost) {
+            if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
                 InetSocketAddress virtualHost = player.getPendingConnection().getVirtualHost();
                 if (virtualHost != null) {
                     String host = virtualHost.getHostString();

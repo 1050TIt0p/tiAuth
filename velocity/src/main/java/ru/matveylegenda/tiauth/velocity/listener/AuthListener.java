@@ -124,7 +124,7 @@ public class AuthListener {
     public EventTask onPlayerChooseInitialServer(PlayerChooseInitialServerEvent event) {
         Player player = event.getPlayer();
 
-        if (MainConfig.IMP.servers.sendToForcedHost) {
+        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
             event.getInitialServer().ifPresent(server -> {
                 String serverName = server.getServerInfo().getName();
                 if (!serverName.equals(MainConfig.IMP.servers.auth)) {

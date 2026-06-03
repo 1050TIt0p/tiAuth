@@ -72,12 +72,16 @@ public class MainConfig extends YamlSerializable {
 
         @NewLine
         @Comment({
-                @CommentValue("Отправлять игроков на сервер из forced_hosts после авторизации"),
-                @CommentValue("Если включено, после регистрации/авторизации игрок будет отправлен на сервер,"),
-                @CommentValue("который был назначен через forced_hosts в конфигурации прокси-сервера,"),
-                @CommentValue("а не на сервер из настройки backend")
+                @CommentValue("Режим выбора сервера после авторизации"),
+                @CommentValue("BACKEND - всегда отправлять на сервер из настройки backend"),
+                @CommentValue("FORCED_HOST - отправлять на сервер из forced_hosts прокси, если доступно")
         })
-        public boolean sendToForcedHost = false;
+        public PostAuthServerMode postAuthServerMode = PostAuthServerMode.BACKEND;
+    }
+
+    public enum PostAuthServerMode {
+        BACKEND,
+        FORCED_HOST
     }
 
     public Database database;

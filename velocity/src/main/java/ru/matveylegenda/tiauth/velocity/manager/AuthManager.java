@@ -478,7 +478,7 @@ public class AuthManager {
     public void forceAuth(Player player, PlayerChooseInitialServerEvent event, CompletableFuture<Void> future) {
         String name = player.getUsername();
 
-        if (MainConfig.IMP.servers.sendToForcedHost && event != null) {
+        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST && event != null) {
             event.getInitialServer().ifPresent(server -> {
                 String serverName = server.getServerInfo().getName();
                 if (!serverName.equals(MainConfig.IMP.servers.auth)) {
@@ -489,55 +489,62 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(name, (user, success) -> {
             try {
-                if (!success) {
-                    player.disconnect(CachedComponents.IMP.queryError);
-                    return;
-                }
-
-                if (user != null && !player.getUsername().equals(user.getRealName())) {
-                    player.disconnect(CachedComponents.IMP.player.kick.realname
-                            .replaceText(builder -> builder
-                                    .match(VelocityUtils.REAL_NAME)
-                                    .replacement(user.getRealName()))
-                            .replaceText(builder -> builder
-                                    .match(VelocityUtils.NAME)
-                                    .replacement(player.getUsername())));
-                    return;
-                }
-
-                String sessionIP = SessionCache.getIP(name);
-                String remoteIp = player.getRemoteAddress().getAddress().getHostAddress();
-
-                if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
-                    AuthCache.setAuthenticated(name);
-                    if (event == null && future == null) {
-                        connectToBackend(player);
-                    } else {
-                        resolveBackendServer(name).ifPresent(event::setInitialServer);
-                    }
-                    return;
-                }
-
-                // подключаем к auth-серверу
-                if (event == null && future == null) {
-                    connectToAuthServer(player);
-                } else {
-                    Optional<RegisteredServer> authOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
-                    authOpt.ifPresent(event::setInitialServer);
-                }
-
-                Component reminderMessage = (user != null)
-                        ? CachedComponents.IMP.player.reminder.login
-                        : CachedComponents.IMP.player.reminder.register;
-
-                taskManager.startAuthTimeoutTask(player);
-                taskManager.startAuthReminderTask(player, reminderMessage);
+                handleForceAuthUser(player, event, user, success);
             } finally {
                 if (event != null && future != null) {
                     future.complete(null);
                 }
             }
         });
+    }
+
+    private void handleForceAuthUser(Player player, PlayerChooseInitialServerEvent event, AuthUser user, boolean success) {
+        if (!success) {
+            player.disconnect(CachedComponents.IMP.queryError);
+            return;
+        }
+
+        String name = player.getUsername();
+
+        if (user != null && !name.equals(user.getRealName())) {
+            player.disconnect(CachedComponents.IMP.player.kick.realname
+                    .replaceText(builder -> builder
+                            .match(VelocityUtils.REAL_NAME)
+                            .replacement(user.getRealName()))
+                    .replaceText(builder -> builder
+                            .match(VelocityUtils.NAME)
+                            .replacement(name)));
+            return;
+        }
+
+        String sessionIP = SessionCache.getIP(name);
+        String remoteIp = player.getRemoteAddress().getAddress().getHostAddress();
+
+        boolean isExternalCall = event == null;
+
+        if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
+            AuthCache.setAuthenticated(name);
+            if (isExternalCall) {
+                connectToBackend(player);
+            } else {
+                resolveBackendServer(name).ifPresent(event::setInitialServer);
+            }
+            return;
+        }
+
+        if (isExternalCall) {
+            connectToAuthServer(player);
+        } else {
+            Optional<RegisteredServer> authOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
+            authOpt.ifPresent(event::setInitialServer);
+        }
+
+        Component reminderMessage = (user != null)
+                ? CachedComponents.IMP.player.reminder.login
+                : CachedComponents.IMP.player.reminder.register;
+
+        taskManager.startAuthTimeoutTask(player);
+        taskManager.startAuthReminderTask(player, reminderMessage);
     }
 
     public void showLoginDialog(Player player) {
@@ -578,7 +585,7 @@ public class AuthManager {
     }
 
     private Optional<RegisteredServer> resolveBackendServer(String playerName) {
-        if (MainConfig.IMP.servers.sendToForcedHost) {
+        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
             String forcedHost = forcedHostMap.get(playerName.toLowerCase());
             if (forcedHost != null) {
                 java.util.Optional<RegisteredServer> forcedServer = plugin.getServer().getServer(forcedHost);
