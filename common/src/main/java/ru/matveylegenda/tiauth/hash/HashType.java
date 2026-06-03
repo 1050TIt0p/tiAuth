@@ -2,5 +2,6 @@ package ru.matveylegenda.tiauth.hash;
 
 public enum HashType {
     BCRYPT,
-    SHA256
+    SHA256,
+    ARGON2
 }
