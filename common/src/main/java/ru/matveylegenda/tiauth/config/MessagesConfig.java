@@ -171,6 +171,7 @@ public class MessagesConfig extends YamlSerializable {
             public String invalidNickPattern;
             public String ipLimitOnlineReached;
             public String ipLimitRegisteredReached;
+            public String forcedHostNotFound;
         }
 
         @NewLine
@@ -281,6 +282,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.invalidNickPattern = "{prefix} &fВаш ник содержит запрещенные символы";
                 player.kick.ipLimitOnlineReached = "{prefix} &fС этого IP-адреса играет максимальное количество аккаунтов";
                 player.kick.ipLimitRegisteredReached = "{prefix} &fС этого IP-адреса зарегистрировано слишком много аккаунтов";
+                player.kick.forcedHostNotFound = "{prefix} &fСервер не найден в списке forced_hosts. Переключитесь на BACKEND режим или настройте forced_hosts в конфигурации прокси";
                 player.reminder.login = "{prefix} &fАвторизируйтесь командой &#8833EC/login <пароль>";
                 player.reminder.register = "{prefix} &fЗарегистрируйтесь командой &#8833EC/register <пароль> <пароль>";
                 player.dialog.register.title = "Регистрация";
@@ -357,6 +359,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.invalidNickPattern = "{prefix} &fYour nickname contains invalid characters";
                 player.kick.ipLimitOnlineReached = "{prefix} &fToo many accounts are currently playing from this IP address";
                 player.kick.ipLimitRegisteredReached = "{prefix} &fToo many accounts registered from this IP address";
+                player.kick.forcedHostNotFound = "{prefix} &fServer not found in forced_hosts list. Switch to BACKEND mode or configure forced_hosts in the proxy config";
                 player.reminder.login = "{prefix} &fAuthenticate using &#8833EC/login <password>";
                 player.reminder.register = "{prefix} &fRegister using &#8833EC/register <password> <password>";
                 player.dialog.register.title = "Registration";

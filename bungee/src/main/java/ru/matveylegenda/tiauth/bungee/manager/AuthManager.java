@@ -543,7 +543,10 @@ public class AuthManager {
         if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST && event != null) {
             ServerInfo originalTarget = event.getTarget();
             if (originalTarget != null && !originalTarget.getName().equals(MainConfig.IMP.servers.auth)) {
-                forcedHostMap.put(player.getName().toLowerCase(), originalTarget.getName());
+                List<String> whitelist = MainConfig.IMP.servers.forcedHosts.servers;
+                if (whitelist.isEmpty() || whitelist.contains(originalTarget.getName())) {
+                    forcedHostMap.put(player.getName().toLowerCase(), originalTarget.getName());
+                }
             }
         }
     }
@@ -688,6 +691,8 @@ public class AuthManager {
         ServerInfo backendServer = resolveBackendServer(event.getPlayer().getName());
         if (backendServer != null) {
             event.setTarget(backendServer);
+        } else if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+            event.getPlayer().disconnect(CachedMessages.IMP.player.kick.forcedHostNotFound);
         }
     }
 
@@ -697,18 +702,18 @@ public class AuthManager {
 
         if (backendServer != null && (currentServer == null || !currentServer.equals(backendServer))) {
             player.connect(backendServer);
+        } else if (backendServer == null && MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+            player.disconnect(CachedMessages.IMP.player.kick.forcedHostNotFound);
         }
     }
 
     private ServerInfo resolveBackendServer(String playerName) {
         if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
             String forcedHost = forcedHostMap.get(playerName.toLowerCase());
-            if (forcedHost != null) {
-                ServerInfo forcedServer = plugin.getProxy().getServerInfo(forcedHost);
-                if (forcedServer != null) {
-                    return forcedServer;
-                }
+            if (forcedHost == null) {
+                return null;
             }
+            return plugin.getProxy().getServerInfo(forcedHost);
         }
         return plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
     }

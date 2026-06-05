@@ -20,6 +20,7 @@ import ru.matveylegenda.tiauth.database.Database;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -166,7 +167,10 @@ public class AuthListener implements Listener {
                         for (Map.Entry<String, String> entry : listener.getForcedHosts().entrySet()) {
                             if (host.equals(entry.getKey()) || host.endsWith(entry.getKey())) {
                                 if (!entry.getValue().equals(MainConfig.IMP.servers.auth)) {
-                                    authManager.setForcedHost(player.getName(), entry.getValue());
+                                    List<String> whitelist = MainConfig.IMP.servers.forcedHosts.servers;
+                                    if (whitelist.isEmpty() || whitelist.contains(entry.getValue())) {
+                                        authManager.setForcedHost(player.getName(), entry.getValue());
+                                    }
                                 }
                                 return;
                             }

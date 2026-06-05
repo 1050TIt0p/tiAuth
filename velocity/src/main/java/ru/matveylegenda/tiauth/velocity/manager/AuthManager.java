@@ -478,15 +478,6 @@ public class AuthManager {
     public void forceAuth(Player player, PlayerChooseInitialServerEvent event, CompletableFuture<Void> future) {
         String name = player.getUsername();
 
-        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST && event != null) {
-            event.getInitialServer().ifPresent(server -> {
-                String serverName = server.getServerInfo().getName();
-                if (!serverName.equals(MainConfig.IMP.servers.auth)) {
-                    forcedHostMap.put(name.toLowerCase(), serverName);
-                }
-            });
-        }
-
         database.getAuthUserRepository().getUser(name, (user, success) -> {
             try {
                 handleForceAuthUser(player, event, user, success);
@@ -527,7 +518,13 @@ public class AuthManager {
             if (isExternalCall) {
                 connectToBackend(player);
             } else {
-                resolveBackendServer(name).ifPresent(event::setInitialServer);
+                Optional<RegisteredServer> backend = resolveBackendServer(name);
+                if (backend.isPresent()) {
+                    event.setInitialServer(backend.get());
+                } else if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+                    player.disconnect(CachedComponents.IMP.player.kick.forcedHostNotFound);
+                    return;
+                }
             }
             return;
         }
@@ -575,24 +572,26 @@ public class AuthManager {
     }
 
     private void connectToBackend(Player player) {
-        resolveBackendServer(player.getUsername()).ifPresent(backend -> {
+        Optional<RegisteredServer> backend = resolveBackendServer(player.getUsername());
+        if (backend.isPresent()) {
+            RegisteredServer target = backend.get();
             player.getCurrentServer().ifPresentOrElse(current -> {
-                if (!current.getServer().equals(backend)) {
-                    player.createConnectionRequest(backend).connect();
+                if (!current.getServer().equals(target)) {
+                    player.createConnectionRequest(target).connect();
                 }
-            }, () -> player.createConnectionRequest(backend).connect());
-        });
+            }, () -> player.createConnectionRequest(target).connect());
+        } else if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+            player.disconnect(CachedComponents.IMP.player.kick.forcedHostNotFound);
+        }
     }
 
     private Optional<RegisteredServer> resolveBackendServer(String playerName) {
         if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
             String forcedHost = forcedHostMap.get(playerName.toLowerCase());
-            if (forcedHost != null) {
-                java.util.Optional<RegisteredServer> forcedServer = plugin.getServer().getServer(forcedHost);
-                if (forcedServer.isPresent()) {
-                    return forcedServer;
-                }
+            if (forcedHost == null) {
+                return Optional.empty();
             }
+            return plugin.getServer().getServer(forcedHost);
         }
         return plugin.getServer().getServer(MainConfig.IMP.servers.backend);
     }

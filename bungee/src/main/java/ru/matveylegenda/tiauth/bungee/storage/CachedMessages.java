@@ -135,6 +135,7 @@ public class CachedMessages {
             public String invalidNickPattern;
             public String ipLimitOnlineReached;
             public String ipLimitRegisteredReached;
+            public String forcedHostNotFound;
         }
 
         public static class Reminder {
@@ -272,6 +273,7 @@ public class CachedMessages {
         player.kick.invalidNickPattern = COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefix));
         player.kick.ipLimitOnlineReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefix));
         player.kick.ipLimitRegisteredReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefix));
+        player.kick.forcedHostNotFound = COLORIZER.colorize(getPrefixed(config.player.kick.forcedHostNotFound, prefix));
 
         player.reminder = new Player.Reminder();
         player.reminder.login = COLORIZER.colorize(getPrefixed(config.player.reminder.login, prefix));

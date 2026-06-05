@@ -25,6 +25,7 @@ import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
@@ -128,7 +129,10 @@ public class AuthListener {
             event.getInitialServer().ifPresent(server -> {
                 String serverName = server.getServerInfo().getName();
                 if (!serverName.equals(MainConfig.IMP.servers.auth)) {
-                    authManager.setForcedHost(player.getUsername(), serverName);
+                    List<String> whitelist = MainConfig.IMP.servers.forcedHosts.servers;
+                    if (whitelist.isEmpty() || whitelist.contains(serverName)) {
+                        authManager.setForcedHost(player.getUsername(), serverName);
+                    }
                 }
             });
         }

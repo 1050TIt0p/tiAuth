@@ -140,6 +140,7 @@ public class CachedComponents {
             public Component invalidNickPattern;
             public Component ipLimitOnlineReached;
             public Component ipLimitRegisteredReached;
+            public Component forcedHostNotFound;
         }
 
         public static class Reminder {
@@ -279,6 +280,7 @@ public class CachedComponents {
         player.kick.invalidNickPattern = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefixRaw)));
         player.kick.ipLimitOnlineReached = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefixRaw)));
         player.kick.ipLimitRegisteredReached = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefixRaw)));
+        player.kick.forcedHostNotFound = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.forcedHostNotFound, prefixRaw)));
 
         player.reminder = new Player.Reminder();
         player.reminder.login = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.reminder.login, prefixRaw)));
