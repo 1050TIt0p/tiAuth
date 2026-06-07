@@ -133,6 +133,7 @@ public class CachedMessages {
             public String tooManyAttempts;
             public String ban;
             public String invalidNickPattern;
+            public String forcedHostNotFound;
             public String ipLimitOnlineReached;
             public String ipLimitRegisteredReached;
         }
@@ -270,6 +271,7 @@ public class CachedMessages {
         player.kick.tooManyAttempts = COLORIZER.colorize(getPrefixed(config.player.kick.tooManyAttempts, prefix));
         player.kick.ban = COLORIZER.colorize(getPrefixed(config.player.kick.ban, prefix));
         player.kick.invalidNickPattern = COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefix));
+        player.kick.forcedHostNotFound = COLORIZER.colorize(getPrefixed(config.player.kick.forcedHostNotFound, prefix));
         player.kick.ipLimitOnlineReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefix));
         player.kick.ipLimitRegisteredReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefix));
 

@@ -138,6 +138,7 @@ public class CachedComponents {
             public Component tooManyAttempts;
             public Component ban;
             public Component invalidNickPattern;
+            public Component forcedHostNotFound;
             public Component ipLimitOnlineReached;
             public Component ipLimitRegisteredReached;
         }
@@ -277,6 +278,7 @@ public class CachedComponents {
         player.kick.tooManyAttempts = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.tooManyAttempts, prefixRaw)));
         player.kick.ban = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.ban, prefixRaw)));
         player.kick.invalidNickPattern = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefixRaw)));
+        player.kick.forcedHostNotFound = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.forcedHostNotFound, prefixRaw)));
         player.kick.ipLimitOnlineReached = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefixRaw)));
         player.kick.ipLimitRegisteredReached = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefixRaw)));
 
