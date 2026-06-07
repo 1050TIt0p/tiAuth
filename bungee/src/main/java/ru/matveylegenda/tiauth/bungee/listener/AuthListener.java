@@ -18,10 +18,15 @@ import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.database.Database;
 
 import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
+
+import net.md_5.bungee.api.config.ListenerInfo;
 
 public class AuthListener implements Listener {
     private static Field UNIQUE_ID_FIELD;
@@ -154,6 +159,25 @@ public class AuthListener implements Listener {
         ProxiedPlayer player = event.getPlayer();
 
         if (event.getReason() == ServerConnectEvent.Reason.JOIN_PROXY) {
+            if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+                InetSocketAddress virtualHost = player.getPendingConnection().getVirtualHost();
+                if (virtualHost != null) {
+                    String host = virtualHost.getHostString();
+                    for (ListenerInfo listener : ProxyServer.getInstance().getConfig().getListeners()) {
+                        for (Map.Entry<String, String> entry : listener.getForcedHosts().entrySet()) {
+                            if (host.equals(entry.getKey()) || host.endsWith(entry.getKey())) {
+                                if (!entry.getValue().equals(MainConfig.IMP.servers.auth)) {
+                                    List<String> whitelist = MainConfig.IMP.servers.forcedHosts.servers;
+                                    if (whitelist.isEmpty() || whitelist.contains(entry.getValue())) {
+                                        authManager.setForcedHost(player.getName(), entry.getValue());
+                                    }
+                                }
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
             return;
         }
 
@@ -185,6 +209,7 @@ public class AuthListener implements Listener {
         }
 
         taskManager.cancelTasks(player);
+        authManager.removeForcedHost(player.getName());
     }
 
     public int getPlayersCountByIp(String ip) {

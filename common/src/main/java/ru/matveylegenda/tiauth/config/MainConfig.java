@@ -52,6 +52,14 @@ public class MainConfig extends YamlSerializable {
     @NewLine
     public static class Servers {
         @Comment({
+                @CommentValue("Режим выбора сервера после авторизации"),
+                @CommentValue("BACKEND - всегда отправлять на сервер из настройки backend"),
+                @CommentValue("FORCED_HOST - отправлять на сервер из forced_hosts прокси, если доступно")
+        })
+        public PostAuthServerMode postAuthServerMode = PostAuthServerMode.BACKEND;
+
+        @NewLine
+        @Comment({
                 @CommentValue("Использовать ли виртуальный сервер NanoLimbo для сервера авторизации"),
                 @CommentValue("Настройка виртуального сервера в plugins/tiAuth/limbo/settings.yml"),
                 @CommentValue("Функция не тестировалась должным образом, возможны баги")
@@ -69,6 +77,24 @@ public class MainConfig extends YamlSerializable {
                 @CommentValue("Бэкенд сервер на который будет перемещать игроков после регистрации/авторизации")
         })
         public String backend = "hub";
+
+        @NewLine
+        @Comment({
+                @CommentValue("Настройки forced_hosts"),
+                @CommentValue("Список серверов, которые считаются forced_hosts"),
+                @CommentValue("Если список пуст - учитываются все серверы, кроме auth"),
+                @CommentValue("Если не пуст - учитываются только серверы из списка")
+        })
+        public ForcedHosts forcedHosts = new ForcedHosts();
+
+        public static class ForcedHosts {
+            public List<String> servers = List.of();
+        }
+    }
+
+    public enum PostAuthServerMode {
+        BACKEND,
+        FORCED_HOST
     }
 
     public Database database;
@@ -265,6 +291,12 @@ public class MainConfig extends YamlSerializable {
     public int maxRegisteredAccountsPerIp = 10;
 
     public List<String> excludedIps = List.of("127.0.0.1");
+
+    @NewLine
+    @Comment({
+            @CommentValue("Проверять обновления на GitHub")
+    })
+    public boolean checkUpdates = true;
 
     public Libraries libraries = new Libraries();
 

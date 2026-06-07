@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 public class AuthManager {
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
+    private final Map<String, String> forcedHostMap = new ConcurrentHashMap<>();
     private final TiAuth plugin;
     private final Database database;
     private final TaskManager taskManager;
@@ -531,55 +532,73 @@ public class AuthManager {
     }
 
     public void forceAuth(ProxiedPlayer player, PostLoginEvent event) {
+        handleForcedHost(player, event);
+
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
-            try {
-                if (!success) {
-                    player.disconnect(CachedMessages.IMP.queryError);
-                    return;
-                }
+            processForceAuthUser(player, event, user, success);
+        });
+    }
 
-                if (user != null && !player.getName().equals(user.getRealName())) {
-                    player.disconnect(CachedMessages.IMP.player.kick.realname
-                            .replace("{realname}", user.getRealName())
-                            .replace("{name}", player.getName())
-                    );
-
-                    return;
-                }
-
-                String sessionIP = SessionCache.getIP(player.getName());
-
-                if (PremiumCache.isPremium(player.getName()) ||
-                        (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
-                    AuthCache.setAuthenticated(player.getName());
-
-                    if (event != null) {
-                        connectToBackend(event);
-                    } else {
-                        connectToBackend(player);
-                    }
-
-                    return;
-                }
-
-                if (event != null) {
-                    connectToAuthServer(event);
-                } else {
-                    connectToAuthServer(player);
-                }
-
-                String reminderMessage = (user != null)
-                        ? CachedMessages.IMP.player.reminder.login
-                        : CachedMessages.IMP.player.reminder.register;
-
-                taskManager.startAuthTimeoutTask(player);
-                taskManager.startAuthReminderTask(player, reminderMessage);
-            } finally {
-                if (event != null) {
-                    event.completeIntent(plugin);
+    private void handleForcedHost(ProxiedPlayer player, PostLoginEvent event) {
+        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST && event != null) {
+            ServerInfo originalTarget = event.getTarget();
+            if (originalTarget != null && !originalTarget.getName().equals(MainConfig.IMP.servers.auth)) {
+                List<String> whitelist = MainConfig.IMP.servers.forcedHosts.servers;
+                if (whitelist.isEmpty() || whitelist.contains(originalTarget.getName())) {
+                    forcedHostMap.put(player.getName().toLowerCase(), originalTarget.getName());
                 }
             }
-        });
+        }
+    }
+
+    private void processForceAuthUser(ProxiedPlayer player, PostLoginEvent event, AuthUser user, boolean success) {
+        try {
+            if (!success) {
+                player.disconnect(CachedMessages.IMP.queryError);
+                return;
+            }
+
+            if (user != null && !player.getName().equals(user.getRealName())) {
+                player.disconnect(CachedMessages.IMP.player.kick.realname
+                        .replace("{realname}", user.getRealName())
+                        .replace("{name}", player.getName())
+                );
+
+                return;
+            }
+
+            String sessionIP = SessionCache.getIP(player.getName());
+
+            if (PremiumCache.isPremium(player.getName()) ||
+                    (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
+                AuthCache.setAuthenticated(player.getName());
+
+                if (event != null) {
+                    connectToBackend(event);
+                } else {
+                    connectToBackend(player);
+                }
+
+                return;
+            }
+
+            if (event != null) {
+                connectToAuthServer(event);
+            } else {
+                connectToAuthServer(player);
+            }
+
+            String reminderMessage = (user != null)
+                    ? CachedMessages.IMP.player.reminder.login
+                    : CachedMessages.IMP.player.reminder.register;
+
+            taskManager.startAuthTimeoutTask(player);
+            taskManager.startAuthReminderTask(player, reminderMessage);
+        } finally {
+            if (event != null) {
+                event.completeIntent(plugin);
+            }
+        }
     }
 
     public void showLoginDialog(ProxiedPlayer player) {
@@ -646,6 +665,14 @@ public class AuthManager {
         });
     }
 
+    public void setForcedHost(String playerName, String serverName) {
+        forcedHostMap.put(playerName.toLowerCase(), serverName);
+    }
+
+    public void removeForcedHost(String playerName) {
+        forcedHostMap.remove(playerName.toLowerCase());
+    }
+
     private void connectToAuthServer(PostLoginEvent event) {
         ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
         event.setTarget(authServer);
@@ -661,17 +688,34 @@ public class AuthManager {
     }
 
     private void connectToBackend(PostLoginEvent event) {
-        ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
-        event.setTarget(backendServer);
+        ServerInfo backendServer = resolveBackendServer(event.getPlayer().getName());
+        if (backendServer != null) {
+            event.setTarget(backendServer);
+        } else if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+            event.getPlayer().disconnect(CachedMessages.IMP.player.kick.forcedHostNotFound);
+        }
     }
 
     private void connectToBackend(ProxiedPlayer player) {
         ServerInfo currentServer = player.getServer().getInfo();
-        ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
+        ServerInfo backendServer = resolveBackendServer(player.getName());
 
-        if (currentServer == null || !currentServer.equals(backendServer)) {
+        if (backendServer != null && (currentServer == null || !currentServer.equals(backendServer))) {
             player.connect(backendServer);
+        } else if (backendServer == null && MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+            player.disconnect(CachedMessages.IMP.player.kick.forcedHostNotFound);
         }
+    }
+
+    private ServerInfo resolveBackendServer(String playerName) {
+        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+            String forcedHost = forcedHostMap.get(playerName.toLowerCase());
+            if (forcedHost == null) {
+                return null;
+            }
+            return plugin.getProxy().getServerInfo(forcedHost);
+        }
+        return plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
     }
 
     private boolean supportDialog(ProxiedPlayer player) {
