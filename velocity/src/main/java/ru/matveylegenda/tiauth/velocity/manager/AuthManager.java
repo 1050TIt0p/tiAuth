@@ -324,9 +324,9 @@ public class AuthManager {
                     if (firedEvent.isMoveToBackendServer()) {
                         connectToBackend(player);
                     }
-                });
 
-                endProcess(name);
+                    endProcess(name);
+                });
             });
         });
     }
@@ -455,9 +455,9 @@ public class AuthManager {
             if (firedEvent.isMoveToBackendServer()) {
                 connectToBackend(player);
             }
-        });
 
-        callback.run();
+            callback.run();
+        });
     }
 
     public void changePasswordPlayer(Player player, String oldPassword, String newPassword) {
