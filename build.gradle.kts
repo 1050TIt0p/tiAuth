@@ -76,6 +76,9 @@ tasks.shadowJar {
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
     relocate("net.elytrium.serializer", "ru.matveylegenda.tiauth.thirdparty.net.elytrium.serializer")
     relocate("ua.nanit.limbo", "ru.matveylegenda.tiauth.thirdparty.ua.nanit.limbo")
+    relocate("org.spongepowered.configurate", "ru.matveylegenda.tiauth.thirdparty.org.spongepowered.configurate")
+    relocate("io.leangen.geantyref", "ru.matveylegenda.tiauth.thirdparty.io.leangen.geantyref")
+    relocate("com.grack.nanojson", "ru.matveylegenda.tiauth.thirdparty.com.grack.nanojson")
     relocate("net.byteflux", "ru.matveylegenda.tiauth.thirdparty.net.byteflux")
 
     exclude("net/kyori/**")
