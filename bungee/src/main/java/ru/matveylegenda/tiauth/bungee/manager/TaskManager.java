@@ -39,7 +39,7 @@ public class TaskManager {
                 return;
             }
 
-            player.disconnect(CachedMessages.IMP.player.kick.timeout);
+            player.disconnect(new TextComponent(CachedMessages.IMP.player.kick.timeout));
 
         }, MainConfig.IMP.auth.timeoutSeconds, TimeUnit.SECONDS);
 

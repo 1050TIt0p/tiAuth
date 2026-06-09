@@ -30,6 +30,7 @@ import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -135,7 +136,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                player.disconnect(CachedMessages.IMP.queryError);
+                player.disconnect(new TextComponent(CachedMessages.IMP.queryError));
                 endProcess(player);
                 return;
             }
@@ -149,9 +150,9 @@ public class AuthManager {
                 return;
             }
 
-            registerPlayer(player.getName(), password, player.getAddress().getAddress().getHostAddress(), success1 -> {
+            registerPlayer(player.getName(), password, ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress(), success1 -> {
                 if (!success1) {
-                    player.disconnect(CachedMessages.IMP.queryError);
+                    player.disconnect(new TextComponent(CachedMessages.IMP.queryError));
                     endProcess(player);
                     return;
                 }
@@ -162,7 +163,7 @@ public class AuthManager {
                 );
                 AuthCache.setAuthenticated(player.getName());
 
-                SessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
+                SessionCache.addPlayer(player.getName(), ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
                 taskManager.cancelTasks(player);
 
                 PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
@@ -247,7 +248,7 @@ public class AuthManager {
 
                 SessionCache.removePlayer(player.getName());
 
-                player.disconnect(CachedMessages.IMP.player.unregister.success);
+                player.disconnect(new TextComponent(CachedMessages.IMP.player.unregister.success));
 
                 endProcess(player);
             });
@@ -270,8 +271,8 @@ public class AuthManager {
             BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.login.alreadyLogged
-            );
-            return;
+                );
+                return;
         }
 
         if (password.isEmpty()) {
@@ -296,7 +297,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                player.disconnect(CachedMessages.IMP.queryError);
+                player.disconnect(new TextComponent(CachedMessages.IMP.queryError));
                 endProcess(player);
                 return;
             }
@@ -317,10 +318,10 @@ public class AuthManager {
                 int attempts = loginAttempts.merge(player.getName(), 1, Integer::sum);
 
                 if (attempts >= MainConfig.IMP.auth.loginAttempts) {
-                    player.disconnect(CachedMessages.IMP.player.kick.tooManyAttempts);
+                    player.disconnect(new TextComponent(CachedMessages.IMP.player.kick.tooManyAttempts));
 
                     if (MainConfig.IMP.auth.banPlayer) {
-                        BanCache.addPlayer(player.getAddress().getAddress().getHostAddress());
+                        BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
                     }
 
                     loginAttempts.remove(player.getName());
@@ -373,7 +374,7 @@ public class AuthManager {
     }
 
     public void loginPlayer(ProxiedPlayer player, Runnable callback) {
-        String ip = player.getAddress().getAddress().getHostAddress();
+        String ip = ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress();
 
         AuthCache.setAuthenticated(player.getName());
         database.getAuthUserRepository().updateLastLogin(player.getName());
@@ -554,23 +555,22 @@ public class AuthManager {
     private void processForceAuthUser(ProxiedPlayer player, PostLoginEvent event, AuthUser user, boolean success) {
         try {
             if (!success) {
-                player.disconnect(CachedMessages.IMP.queryError);
+                player.disconnect(new TextComponent(CachedMessages.IMP.queryError));
                 return;
             }
 
             if (user != null && !player.getName().equals(user.getRealName())) {
-                player.disconnect(CachedMessages.IMP.player.kick.realname
-                        .replace("{realname}", user.getRealName())
-                        .replace("{name}", player.getName())
-                );
-
+                    player.disconnect(new TextComponent(CachedMessages.IMP.player.kick.realname
+                            .replace("{realname}", user.getRealName())
+                            .replace("{name}", player.getName())
+                    ));
                 return;
             }
 
             String sessionIP = SessionCache.getIP(player.getName());
 
             if (PremiumCache.isPremium(player.getName()) ||
-                    (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
+                    (sessionIP != null && sessionIP.equals(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress()))) {
                 AuthCache.setAuthenticated(player.getName());
 
                 if (event != null) {
@@ -616,7 +616,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                player.disconnect(CachedMessages.IMP.queryError);
+                player.disconnect(new TextComponent(CachedMessages.IMP.queryError));
                 return;
             }
 
@@ -692,7 +692,7 @@ public class AuthManager {
         if (backendServer != null) {
             event.setTarget(backendServer);
         } else if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
-            event.getPlayer().disconnect(CachedMessages.IMP.player.kick.forcedHostNotFound);
+            event.getPlayer().disconnect(new TextComponent(CachedMessages.IMP.player.kick.forcedHostNotFound));
         }
     }
 
@@ -703,7 +703,7 @@ public class AuthManager {
         if (backendServer != null && (currentServer == null || !currentServer.equals(backendServer))) {
             player.connect(backendServer);
         } else if (backendServer == null && MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
-            player.disconnect(CachedMessages.IMP.player.kick.forcedHostNotFound);
+            player.disconnect(new TextComponent(CachedMessages.IMP.player.kick.forcedHostNotFound));
         }
     }
 

@@ -1,6 +1,7 @@
 package ru.matveylegenda.tiauth.bungee.listener;
 
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.*;
@@ -65,15 +66,15 @@ public class AuthListener implements Listener {
         PendingConnection connection = event.getConnection();
 
         if (!nickPattern.matcher(connection.getName()).matches()) {
-            event.setCancelReason(CachedMessages.IMP.player.kick.invalidNickPattern);
+            event.setCancelReason(new TextComponent(CachedMessages.IMP.player.kick.invalidNickPattern));
             event.setCancelled(true);
             return;
         }
 
-        String ip = connection.getAddress().getAddress().getHostAddress();
+        String ip = ((InetSocketAddress) connection.getSocketAddress()).getAddress().getHostAddress();
         if (BanCache.isBanned(ip)) {
-            event.setCancelReason(CachedMessages.IMP.player.kick.ban
-                    .replace("{time}", String.valueOf(BanCache.getRemainingSeconds(ip))));
+            event.setCancelReason(new TextComponent(CachedMessages.IMP.player.kick.ban
+                    .replace("{time}", String.valueOf(BanCache.getRemainingSeconds(ip)))));
             event.setCancelled(true);
             return;
         }
@@ -87,7 +88,7 @@ public class AuthListener implements Listener {
 
         if (!MainConfig.IMP.excludedIps.contains(ip)) {
             if (count >= MainConfig.IMP.maxOnlineAccountsPerIp) {
-                event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitOnlineReached);
+                event.setCancelReason(new TextComponent(CachedMessages.IMP.player.kick.ipLimitOnlineReached));
                 event.setCancelled(true);
                 return;
             }
@@ -96,7 +97,7 @@ public class AuthListener implements Listener {
         event.registerIntent(plugin);
         database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
             if (!success) {
-                event.setCancelReason(CachedMessages.IMP.queryError);
+                event.setCancelReason(new TextComponent(CachedMessages.IMP.queryError));
                 event.setCancelled(true);
 
                 event.completeIntent(plugin);
@@ -109,7 +110,7 @@ public class AuthListener implements Listener {
                 if (!MainConfig.IMP.excludedIps.contains(ip)) {
                     database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
                         if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
-                            event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitRegisteredReached);
+                            event.setCancelReason(new TextComponent(CachedMessages.IMP.player.kick.ipLimitRegisteredReached));
                             event.setCancelled(true);
                         }
                         event.completeIntent(plugin);
@@ -216,7 +217,7 @@ public class AuthListener implements Listener {
         int count = 0;
 
         for (ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
-            String playerIp = player.getAddress().getAddress().getHostAddress();
+            String playerIp = ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress();
             if (playerIp.equals(ip)) {
                 count++;
             }
