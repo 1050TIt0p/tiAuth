@@ -66,14 +66,14 @@ public class AuthListener implements Listener {
         PendingConnection connection = event.getConnection();
 
         if (!nickPattern.matcher(connection.getName()).matches()) {
-            event.setCancelReason(new TextComponent(CachedMessages.IMP.player.kick.invalidNickPattern));
+            event.setReason(new TextComponent(CachedMessages.IMP.player.kick.invalidNickPattern));
             event.setCancelled(true);
             return;
         }
 
         String ip = ((InetSocketAddress) connection.getSocketAddress()).getAddress().getHostAddress();
         if (BanCache.isBanned(ip)) {
-            event.setCancelReason(new TextComponent(CachedMessages.IMP.player.kick.ban
+            event.setReason(new TextComponent(CachedMessages.IMP.player.kick.ban
                     .replace("{time}", String.valueOf(BanCache.getRemainingSeconds(ip)))));
             event.setCancelled(true);
             return;
@@ -88,7 +88,7 @@ public class AuthListener implements Listener {
 
         if (!MainConfig.IMP.excludedIps.contains(ip)) {
             if (count >= MainConfig.IMP.maxOnlineAccountsPerIp) {
-                event.setCancelReason(new TextComponent(CachedMessages.IMP.player.kick.ipLimitOnlineReached));
+                event.setReason(new TextComponent(CachedMessages.IMP.player.kick.ipLimitOnlineReached));
                 event.setCancelled(true);
                 return;
             }
@@ -97,7 +97,7 @@ public class AuthListener implements Listener {
         event.registerIntent(plugin);
         database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
             if (!success) {
-                event.setCancelReason(new TextComponent(CachedMessages.IMP.queryError));
+                event.setReason(new TextComponent(CachedMessages.IMP.queryError));
                 event.setCancelled(true);
 
                 event.completeIntent(plugin);
@@ -110,7 +110,7 @@ public class AuthListener implements Listener {
                 if (!MainConfig.IMP.excludedIps.contains(ip)) {
                     database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
                         if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
-                            event.setCancelReason(new TextComponent(CachedMessages.IMP.player.kick.ipLimitRegisteredReached));
+                            event.setReason(new TextComponent(CachedMessages.IMP.player.kick.ipLimitRegisteredReached));
                             event.setCancelled(true);
                         }
                         event.completeIntent(plugin);
