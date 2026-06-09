@@ -77,7 +77,7 @@ public class TaskManager {
                 return;
             }
 
-            if (MainConfig.IMP.title.enabled) {
+            if (MainConfig.IMP.title.beforeLogin.enabled) {
                 sendTitle(player, c);
             }
             if (MainConfig.IMP.actionBar.enabled) {
@@ -101,9 +101,9 @@ public class TaskManager {
                 CachedComponents.IMP.player.title.subTitle.replaceText(builder -> builder
                         .match(VelocityUtils.TIME)
                         .replacement(String.valueOf(counter))),
-                0,
-                21,
-                0);
+                MainConfig.IMP.title.beforeLogin.fadeIn,
+                MainConfig.IMP.title.beforeLogin.stay,
+                MainConfig.IMP.title.beforeLogin.fadeOut);
         player.showTitle(componentTitle);
     }
 

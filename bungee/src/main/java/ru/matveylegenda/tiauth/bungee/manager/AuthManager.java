@@ -514,21 +514,6 @@ public class AuthManager {
                         CachedMessages.IMP.player.login.success
                 );
 
-                if (MainConfig.IMP.title.enabledOnAuth) {
-                    Title title = ProxyServer.getInstance().createTitle();
-                    title.title(TextComponent.fromLegacy(
-                            CachedMessages.IMP.player.title.onAuthTitle
-                    ));
-                    title.subTitle(TextComponent.fromLegacy(
-                            CachedMessages.IMP.player.title.onAuthSubTitle
-                    ));
-                    title.fadeIn(0);
-                    title.stay(21);
-                    title.fadeOut(0);
-
-                    player.sendTitle(title);
-                }
-
                 loginAttempts.remove(player.getName());
                 endProcess(player);
             });
@@ -552,6 +537,23 @@ public class AuthManager {
         }
 
         callback.run();
+    }
+
+    public void sendAuthTitle(ProxiedPlayer player) {
+        if (MainConfig.IMP.title.afterLogin.enabled) {
+            Title title = ProxyServer.getInstance().createTitle();
+            title.title(TextComponent.fromLegacy(
+                    CachedMessages.IMP.player.title.onAuthTitle
+            ));
+            title.subTitle(TextComponent.fromLegacy(
+                    CachedMessages.IMP.player.title.onAuthSubTitle
+            ));
+            title.fadeIn(MainConfig.IMP.title.afterLogin.fadeIn);
+            title.stay(MainConfig.IMP.title.afterLogin.stay);
+            title.fadeOut(MainConfig.IMP.title.afterLogin.fadeOut);
+
+            player.sendTitle(title);
+        }
     }
 
     public void changePasswordPlayer(ProxiedPlayer player, String oldPassword, String newPassword) {

@@ -199,6 +199,10 @@ public class AuthListener implements Listener {
         } else {
             taskManager.cancelTasks(player);
         }
+
+        if (AuthCache.isAuthenticated(player.getName())) {
+            authManager.sendAuthTitle(player);
+        }
     }
 
     @EventHandler

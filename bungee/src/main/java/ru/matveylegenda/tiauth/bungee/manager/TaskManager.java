@@ -81,7 +81,7 @@ public class TaskManager {
                 return;
             }
 
-            if (MainConfig.IMP.title.enabled) sendTitle(player, counter.get());
+            if (MainConfig.IMP.title.beforeLogin.enabled) sendTitle(player, counter.get());
             if (MainConfig.IMP.actionBar.enabled) sendActionBar(player, counter.get());
             if (MainConfig.IMP.bossBar.enabled) updateBossBar(player, counter.get(), barId);
 
@@ -131,9 +131,9 @@ public class TaskManager {
                 CachedMessages.IMP.player.title.subTitle
                         .replace("{time}", String.valueOf(counter))
         ));
-        title.fadeIn(0);
-        title.stay(21);
-        title.fadeOut(0);
+        title.fadeIn(MainConfig.IMP.title.beforeLogin.fadeIn);
+        title.stay(MainConfig.IMP.title.beforeLogin.stay);
+        title.fadeOut(MainConfig.IMP.title.beforeLogin.fadeOut);
 
         player.sendTitle(title);
     }

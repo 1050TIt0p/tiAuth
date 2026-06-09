@@ -261,12 +261,40 @@ public class MainConfig extends YamlSerializable {
         public BarStyle style = BarStyle.SEGMENTED_12;
     }
 
+    @NewLine
+    @Comment({
+            @CommentValue("Тайтл (заголовок) во время ожидания авторизации")
+    })
     public Title title;
 
     @NewLine
     public static class Title {
-        public boolean enabled = false;
-        public boolean enabledOnAuth = false;
+        @Comment({
+                @CommentValue("Тайтл до авторизации (таймер обратного отсчета)")
+        })
+        public Times beforeLogin = new Times();
+        @NewLine
+        @Comment({
+                @CommentValue("Тайтл после авторизации (при подключении к целевому серверу)")
+        })
+        public Times afterLogin = new Times();
+
+        @NewLine
+        public static class Times {
+            public boolean enabled = false;
+            @Comment({
+                    @CommentValue("Время появления (fadeIn) в тактах (20 тактов = 1 секунда)")
+            })
+            public int fadeIn = 0;
+            @Comment({
+                    @CommentValue("Время отображения (stay) в тактах")
+            })
+            public int stay = 21;
+            @Comment({
+                    @CommentValue("Время исчезания (fadeOut) в тактах")
+            })
+            public int fadeOut = 0;
+        }
     }
 
     public ActionBar actionBar;
