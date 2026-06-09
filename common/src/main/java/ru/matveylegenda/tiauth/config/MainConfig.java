@@ -267,20 +267,24 @@ public class MainConfig extends YamlSerializable {
     })
     public Title title;
 
-    @NewLine
     public static class Title {
         @Comment({
                 @CommentValue("Тайтл до авторизации (таймер обратного отсчета)")
         })
-        public Times beforeLogin = new Times();
+        public BeforeLogin beforeLogin = new BeforeLogin();
         @NewLine
         @Comment({
                 @CommentValue("Тайтл после авторизации (при подключении к целевому серверу)")
         })
-        public Times afterLogin = new Times();
+        public AfterLogin afterLogin = new AfterLogin();
 
         @NewLine
-        public static class Times {
+        public static class BeforeLogin {
+            public boolean enabled = false;
+        }
+
+        @NewLine
+        public static class AfterLogin {
             public boolean enabled = false;
             @Comment({
                     @CommentValue("Время появления (fadeIn) в тактах (20 тактов = 1 секунда)")

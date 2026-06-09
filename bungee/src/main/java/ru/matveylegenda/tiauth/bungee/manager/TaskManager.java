@@ -131,9 +131,9 @@ public class TaskManager {
                 CachedMessages.IMP.player.title.subTitle
                         .replace("{time}", String.valueOf(counter))
         ));
-        title.fadeIn(MainConfig.IMP.title.beforeLogin.fadeIn);
-        title.stay(MainConfig.IMP.title.beforeLogin.stay);
-        title.fadeOut(MainConfig.IMP.title.beforeLogin.fadeOut);
+        title.fadeIn(0);
+        title.stay(21);
+        title.fadeOut(0);
 
         player.sendTitle(title);
     }
