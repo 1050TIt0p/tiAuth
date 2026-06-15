@@ -33,6 +33,9 @@ public class AuthUser {
     @DatabaseField
     private long regDate;
 
+    @DatabaseField
+    private String totpToken = "";
+
     public AuthUser(String username, String realName, String password, boolean premium, String regIp) {
         this.username = username;
         this.realName = realName;

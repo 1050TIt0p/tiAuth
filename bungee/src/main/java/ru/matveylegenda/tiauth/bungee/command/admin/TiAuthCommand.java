@@ -1,6 +1,7 @@
 package ru.matveylegenda.tiauth.bungee.command.admin;
 
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.bungee.TiAuth;
@@ -56,6 +57,7 @@ public class TiAuthCommand extends Command {
                 }
 
                 MainConfig.IMP.reload();
+                MessagesConfig.IMP = new MessagesConfig(MessagesConfig.getMessagesPath(MainConfig.IMP.lang));
                 MessagesConfig.IMP.reload();
                 plugin.getAuthManager().setPasswordPattern(Pattern.compile(MainConfig.IMP.auth.passwordPattern));
                 plugin.getAuthManager().setHash(HashFactory.create(MainConfig.IMP.auth.hashAlgorithm));
@@ -96,7 +98,7 @@ public class TiAuthCommand extends Command {
                     ProxiedPlayer player = plugin.getProxy().getPlayer(playerName);
                     if (player != null) {
                         SessionCache.removePlayer(playerName);
-                        player.disconnect(CachedMessages.IMP.player.unregister.success);
+                        player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.unregister.success));
                     }
 
                     BungeeUtils.sendMessage(

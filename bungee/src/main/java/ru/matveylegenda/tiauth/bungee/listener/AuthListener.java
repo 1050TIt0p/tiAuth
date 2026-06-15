@@ -1,6 +1,7 @@
 package ru.matveylegenda.tiauth.bungee.listener;
 
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.*;
@@ -18,10 +19,15 @@ import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.database.Database;
 
 import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
+
+import net.md_5.bungee.api.config.ListenerInfo;
 
 public class AuthListener implements Listener {
     private static Field UNIQUE_ID_FIELD;
@@ -60,15 +66,15 @@ public class AuthListener implements Listener {
         PendingConnection connection = event.getConnection();
 
         if (!nickPattern.matcher(connection.getName()).matches()) {
-            event.setCancelReason(CachedMessages.IMP.player.kick.invalidNickPattern);
+            event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.invalidNickPattern));
             event.setCancelled(true);
             return;
         }
 
-        String ip = connection.getAddress().getAddress().getHostAddress();
+        String ip = ((InetSocketAddress) connection.getSocketAddress()).getAddress().getHostAddress();
         if (BanCache.isBanned(ip)) {
-            event.setCancelReason(CachedMessages.IMP.player.kick.ban
-                    .replace("{time}", String.valueOf(BanCache.getRemainingSeconds(ip))));
+            event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.ban
+                    .replace("{time}", String.valueOf(BanCache.getRemainingSeconds(ip)))));
             event.setCancelled(true);
             return;
         }
@@ -82,7 +88,7 @@ public class AuthListener implements Listener {
 
         if (!MainConfig.IMP.excludedIps.contains(ip)) {
             if (count >= MainConfig.IMP.maxOnlineAccountsPerIp) {
-                event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitOnlineReached);
+                event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.ipLimitOnlineReached));
                 event.setCancelled(true);
                 return;
             }
@@ -91,7 +97,7 @@ public class AuthListener implements Listener {
         event.registerIntent(plugin);
         database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
             if (!success) {
-                event.setCancelReason(CachedMessages.IMP.queryError);
+                event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
                 event.setCancelled(true);
 
                 event.completeIntent(plugin);
@@ -104,7 +110,7 @@ public class AuthListener implements Listener {
                 if (!MainConfig.IMP.excludedIps.contains(ip)) {
                     database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
                         if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
-                            event.setCancelReason(CachedMessages.IMP.player.kick.ipLimitRegisteredReached);
+                            event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.ipLimitRegisteredReached));
                             event.setCancelled(true);
                         }
                         event.completeIntent(plugin);
@@ -154,6 +160,25 @@ public class AuthListener implements Listener {
         ProxiedPlayer player = event.getPlayer();
 
         if (event.getReason() == ServerConnectEvent.Reason.JOIN_PROXY) {
+            if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+                InetSocketAddress virtualHost = player.getPendingConnection().getVirtualHost();
+                if (virtualHost != null) {
+                    String host = virtualHost.getHostString();
+                    for (ListenerInfo listener : ProxyServer.getInstance().getConfig().getListeners()) {
+                        for (Map.Entry<String, String> entry : listener.getForcedHosts().entrySet()) {
+                            if (host.equals(entry.getKey()) || host.endsWith(entry.getKey())) {
+                                if (!entry.getValue().equals(MainConfig.IMP.servers.auth)) {
+                                    List<String> whitelist = MainConfig.IMP.servers.forcedHosts.servers;
+                                    if (whitelist.isEmpty() || whitelist.contains(entry.getValue())) {
+                                        authManager.setForcedHost(player.getName(), entry.getValue());
+                                    }
+                                }
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
             return;
         }
 
@@ -174,6 +199,10 @@ public class AuthListener implements Listener {
         } else {
             taskManager.cancelTasks(player);
         }
+
+        if (AuthCache.isAuthenticated(player.getName())) {
+            authManager.sendAuthTitle(player);
+        }
     }
 
     @EventHandler
@@ -185,13 +214,14 @@ public class AuthListener implements Listener {
         }
 
         taskManager.cancelTasks(player);
+        authManager.removeForcedHost(player.getName());
     }
 
     public int getPlayersCountByIp(String ip) {
         int count = 0;
 
         for (ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
-            String playerIp = player.getAddress().getAddress().getHostAddress();
+            String playerIp = ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress();
             if (playerIp.equals(ip)) {
                 count++;
             }

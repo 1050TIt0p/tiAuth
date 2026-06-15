@@ -1,5 +1,6 @@
 package ru.matveylegenda.tiauth.bungee.manager;
 
+import lombok.Getter;
 import lombok.Setter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.Title;
@@ -30,8 +31,13 @@ import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import dev.samstevens.totp.code.CodeVerifier;
+import dev.samstevens.totp.code.DefaultCodeGenerator;
+import dev.samstevens.totp.code.DefaultCodeVerifier;
+import dev.samstevens.totp.time.SystemTimeProvider;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,8 +46,14 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class AuthManager {
+    public static final CodeVerifier TOTP_CODE_VERIFIER = new DefaultCodeVerifier(new DefaultCodeGenerator(), new SystemTimeProvider());
+
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
+    private final Map<String, String> forcedHostMap = new ConcurrentHashMap<>();
+    private final Set<String> totpPendingPlayers = ConcurrentHashMap.newKeySet();
+    private final Map<String, Integer> totpAttempts = new ConcurrentHashMap<>();
+    private final Map<String, String> totpEnableSecrets = new ConcurrentHashMap<>();
     private final TiAuth plugin;
     private final Database database;
     private final TaskManager taskManager;
@@ -49,6 +61,7 @@ public class AuthManager {
     @Setter
     private Pattern passwordPattern;
     @Setter
+    @Getter
     private Hash hash;
 
     public AuthManager(TiAuth plugin) {
@@ -58,6 +71,250 @@ public class AuthManager {
         this.passwordPattern = Pattern.compile(MainConfig.IMP.auth.passwordPattern);
         this.hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
     }
+
+    //
+    // Process management
+    //
+
+    private boolean beginProcess(ProxiedPlayer player) {
+        if (!inProcess.add(player.getName())) {
+            BungeeUtils.sendMessage(player, CachedMessages.IMP.processing);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void endProcess(ProxiedPlayer player) {
+        inProcess.remove(player.getName());
+    }
+
+    //
+    // Dialog
+    //
+
+    private boolean supportDialog(ProxiedPlayer player) {
+        return player.getPendingConnection().getVersion() >= 771;
+    }
+
+    public void showLoginDialog(ProxiedPlayer player) {
+        showLoginDialog(player, null);
+    }
+
+    public void showLoginDialog(ProxiedPlayer player, String noticeMessage) {
+        if (!MainConfig.IMP.auth.useDialogs) {
+            return;
+        }
+
+        if (!supportDialog(player)) {
+            return;
+        }
+
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            if (!success) {
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
+                return;
+            }
+
+            Dialog dialog;
+            if (user != null) {
+                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.title))
+                        .inputs(
+                                List.of(
+                                        new TextInput("password", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.passwordField))
+                                )
+                        ))
+                        .action(
+                                new ActionButton(
+                                        TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.confirmButton),
+                                        new CustomClickAction("tiauth_login")
+                                )
+                        );
+            } else {
+                List<DialogInput> inputList = new ArrayList<>();
+
+                inputList.add(new TextInput("password", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.passwordField)));
+                if (MainConfig.IMP.auth.repeatPasswordWhenRegister) {
+                    inputList.add(new TextInput("repeatPassword", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.repeatPasswordField)));
+                }
+                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.title))
+                        .inputs(
+                                inputList
+                        ))
+                        .action(
+                                new ActionButton(
+                                        TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.confirmButton),
+                                        new CustomClickAction("tiauth_register")
+                                )
+                        );
+            }
+
+            if (noticeMessage != null) {
+                dialog.getBase().body(
+                        List.of(
+                                new PlainMessageBody(TextComponent.fromLegacy(noticeMessage))
+                        )
+                );
+            }
+
+            plugin.getProxy().getScheduler().schedule(plugin, () -> {
+                if (player.isConnected()) {
+                    player.showDialog(dialog);
+                }
+            }, 50, TimeUnit.MILLISECONDS);
+        });
+    }
+
+    //
+    // Forced host management
+    //
+
+    private void handleForcedHost(ProxiedPlayer player, PostLoginEvent event) {
+        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST && event != null) {
+            ServerInfo originalTarget = event.getTarget();
+            if (originalTarget != null && !originalTarget.getName().equals(MainConfig.IMP.servers.auth)) {
+                List<String> whitelist = MainConfig.IMP.servers.forcedHosts.servers;
+                if (whitelist.isEmpty() || whitelist.contains(originalTarget.getName())) {
+                    forcedHostMap.put(player.getName().toLowerCase(), originalTarget.getName());
+                }
+            }
+        }
+    }
+
+    public void setForcedHost(String playerName, String serverName) {
+        forcedHostMap.put(playerName.toLowerCase(), serverName);
+    }
+
+    public void removeForcedHost(String playerName) {
+        forcedHostMap.remove(playerName.toLowerCase());
+    }
+
+    private ServerInfo resolveBackendServer(String playerName) {
+        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+            String forcedHost = forcedHostMap.get(playerName.toLowerCase());
+            if (forcedHost == null) {
+                return null;
+            }
+            return plugin.getProxy().getServerInfo(forcedHost);
+        }
+        return plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
+    }
+
+    //
+    // Auth flow
+    //
+
+    public void forceAuth(ProxiedPlayer player) {
+        forceAuth(player, null);
+    }
+
+    public void forceAuth(ProxiedPlayer player, PostLoginEvent event) {
+        handleForcedHost(player, event);
+
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            processForceAuthUser(player, event, user, success);
+        });
+    }
+
+    private void processForceAuthUser(ProxiedPlayer player, PostLoginEvent event, AuthUser user, boolean success) {
+        try {
+            if (!success) {
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
+                return;
+            }
+
+            if (user != null && !player.getName().equals(user.getRealName())) {
+                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.realname
+                            .replace("{realname}", user.getRealName())
+                            .replace("{name}", player.getName())
+                    ));
+                return;
+            }
+
+            String sessionIP = SessionCache.getIP(player.getName());
+
+            if (PremiumCache.isPremium(player.getName()) ||
+                    (sessionIP != null && sessionIP.equals(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress()))) {
+                AuthCache.setAuthenticated(player.getName());
+
+                if (event != null) {
+                    connectToBackend(event);
+                } else {
+                    connectToBackend(player);
+                }
+
+                return;
+            }
+
+            if (event != null) {
+                connectToAuthServer(event);
+            } else {
+                connectToAuthServer(player);
+            }
+
+            String reminderMessage = (user != null)
+                    ? CachedMessages.IMP.player.reminder.login
+                    : CachedMessages.IMP.player.reminder.register;
+
+            taskManager.startAuthTimeoutTask(player);
+            taskManager.startAuthReminderTask(player, reminderMessage);
+        } finally {
+            if (event != null) {
+                event.completeIntent(plugin);
+            }
+        }
+    }
+
+    //
+    // Connection helpers
+    //
+
+    private void connectToAuthServer(PostLoginEvent event) {
+        ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
+        if (authServer == null) {
+            event.getPlayer().disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.authServerNotFound));
+            return;
+        }
+        event.setTarget(authServer);
+    }
+
+    private void connectToAuthServer(ProxiedPlayer player) {
+        ServerInfo currentServer = player.getServer().getInfo();
+        ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
+
+        if (authServer == null) {
+            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.authServerNotFound));
+            return;
+        }
+
+        if (currentServer == null || !currentServer.equals(authServer)) {
+            player.connect(authServer);
+        }
+    }
+
+    private void connectToBackend(PostLoginEvent event) {
+        ServerInfo backendServer = resolveBackendServer(event.getPlayer().getName());
+        if (backendServer != null) {
+            event.setTarget(backendServer);
+        } else if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+            event.getPlayer().disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.forcedHostNotFound));
+        }
+    }
+
+    private void connectToBackend(ProxiedPlayer player) {
+        ServerInfo currentServer = player.getServer().getInfo();
+        ServerInfo backendServer = resolveBackendServer(player.getName());
+
+        if (backendServer != null && (currentServer == null || !currentServer.equals(backendServer))) {
+            player.connect(backendServer);
+        } else if (backendServer == null && MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.forcedHostNotFound));
+        }
+    }
+
+    //
+    // Player actions
+    //
 
     public void registerPlayer(ProxiedPlayer player, String password, String repeatPassword) {
         if (!password.equals(repeatPassword)) {
@@ -134,7 +391,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                player.disconnect(CachedMessages.IMP.queryError);
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
                 endProcess(player);
                 return;
             }
@@ -148,9 +405,9 @@ public class AuthManager {
                 return;
             }
 
-            registerPlayer(player.getName(), password, player.getAddress().getAddress().getHostAddress(), success1 -> {
+            registerPlayer(player.getName(), password, ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress(), success1 -> {
                 if (!success1) {
-                    player.disconnect(CachedMessages.IMP.queryError);
+                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
                     endProcess(player);
                     return;
                 }
@@ -161,7 +418,7 @@ public class AuthManager {
                 );
                 AuthCache.setAuthenticated(player.getName());
 
-                SessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
+                SessionCache.addPlayer(player.getName(), ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
                 taskManager.cancelTasks(player);
 
                 PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
@@ -195,82 +452,13 @@ public class AuthManager {
         );
     }
 
-    public void unregisterPlayer(ProxiedPlayer player, String password) {
-        if (!beginProcess(player)) {
-            return;
-        }
-
-        if (password.length() < MainConfig.IMP.auth.minPasswordLength || password.length() > MainConfig.IMP.auth.maxPasswordLength) {
-            BungeeUtils.sendMessage(
-                    player,
-                    CachedMessages.IMP.player.checkPassword.invalidLength
-                            .replace("{min}", String.valueOf(MainConfig.IMP.auth.minPasswordLength))
-                            .replace("{max}", String.valueOf(MainConfig.IMP.auth.maxPasswordLength))
-            );
-
-            endProcess(player);
-            return;
-        }
-
-        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
-            if (!success) {
-                BungeeUtils.sendMessage(
-                        player,
-                        CachedMessages.IMP.queryError
-                );
-                endProcess(player);
-                return;
-            }
-
-
-            String hashedPassword = user.getPassword();
-
-            if (!hash.verifyPassword(password, hashedPassword)) {
-                BungeeUtils.sendMessage(
-                        player,
-                        CachedMessages.IMP.player.checkPassword.wrongPassword
-                );
-                endProcess(player);
-                return;
-            }
-
-            unregisterPlayer(player.getName(), success1 -> {
-                if (!success1) {
-                    BungeeUtils.sendMessage(
-                            player,
-                            CachedMessages.IMP.queryError
-                    );
-                    endProcess(player);
-                    return;
-                }
-
-                SessionCache.removePlayer(player.getName());
-
-                player.disconnect(CachedMessages.IMP.player.unregister.success);
-
-                endProcess(player);
-            });
-        });
-    }
-
-    public void unregisterPlayer(String playerName, Consumer<Boolean> callback) {
-        database.getAuthUserRepository().deleteUser(playerName, success -> {
-            if (!success) {
-                callback.accept(false);
-                return;
-            }
-
-            callback.accept(true);
-        });
-    }
-
     public void loginPlayer(ProxiedPlayer player, String password) {
         if (AuthCache.isAuthenticated(player.getName())) {
             BungeeUtils.sendMessage(
                     player,
                     CachedMessages.IMP.player.login.alreadyLogged
-            );
-            return;
+                );
+                return;
         }
 
         if (password.isEmpty()) {
@@ -295,7 +483,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                player.disconnect(CachedMessages.IMP.queryError);
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
                 endProcess(player);
                 return;
             }
@@ -316,10 +504,10 @@ public class AuthManager {
                 int attempts = loginAttempts.merge(player.getName(), 1, Integer::sum);
 
                 if (attempts >= MainConfig.IMP.auth.loginAttempts) {
-                    player.disconnect(CachedMessages.IMP.player.kick.tooManyAttempts);
+                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
 
                     if (MainConfig.IMP.auth.banPlayer) {
-                        BanCache.addPlayer(player.getAddress().getAddress().getHostAddress());
+                        BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
                     }
 
                     loginAttempts.remove(player.getName());
@@ -344,26 +532,20 @@ public class AuthManager {
                 return;
             }
 
+            String totpToken = user.getTotpToken();
+            if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
+                endProcess(player);
+                totpPendingPlayers.add(player.getName().toLowerCase());
+                taskManager.cancelTasks(player);
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.prompt);
+                return;
+            }
+
             loginPlayer(player, () -> {
                 BungeeUtils.sendMessage(
                         player,
                         CachedMessages.IMP.player.login.success
                 );
-
-                if (MainConfig.IMP.title.enabledOnAuth) {
-                    Title title = ProxyServer.getInstance().createTitle();
-                    title.title(TextComponent.fromLegacy(
-                            CachedMessages.IMP.player.title.onAuthTitle
-                    ));
-                    title.subTitle(TextComponent.fromLegacy(
-                            CachedMessages.IMP.player.title.onAuthSubTitle
-                    ));
-                    title.fadeIn(0);
-                    title.stay(21);
-                    title.fadeOut(0);
-
-                    player.sendTitle(title);
-                }
 
                 loginAttempts.remove(player.getName());
                 endProcess(player);
@@ -372,7 +554,7 @@ public class AuthManager {
     }
 
     public void loginPlayer(ProxiedPlayer player, Runnable callback) {
-        String ip = player.getAddress().getAddress().getHostAddress();
+        String ip = ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress();
 
         AuthCache.setAuthenticated(player.getName());
         database.getAuthUserRepository().updateLastLogin(player.getName());
@@ -388,6 +570,21 @@ public class AuthManager {
         }
 
         callback.run();
+    }
+
+    public void sendAuthTitle(ProxiedPlayer player) {
+        var afterLogin = MainConfig.IMP.title.afterLogin;
+        if (afterLogin.enabled) {
+            var msg = CachedMessages.IMP.player.title.afterLogin;
+            Title title = ProxyServer.getInstance().createTitle();
+            title.title(TextComponent.fromLegacy(msg.title));
+            title.subTitle(TextComponent.fromLegacy(msg.subtitle));
+            title.fadeIn(msg.delays.start);
+            title.stay(msg.delays.duration);
+            title.fadeOut(msg.delays.end);
+
+            player.sendTitle(title);
+        }
     }
 
     public void changePasswordPlayer(ProxiedPlayer player, String oldPassword, String newPassword) {
@@ -487,6 +684,160 @@ public class AuthManager {
         SessionCache.removePlayer(player.getName());
     }
 
+    public void unregisterPlayer(ProxiedPlayer player, String password) {
+        if (!beginProcess(player)) {
+            return;
+        }
+
+        if (password.length() < MainConfig.IMP.auth.minPasswordLength || password.length() > MainConfig.IMP.auth.maxPasswordLength) {
+            BungeeUtils.sendMessage(
+                    player,
+                    CachedMessages.IMP.player.checkPassword.invalidLength
+                            .replace("{min}", String.valueOf(MainConfig.IMP.auth.minPasswordLength))
+                            .replace("{max}", String.valueOf(MainConfig.IMP.auth.maxPasswordLength))
+            );
+
+            endProcess(player);
+            return;
+        }
+
+        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
+            if (!success) {
+                BungeeUtils.sendMessage(
+                        player,
+                        CachedMessages.IMP.queryError
+                );
+                endProcess(player);
+                return;
+            }
+
+
+            String hashedPassword = user.getPassword();
+
+            if (!hash.verifyPassword(password, hashedPassword)) {
+                BungeeUtils.sendMessage(
+                        player,
+                        CachedMessages.IMP.player.checkPassword.wrongPassword
+                );
+                endProcess(player);
+                return;
+            }
+
+            unregisterPlayer(player.getName(), success1 -> {
+                if (!success1) {
+                    BungeeUtils.sendMessage(
+                            player,
+                            CachedMessages.IMP.queryError
+                    );
+                    endProcess(player);
+                    return;
+                }
+
+                SessionCache.removePlayer(player.getName());
+
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.unregister.success));
+
+                endProcess(player);
+            });
+        });
+    }
+
+    public void unregisterPlayer(String playerName, Consumer<Boolean> callback) {
+        database.getAuthUserRepository().deleteUser(playerName, success -> {
+            if (!success) {
+                callback.accept(false);
+                return;
+            }
+
+            callback.accept(true);
+        });
+    }
+
+    //
+    // TOTP
+    //
+
+    public boolean isTotpPending(String playerName) {
+        return totpPendingPlayers.contains(playerName.toLowerCase());
+    }
+
+    public void setTotpEnableSecret(String playerName, String secret) {
+        totpEnableSecrets.put(playerName.toLowerCase(), secret);
+    }
+
+    public String getTotpEnableSecret(String playerName) {
+        return totpEnableSecrets.get(playerName.toLowerCase());
+    }
+
+    public void removeTotpEnableSecret(String playerName) {
+        totpEnableSecrets.remove(playerName.toLowerCase());
+    }
+
+    public void verifyTotpLogin(ProxiedPlayer player, String code) {
+        String name = player.getName();
+
+        if (!totpPendingPlayers.contains(name.toLowerCase())) {
+            return;
+        }
+
+        if (!beginProcess(player)) {
+            return;
+        }
+
+        database.getAuthUserRepository().getUser(name, (user, success) -> {
+            if (!success) {
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
+                endProcess(player);
+                return;
+            }
+
+            if (user == null) {
+                totpPendingPlayers.remove(name.toLowerCase());
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.notRegistered);
+                endProcess(player);
+                return;
+            }
+
+            String totpToken = user.getTotpToken();
+            if (totpToken == null || totpToken.isEmpty()) {
+                totpPendingPlayers.remove(name.toLowerCase());
+                loginPlayer(player, () -> {
+                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+                    endProcess(player);
+                });
+                return;
+            }
+
+            if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
+                totpPendingPlayers.remove(name.toLowerCase());
+                totpAttempts.remove(name.toLowerCase());
+                loginPlayer(player, () -> {
+                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+                    loginAttempts.remove(name);
+                    endProcess(player);
+                });
+            } else {
+                int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
+                if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+                    totpPendingPlayers.remove(name.toLowerCase());
+                    totpAttempts.remove(name.toLowerCase());
+                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
+                    if (MainConfig.IMP.auth.totp.banPlayer) {
+                        BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
+                    }
+                    endProcess(player);
+                    return;
+                }
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
+                endProcess(player);
+            }
+        });
+    }
+
+    //
+    // Premium
+    //
+
     public void togglePremium(ProxiedPlayer player) {
         if (!beginProcess(player)) {
             return;
@@ -524,170 +875,5 @@ public class AuthManager {
 
             endProcess(player);
         });
-    }
-
-    public void forceAuth(ProxiedPlayer player) {
-        forceAuth(player, null);
-    }
-
-    public void forceAuth(ProxiedPlayer player, PostLoginEvent event) {
-        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
-            try {
-                if (!success) {
-                    player.disconnect(CachedMessages.IMP.queryError);
-                    return;
-                }
-
-                if (user != null && !player.getName().equals(user.getRealName())) {
-                    player.disconnect(CachedMessages.IMP.player.kick.realname
-                            .replace("{realname}", user.getRealName())
-                            .replace("{name}", player.getName())
-                    );
-
-                    return;
-                }
-
-                String sessionIP = SessionCache.getIP(player.getName());
-
-                if (PremiumCache.isPremium(player.getName()) ||
-                        (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
-                    AuthCache.setAuthenticated(player.getName());
-
-                    if (event != null) {
-                        connectToBackend(event);
-                    } else {
-                        connectToBackend(player);
-                    }
-
-                    return;
-                }
-
-                if (event != null) {
-                    connectToAuthServer(event);
-                } else {
-                    connectToAuthServer(player);
-                }
-
-                String reminderMessage = (user != null)
-                        ? CachedMessages.IMP.player.reminder.login
-                        : CachedMessages.IMP.player.reminder.register;
-
-                taskManager.startAuthTimeoutTask(player);
-                taskManager.startAuthReminderTask(player, reminderMessage);
-            } finally {
-                if (event != null) {
-                    event.completeIntent(plugin);
-                }
-            }
-        });
-    }
-
-    public void showLoginDialog(ProxiedPlayer player) {
-        showLoginDialog(player, null);
-    }
-
-    public void showLoginDialog(ProxiedPlayer player, String noticeMessage) {
-        if (!MainConfig.IMP.auth.useDialogs) {
-            return;
-        }
-
-        if (!supportDialog(player)) {
-            return;
-        }
-
-        database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
-            if (!success) {
-                player.disconnect(CachedMessages.IMP.queryError);
-                return;
-            }
-
-            Dialog dialog;
-            if (user != null) {
-                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.title))
-                        .inputs(
-                                List.of(
-                                        new TextInput("password", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.passwordField))
-                                )
-                        ))
-                        .action(
-                                new ActionButton(
-                                        TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.confirmButton),
-                                        new CustomClickAction("tiauth_login")
-                                )
-                        );
-            } else {
-                List<DialogInput> inputList = new ArrayList<>();
-
-                inputList.add(new TextInput("password", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.passwordField)));
-                if (MainConfig.IMP.auth.repeatPasswordWhenRegister) {
-                    inputList.add(new TextInput("repeatPassword", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.repeatPasswordField)));
-                }
-                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.title))
-                        .inputs(
-                                inputList
-                        ))
-                        .action(
-                                new ActionButton(
-                                        TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.confirmButton),
-                                        new CustomClickAction("tiauth_register")
-                                )
-                        );
-            }
-
-            if (noticeMessage != null) {
-                dialog.getBase().body(
-                        List.of(
-                                new PlainMessageBody(TextComponent.fromLegacy(noticeMessage))
-                        )
-                );
-            }
-
-            plugin.getProxy().getScheduler().schedule(plugin, () -> player.showDialog(dialog), 50, TimeUnit.MILLISECONDS);
-        });
-    }
-
-    private void connectToAuthServer(PostLoginEvent event) {
-        ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
-        event.setTarget(authServer);
-    }
-
-    private void connectToAuthServer(ProxiedPlayer player) {
-        ServerInfo currentServer = player.getServer().getInfo();
-        ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
-
-        if (currentServer == null || !currentServer.equals(authServer)) {
-            player.connect(authServer);
-        }
-    }
-
-    private void connectToBackend(PostLoginEvent event) {
-        ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
-        event.setTarget(backendServer);
-    }
-
-    private void connectToBackend(ProxiedPlayer player) {
-        ServerInfo currentServer = player.getServer().getInfo();
-        ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
-
-        if (currentServer == null || !currentServer.equals(backendServer)) {
-            player.connect(backendServer);
-        }
-    }
-
-    private boolean supportDialog(ProxiedPlayer player) {
-        return player.getPendingConnection().getVersion() >= 771;
-    }
-
-    private boolean beginProcess(ProxiedPlayer player) {
-        if (!inProcess.add(player.getName())) {
-            BungeeUtils.sendMessage(player, CachedMessages.IMP.processing);
-            return false;
-        }
-
-        return true;
-    }
-
-    private void endProcess(ProxiedPlayer player) {
-        inProcess.remove(player.getName());
     }
 }

@@ -36,17 +36,24 @@ public final class TiAuth extends Plugin {
 
     @Override
     public void onLoad() {
-        File dataFolder = getDataFolder();
-        if (!dataFolder.exists()) {
-            dataFolder.mkdir();
+        try {
+            File dataFolder = getDataFolder();
+            if (!dataFolder.exists()) {
+                dataFolder.mkdir();
+            }
+            MainConfig.IMP.reload();
+            MessagesConfig.IMP = new MessagesConfig(MessagesConfig.getMessagesPath(MainConfig.IMP.lang));
+            MessagesConfig.IMP.reload();
+            loadLibraries();
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, "Error during plugin load. Stopping server...", e);
+            getProxy().stop();
         }
-        MainConfig.IMP.reload();
-        MessagesConfig.IMP.reload();
-        loadLibraries();
     }
 
     @Override
     public void onEnable() {
+        try {
 //        if (!isSupportedVersion()) {
 //            logger.warning("*** ВНИМАНИЕ ***");
 //            logger.warning("tiAuth поддерживает BungeeCord версии 1.21 и выше!");
@@ -54,38 +61,44 @@ public final class TiAuth extends Plugin {
 //            logger.warning("Обновите прокси, если хотите использовать tiAuth.");
 //            return;
 //        }
-        logger = getLogger();
-        File dataFolder = getDataFolder();
-        if (!dataFolder.exists()) {
-            dataFolder.mkdir();
+            logger = getLogger();
+            File dataFolder = getDataFolder();
+            if (!dataFolder.exists()) {
+                dataFolder.mkdir();
+            }
+            initializeDatabase(dataFolder);
+            startLimboServer(dataFolder);
+            Utils.initializeColorizer(MainConfig.IMP.serializer);
+            taskManager = new TaskManager(this);
+            authManager = new AuthManager(this);
+
+            PluginManager pluginManager = getProxy().getPluginManager();
+            registerListeners(pluginManager);
+            registerCommands(pluginManager);
+
+            new Metrics(this, 26921);
+            new TiAuthAPI(this);
+
+            if (MainConfig.IMP.checkUpdates) {
+                Utils.checkUpdates()
+                        .thenAccept(version -> {
+                            if (version.equals(getDescription().getVersion())) {
+                                logger.info("You are using the latest version");
+                                return;
+                            }
+
+                            logger.info("A new version is available: " + version);
+                            logger.info("Download: https://github.com/1050TIt0p/tiAuth/releases");
+                        })
+                        .exceptionally(e -> {
+                            logger.log(Level.WARNING, "Update check failed", e);
+                            return null;
+                        });
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error during plugin initialization. Stopping server...", e);
+            getProxy().stop();
         }
-        initializeDatabase(dataFolder);
-        startLimboServer(dataFolder);
-        Utils.initializeColorizer(MainConfig.IMP.serializer);
-        taskManager = new TaskManager(this);
-        authManager = new AuthManager(this);
-
-        PluginManager pluginManager = getProxy().getPluginManager();
-        registerListeners(pluginManager);
-        registerCommands(pluginManager);
-
-        new Metrics(this, 26921);
-        new TiAuthAPI(this);
-
-        Utils.checkUpdates()
-                .thenAccept(version -> {
-                    if (version.equals(getDescription().getVersion())) {
-                        logger.info("You are using the latest version");
-                        return;
-                    }
-
-                    logger.info("A new version is available: " + version);
-                    logger.info("Download: https://github.com/1050TIt0p/tiAuth/releases");
-                })
-                .exceptionally(e -> {
-                    logger.log(Level.WARNING, "Update check failed", e);
-                    return null;
-                });
     }
 
     private boolean isSupportedVersion() {
@@ -294,5 +307,6 @@ public final class TiAuth extends Plugin {
         pluginManager.registerCommand(this, new ChangePasswordCommand(this, "changepassword", "changepass"));
         pluginManager.registerCommand(this, new PremiumCommand(this, "premium"));
         pluginManager.registerCommand(this, new LogoutCommand(this, "logout"));
+        pluginManager.registerCommand(this, new TotpCommand(this, "2fa", "totp"));
     }
 }

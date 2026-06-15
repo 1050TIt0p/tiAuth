@@ -77,7 +77,7 @@ public class TaskManager {
                 return;
             }
 
-            if (MainConfig.IMP.title.enabled) {
+            if (MainConfig.IMP.title.beforeLogin.enabled) {
                 sendTitle(player, c);
             }
             if (MainConfig.IMP.actionBar.enabled) {
@@ -94,17 +94,17 @@ public class TaskManager {
     }
 
     private void sendTitle(Player player, int counter) {
-        Title componentTitle = Title.title(
-                CachedComponents.IMP.player.title.title.replaceText(builder -> builder
+        var msg = CachedComponents.IMP.player.title.beforeLogin;
+        player.showTitle(Title.title(
+                msg.title.replaceText(builder -> builder
                         .match(VelocityUtils.TIME)
                         .replacement(String.valueOf(counter))),
-                CachedComponents.IMP.player.title.subTitle.replaceText(builder -> builder
+                msg.subtitle.replaceText(builder -> builder
                         .match(VelocityUtils.TIME)
                         .replacement(String.valueOf(counter))),
                 0,
                 21,
-                0);
-        player.showTitle(componentTitle);
+                0));
     }
 
     private void sendActionBar(Player player, int counter) {
@@ -153,4 +153,5 @@ public class TaskManager {
             player.hideBossBar(bar);
         }
     }
+
 }
