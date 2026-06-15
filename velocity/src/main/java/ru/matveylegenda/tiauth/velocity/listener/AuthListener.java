@@ -3,7 +3,6 @@ package ru.matveylegenda.tiauth.velocity.listener;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
@@ -25,6 +24,7 @@ import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
@@ -123,6 +123,19 @@ public class AuthListener {
     @Subscribe
     public EventTask onPlayerChooseInitialServer(PlayerChooseInitialServerEvent event) {
         Player player = event.getPlayer();
+
+        if (MainConfig.IMP.servers.postAuthServerMode == MainConfig.PostAuthServerMode.FORCED_HOST) {
+            event.getInitialServer().ifPresent(server -> {
+                String serverName = server.getServerInfo().getName();
+                if (!serverName.equals(MainConfig.IMP.servers.auth)) {
+                    List<String> whitelist = MainConfig.IMP.servers.forcedHosts.servers;
+                    if (whitelist.isEmpty() || whitelist.contains(serverName)) {
+                        authManager.setForcedHost(player.getUsername(), serverName);
+                    }
+                }
+            });
+        }
+
         CompletableFuture<Void> future = new CompletableFuture<>();
 
         authManager.forceAuth(player, event, future);
@@ -152,6 +165,10 @@ public class AuthListener {
         } else {
             taskManager.cancelTasks(player);
         }
+
+        if (AuthCache.isAuthenticated(player.getUsername())) {
+            authManager.sendAuthTitle(player);
+        }
     }
 
     @Subscribe
@@ -164,6 +181,7 @@ public class AuthListener {
         }
 
         taskManager.cancelTasks(player);
+        authManager.removeForcedHost(username);
     }
 
     public int getPlayersCountByIp(String ip) {

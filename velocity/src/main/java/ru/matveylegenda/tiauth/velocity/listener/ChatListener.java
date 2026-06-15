@@ -30,6 +30,7 @@ public class ChatListener {
     }
 
     @Subscribe
+    @SuppressWarnings("deprecation")
     public void onChat(PlayerChatEvent event) {
         Player player = event.getPlayer();
         if (!AuthCache.isAuthenticated(player.getUsername())) {

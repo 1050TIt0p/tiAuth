@@ -10,6 +10,8 @@ Authorization plugin for BungeeCord and Velocity
   - Allows licensed players to skip password entry by activating local `online-mode true`
 - Session support
   - Allows players to skip password entry for a certain period after successful authentication
+- Two-factor authentication (2FA/TOTP)
+  - Time-based one-time passwords via authenticator apps with QR code setup, recovery codes and auto-ban
 - Multiple database types support
   - Supports `SQLite`, `H2`, `MySQL`, `PostgreSQL`
 - Virtual server
@@ -25,6 +27,8 @@ Authorization plugin for BungeeCord and Velocity
 - `/changepassword <old password> <new password>` - Change password
 - `/premium` - Enable premium mode
 - `/unregister` <password> - Delete account
+- `/2fa <enable|verify|disable>` - Manage two-factor authentication
+  - Permission: `tiauth.player.2fa`
 
 #### For administrators:
 - `/tiauth reload` - Reload config

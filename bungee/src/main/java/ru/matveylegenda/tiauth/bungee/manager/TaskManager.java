@@ -39,7 +39,7 @@ public class TaskManager {
                 return;
             }
 
-            player.disconnect(CachedMessages.IMP.player.kick.timeout);
+            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.timeout));
 
         }, MainConfig.IMP.auth.timeoutSeconds, TimeUnit.SECONDS);
 
@@ -81,7 +81,7 @@ public class TaskManager {
                 return;
             }
 
-            if (MainConfig.IMP.title.enabled) sendTitle(player, counter.get());
+            if (MainConfig.IMP.title.beforeLogin.enabled) sendTitle(player, counter.get());
             if (MainConfig.IMP.actionBar.enabled) sendActionBar(player, counter.get());
             if (MainConfig.IMP.bossBar.enabled) updateBossBar(player, counter.get(), barId);
 
@@ -123,13 +123,12 @@ public class TaskManager {
 
     private void sendTitle(ProxiedPlayer player, int counter) {
         Title title = ProxyServer.getInstance().createTitle();
+        var msg = CachedMessages.IMP.player.title.beforeLogin;
         title.title(TextComponent.fromLegacy(
-                CachedMessages.IMP.player.title.title
-                        .replace("{time}", String.valueOf(counter))
+                msg.title.replace("{time}", String.valueOf(counter))
         ));
         title.subTitle(TextComponent.fromLegacy(
-                CachedMessages.IMP.player.title.subTitle
-                        .replace("{time}", String.valueOf(counter))
+                msg.subtitle.replace("{time}", String.valueOf(counter))
         ));
         title.fadeIn(0);
         title.stay(21);
@@ -179,4 +178,5 @@ public class TaskManager {
             player.unsafe().sendPacket(remove);
         }
     }
+
 }
