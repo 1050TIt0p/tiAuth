@@ -294,5 +294,6 @@ public final class TiAuth extends Plugin {
         pluginManager.registerCommand(this, new ChangePasswordCommand(this, "changepassword", "changepass"));
         pluginManager.registerCommand(this, new PremiumCommand(this, "premium"));
         pluginManager.registerCommand(this, new LogoutCommand(this, "logout"));
+        pluginManager.registerCommand(this, new TotpCommand(this, "2fa", "totp"));
     }
 }

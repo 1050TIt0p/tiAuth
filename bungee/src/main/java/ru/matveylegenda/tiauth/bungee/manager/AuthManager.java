@@ -1,5 +1,6 @@
 package ru.matveylegenda.tiauth.bungee.manager;
 
+import lombok.Getter;
 import lombok.Setter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.Title;
@@ -30,6 +31,10 @@ import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 
+import dev.samstevens.totp.code.CodeVerifier;
+import dev.samstevens.totp.code.DefaultCodeGenerator;
+import dev.samstevens.totp.code.DefaultCodeVerifier;
+import dev.samstevens.totp.time.SystemTimeProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +45,13 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class AuthManager {
+    public static final CodeVerifier TOTP_CODE_VERIFIER = new DefaultCodeVerifier(new DefaultCodeGenerator(), new SystemTimeProvider());
+
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
+    private final Set<String> totpPendingPlayers = ConcurrentHashMap.newKeySet();
+    private final Map<String, Integer> totpAttempts = new ConcurrentHashMap<>();
+    private final Map<String, String> totpEnableSecrets = new ConcurrentHashMap<>();
     private final TiAuth plugin;
     private final Database database;
     private final TaskManager taskManager;
@@ -49,6 +59,7 @@ public class AuthManager {
     @Setter
     private Pattern passwordPattern;
     @Setter
+    @Getter
     private Hash hash;
 
     public AuthManager(TiAuth plugin) {
@@ -344,6 +355,15 @@ public class AuthManager {
                 return;
             }
 
+            String totpToken = user.getTotpToken();
+            if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
+                endProcess(player);
+                totpPendingPlayers.add(player.getName().toLowerCase());
+                taskManager.cancelTasks(player);
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.prompt);
+                return;
+            }
+
             loginPlayer(player, () -> {
                 BungeeUtils.sendMessage(
                         player,
@@ -486,6 +506,91 @@ public class AuthManager {
         AuthCache.logout(player.getName());
         SessionCache.removePlayer(player.getName());
     }
+
+    //
+    // TOTP
+    //
+
+    public boolean isTotpPending(String playerName) {
+        return totpPendingPlayers.contains(playerName.toLowerCase());
+    }
+
+    public void setTotpEnableSecret(String playerName, String secret) {
+        totpEnableSecrets.put(playerName.toLowerCase(), secret);
+    }
+
+    public String getTotpEnableSecret(String playerName) {
+        return totpEnableSecrets.get(playerName.toLowerCase());
+    }
+
+    public void removeTotpEnableSecret(String playerName) {
+        totpEnableSecrets.remove(playerName.toLowerCase());
+    }
+
+    public void verifyTotpLogin(ProxiedPlayer player, String code) {
+        String name = player.getName();
+
+        if (!totpPendingPlayers.contains(name.toLowerCase())) {
+            return;
+        }
+
+        if (!beginProcess(player)) {
+            return;
+        }
+
+        database.getAuthUserRepository().getUser(name, (user, success) -> {
+            if (!success) {
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
+                endProcess(player);
+                return;
+            }
+
+            if (user == null) {
+                totpPendingPlayers.remove(name.toLowerCase());
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.notRegistered);
+                endProcess(player);
+                return;
+            }
+
+            String totpToken = user.getTotpToken();
+            if (totpToken == null || totpToken.isEmpty()) {
+                totpPendingPlayers.remove(name.toLowerCase());
+                loginPlayer(player, () -> {
+                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+                    endProcess(player);
+                });
+                return;
+            }
+
+            if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
+                totpPendingPlayers.remove(name.toLowerCase());
+                totpAttempts.remove(name.toLowerCase());
+                loginPlayer(player, () -> {
+                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+                    loginAttempts.remove(name);
+                    endProcess(player);
+                });
+            } else {
+                int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
+                if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+                    totpPendingPlayers.remove(name.toLowerCase());
+                    totpAttempts.remove(name.toLowerCase());
+                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
+                    if (MainConfig.IMP.auth.totp.banPlayer) {
+                        BanCache.addPlayer(player.getAddress().getAddress().getHostAddress());
+                    }
+                    endProcess(player);
+                    return;
+                }
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
+                endProcess(player);
+            }
+        });
+    }
+
+    //
+    // Premium
+    //
 
     public void togglePremium(ProxiedPlayer player) {
         if (!beginProcess(player)) {

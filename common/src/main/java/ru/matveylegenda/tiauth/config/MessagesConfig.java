@@ -107,6 +107,7 @@ public class MessagesConfig extends YamlSerializable {
         public Login login = new Login();
         public ChangePassword changePassword = new ChangePassword();
         public Logout logout = new Logout();
+        public Totp totp = new Totp();
         public Premium premium = new Premium();
         public Kick kick = new Kick();
         public Reminder reminder = new Reminder();
@@ -160,6 +161,25 @@ public class MessagesConfig extends YamlSerializable {
         public static class Premium {
             public String enabled;
             public String disabled;
+        }
+
+        @NewLine
+        public static class Totp {
+            public String usage;
+            public String enableUsage;
+            public String verifyUsage;
+            public String disableUsage;
+            public String successful;
+            public String verified;
+            public String disabled;
+            public String wrong;
+            public String alreadyEnabled;
+            public String alreadyDisabled;
+            public String qr;
+            public String token;
+            public String recovery;
+            public String needPassword;
+            public String prompt;
         }
 
         @NewLine
@@ -272,6 +292,21 @@ public class MessagesConfig extends YamlSerializable {
                 player.changePassword.usage = "{prefix} &fИспользование: &#8833EC/changepassword <старый пароль> <новый пароль>";
                 player.changePassword.success = "{prefix} &fВы успешно изменили пароль";
                 player.logout.logoutByPremium = "{prefix} &fВы не можете разлогиниться из-за &#8833ECпремиум режима";
+                player.totp.usage = "{prefix} &fИспользование: &#8833EC/2fa enable [пароль]&f, &#8833EC/2fa verify <код>&f или &#8833EC/2fa disable <код>";
+                player.totp.enableUsage = "{prefix} &fИспользование: &#8833EC/2fa enable [пароль]";
+                player.totp.verifyUsage = "{prefix} &fИспользование: &#8833EC/2fa verify <код>";
+                player.totp.disableUsage = "{prefix} &fИспользование: &#8833EC/2fa disable <код>";
+                player.totp.successful = "{prefix} &f2FA успешно &#8833ECвключена";
+                player.totp.verified = "{prefix} &fQR-код сгенерирован. Подтвердите через &#8833EC/2fa verify <код>";
+                player.totp.disabled = "{prefix} &f2FA успешно &#8833ECотключена";
+                player.totp.wrong = "{prefix} &fНеверный 2FA ключ";
+                player.totp.alreadyEnabled = "{prefix} &f2FA уже включена. Отключите её через &#8833EC/2fa disable <код>";
+                player.totp.alreadyDisabled = "{prefix} &f2FA уже отключена";
+                player.totp.qr = "{prefix} &fНажмите &#8833ECздесь &fчтобы открыть QR-код в браузере";
+                player.totp.token = "{prefix} &fВаш 2FA токен &7(нажмите чтобы скопировать)&f: &6{0}";
+                player.totp.recovery = "{prefix} &fВаши коды восстановления &7(нажмите чтобы скопировать)&f: &6{0}";
+                player.totp.needPassword = "{prefix} &fДля включения 2FA требуется ввести пароль от аккаунта";
+                player.totp.prompt = "{prefix} &fПожалуйста, введите 2FA ключ используя &#8833EC/2fa <ключ>";
                 player.premium.enabled = "{prefix} &fПремиум режим &#8833ECвключен\n&fЕсли у вас нет лицензии Minecraft, выключите режим прописав /premium, иначе вы не сможете войти на сервер";
                 player.premium.disabled = "{prefix} &fПремиум режим &#8833ECвыключен";
                 player.kick.timeout = "{prefix} &fВы не успели авторизоваться";
@@ -348,6 +383,21 @@ public class MessagesConfig extends YamlSerializable {
                 player.changePassword.usage = "{prefix} &fUsage: &#8833EC/changepassword <old password> <new password>";
                 player.changePassword.success = "{prefix} &fYou have successfully changed your password";
                 player.logout.logoutByPremium = "{prefix} &fYou cannot log out due to &#8833ECpremium mode";
+                player.totp.usage = "{prefix} &fUsage: &#8833EC/2fa enable [password]&f, &#8833EC/2fa verify <code>&f or &#8833EC/2fa disable <code>";
+                player.totp.enableUsage = "{prefix} &fUsage: &#8833EC/2fa enable [password]";
+                player.totp.verifyUsage = "{prefix} &fUsage: &#8833EC/2fa verify <code>";
+                player.totp.disableUsage = "{prefix} &fUsage: &#8833EC/2fa disable <code>";
+                player.totp.successful = "{prefix} &f2FA has been &#8833ECenabled";
+                player.totp.verified = "{prefix} &fQR code generated. Confirm using &#8833EC/2fa verify <code>";
+                player.totp.disabled = "{prefix} &f2FA has been &#8833ECdisabled";
+                player.totp.wrong = "{prefix} &fWrong 2FA key";
+                player.totp.alreadyEnabled = "{prefix} &f2FA is already enabled. Disable it using &#8833EC/2fa disable <code>";
+                player.totp.alreadyDisabled = "{prefix} &f2FA is already disabled";
+                player.totp.qr = "{prefix} &fClick &#8833EChere &fto open QR code in browser";
+                player.totp.token = "{prefix} &fYour 2FA token &7(click to copy)&f: &6{0}";
+                player.totp.recovery = "{prefix} &fYour recovery codes &7(click to copy)&f: &6{0}";
+                player.totp.needPassword = "{prefix} &fYou need to enter your password to enable 2FA";
+                player.totp.prompt = "{prefix} &fPlease enter your 2FA key using &#8833EC/2fa <key>";
                 player.premium.enabled = "{prefix} &fPremium mode &#8833ECenabled\n&fIf you don't have a Minecraft license, disable it using /premium, otherwise you won't be able to join the server";
                 player.premium.disabled = "{prefix} &fPremium mode &#8833ECdisabled";
                 player.kick.timeout = "{prefix} &fYou did not authenticate in time";

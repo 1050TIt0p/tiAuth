@@ -27,6 +27,7 @@ subprojects {
         implementation("de.mkammerer:argon2-jvm:2.12")
         implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
         implementation("net.elytrium:serializer:1.1.1")
+        implementation("dev.samstevens.totp:totp:1.7.1")
 
         compileOnly("net.kyori:adventure-api:4.24.0")
         compileOnly("net.kyori:adventure-text-minimessage:4.24.0")
@@ -75,6 +76,7 @@ tasks.shadowJar {
     relocate("com.google.errorprone", "ru.matveylegenda.tiauth.thirdparty.com.google.errorprone")
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
     relocate("net.elytrium.serializer", "ru.matveylegenda.tiauth.thirdparty.net.elytrium.serializer")
+    relocate("dev.samstevens.totp", "ru.matveylegenda.tiauth.thirdparty.dev.samstevens.totp")
     relocate("ua.nanit.limbo", "ru.matveylegenda.tiauth.thirdparty.ua.nanit.limbo")
     relocate("org.spongepowered.configurate", "ru.matveylegenda.tiauth.thirdparty.org.spongepowered.configurate")
     relocate("io.leangen.geantyref", "ru.matveylegenda.tiauth.thirdparty.io.leangen.geantyref")

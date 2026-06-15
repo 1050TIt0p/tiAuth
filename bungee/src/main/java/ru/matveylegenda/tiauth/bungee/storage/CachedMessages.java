@@ -78,6 +78,7 @@ public class CachedMessages {
         public Login login;
         public ChangePassword changePassword;
         public Logout logout;
+        public Totp totp;
         public Premium premium;
         public Kick kick;
         public Reminder reminder;
@@ -125,6 +126,24 @@ public class CachedMessages {
         public static class Premium {
             public String enabled;
             public String disabled;
+        }
+
+        public static class Totp {
+            public String usage;
+            public String enableUsage;
+            public String verifyUsage;
+            public String disableUsage;
+            public String successful;
+            public String verified;
+            public String disabled;
+            public String wrong;
+            public String alreadyEnabled;
+            public String alreadyDisabled;
+            public String qr;
+            public String token;
+            public String recovery;
+            public String needPassword;
+            public String prompt;
         }
 
         public static class Kick {
@@ -263,6 +282,23 @@ public class CachedMessages {
         player.premium = new Player.Premium();
         player.premium.enabled = COLORIZER.colorize(getPrefixed(config.player.premium.enabled, prefix));
         player.premium.disabled = COLORIZER.colorize(getPrefixed(config.player.premium.disabled, prefix));
+
+        player.totp = new Player.Totp();
+        player.totp.usage = COLORIZER.colorize(getPrefixed(config.player.totp.usage, prefix));
+        player.totp.enableUsage = COLORIZER.colorize(getPrefixed(config.player.totp.enableUsage, prefix));
+        player.totp.verifyUsage = COLORIZER.colorize(getPrefixed(config.player.totp.verifyUsage, prefix));
+        player.totp.disableUsage = COLORIZER.colorize(getPrefixed(config.player.totp.disableUsage, prefix));
+        player.totp.successful = COLORIZER.colorize(getPrefixed(config.player.totp.successful, prefix));
+        player.totp.verified = COLORIZER.colorize(getPrefixed(config.player.totp.verified, prefix));
+        player.totp.disabled = COLORIZER.colorize(getPrefixed(config.player.totp.disabled, prefix));
+        player.totp.wrong = COLORIZER.colorize(getPrefixed(config.player.totp.wrong, prefix));
+        player.totp.alreadyEnabled = COLORIZER.colorize(getPrefixed(config.player.totp.alreadyEnabled, prefix));
+        player.totp.alreadyDisabled = COLORIZER.colorize(getPrefixed(config.player.totp.alreadyDisabled, prefix));
+        player.totp.qr = COLORIZER.colorize(getPrefixed(config.player.totp.qr, prefix));
+        player.totp.token = COLORIZER.colorize(getPrefixed(config.player.totp.token, prefix));
+        player.totp.recovery = COLORIZER.colorize(getPrefixed(config.player.totp.recovery, prefix));
+        player.totp.needPassword = COLORIZER.colorize(getPrefixed(config.player.totp.needPassword, prefix));
+        player.totp.prompt = COLORIZER.colorize(getPrefixed(config.player.totp.prompt, prefix));
 
         player.kick = new Player.Kick();
         player.kick.timeout = COLORIZER.colorize(getPrefixed(config.player.kick.timeout, prefix));

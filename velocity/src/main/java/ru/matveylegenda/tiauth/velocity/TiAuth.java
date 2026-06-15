@@ -234,6 +234,7 @@ public final class TiAuth {
         commandManager.register(commandManager.metaBuilder("changepassword").aliases("changepass").build(), new ChangePasswordCommand(this));
         commandManager.register(commandManager.metaBuilder("premium").build(), new PremiumCommand(this));
         commandManager.register(commandManager.metaBuilder("logout").build(), new LogoutCommand(this));
+        commandManager.register(commandManager.metaBuilder("2fa").aliases("totp").build(), new TotpCommand(this));
     }
 
     private String getPluginVersion() {
