@@ -78,6 +78,7 @@ public class CachedMessages {
         public Login login;
         public ChangePassword changePassword;
         public Logout logout;
+        public Totp totp;
         public Premium premium;
         public Kick kick;
         public Reminder reminder;
@@ -127,12 +128,32 @@ public class CachedMessages {
             public String disabled;
         }
 
+        public static class Totp {
+            public String usage;
+            public String enableUsage;
+            public String verifyUsage;
+            public String disableUsage;
+            public String successful;
+            public String verified;
+            public String disabled;
+            public String wrong;
+            public String alreadyEnabled;
+            public String alreadyDisabled;
+            public String qr;
+            public String token;
+            public String recovery;
+            public String needPassword;
+            public String prompt;
+        }
+
         public static class Kick {
             public String timeout;
             public String realname;
             public String tooManyAttempts;
             public String ban;
             public String invalidNickPattern;
+            public String authServerNotFound;
+            public String forcedHostNotFound;
             public String ipLimitOnlineReached;
             public String ipLimitRegisteredReached;
         }
@@ -174,10 +195,10 @@ public class CachedMessages {
         }
 
         public static class Title {
-            public String title;
-            public String subTitle;
-            public String onAuthTitle;
-            public String onAuthSubTitle;
+            public MessagesConfig.Player.Title.TitleMessage beforeLogin;
+            public MessagesConfig.Player.Title.TitleMessage beforeRegister;
+            public MessagesConfig.Player.Title.TitleMessageDelayed afterLogin;
+            public MessagesConfig.Player.Title.TitleMessageDelayed afterRegister;
         }
 
         public static class ActionBar {
@@ -264,12 +285,31 @@ public class CachedMessages {
         player.premium.enabled = COLORIZER.colorize(getPrefixed(config.player.premium.enabled, prefix));
         player.premium.disabled = COLORIZER.colorize(getPrefixed(config.player.premium.disabled, prefix));
 
+        player.totp = new Player.Totp();
+        player.totp.usage = COLORIZER.colorize(getPrefixed(config.player.totp.usage, prefix));
+        player.totp.enableUsage = COLORIZER.colorize(getPrefixed(config.player.totp.enableUsage, prefix));
+        player.totp.verifyUsage = COLORIZER.colorize(getPrefixed(config.player.totp.verifyUsage, prefix));
+        player.totp.disableUsage = COLORIZER.colorize(getPrefixed(config.player.totp.disableUsage, prefix));
+        player.totp.successful = COLORIZER.colorize(getPrefixed(config.player.totp.successful, prefix));
+        player.totp.verified = COLORIZER.colorize(getPrefixed(config.player.totp.verified, prefix));
+        player.totp.disabled = COLORIZER.colorize(getPrefixed(config.player.totp.disabled, prefix));
+        player.totp.wrong = COLORIZER.colorize(getPrefixed(config.player.totp.wrong, prefix));
+        player.totp.alreadyEnabled = COLORIZER.colorize(getPrefixed(config.player.totp.alreadyEnabled, prefix));
+        player.totp.alreadyDisabled = COLORIZER.colorize(getPrefixed(config.player.totp.alreadyDisabled, prefix));
+        player.totp.qr = COLORIZER.colorize(getPrefixed(config.player.totp.qr, prefix));
+        player.totp.token = COLORIZER.colorize(getPrefixed(config.player.totp.token, prefix));
+        player.totp.recovery = COLORIZER.colorize(getPrefixed(config.player.totp.recovery, prefix));
+        player.totp.needPassword = COLORIZER.colorize(getPrefixed(config.player.totp.needPassword, prefix));
+        player.totp.prompt = COLORIZER.colorize(getPrefixed(config.player.totp.prompt, prefix));
+
         player.kick = new Player.Kick();
         player.kick.timeout = COLORIZER.colorize(getPrefixed(config.player.kick.timeout, prefix));
         player.kick.realname = COLORIZER.colorize(getPrefixed(config.player.kick.realname, prefix));
         player.kick.tooManyAttempts = COLORIZER.colorize(getPrefixed(config.player.kick.tooManyAttempts, prefix));
         player.kick.ban = COLORIZER.colorize(getPrefixed(config.player.kick.ban, prefix));
         player.kick.invalidNickPattern = COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefix));
+        player.kick.authServerNotFound = COLORIZER.colorize(getPrefixed(config.player.kick.authServerNotFound, prefix));
+        player.kick.forcedHostNotFound = COLORIZER.colorize(getPrefixed(config.player.kick.forcedHostNotFound, prefix));
         player.kick.ipLimitOnlineReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefix));
         player.kick.ipLimitRegisteredReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefix));
 
@@ -301,13 +341,30 @@ public class CachedMessages {
         player.bossBar.message = COLORIZER.colorize(getPrefixed(config.player.bossBar.message, prefix));
 
         player.title = new Player.Title();
-        player.title.title = COLORIZER.colorize(getPrefixed(config.player.title.title, prefix));
-        player.title.subTitle = COLORIZER.colorize(getPrefixed(config.player.title.subTitle, prefix));
-        player.title.onAuthTitle = COLORIZER.colorize(getPrefixed(config.player.title.onAuthTitle, prefix));
-        player.title.onAuthSubTitle = COLORIZER.colorize(getPrefixed(config.player.title.onAuthSubTitle, prefix));
+        player.title.beforeLogin = createTitleMessage(config.player.title.beforeLogin);
+        player.title.beforeRegister = createTitleMessage(config.player.title.beforeRegister);
+        player.title.afterLogin = createTitleMessageDelayed(config.player.title.afterLogin);
+        player.title.afterRegister = createTitleMessageDelayed(config.player.title.afterRegister);
 
         player.actionBar = new Player.ActionBar();
         player.actionBar.message = COLORIZER.colorize(getPrefixed(config.player.actionBar.message, prefix));
+    }
+
+    private MessagesConfig.Player.Title.TitleMessage createTitleMessage(MessagesConfig.Player.Title.TitleMessage source) {
+        MessagesConfig.Player.Title.TitleMessage msg = new MessagesConfig.Player.Title.TitleMessage();
+        msg.title = COLORIZER.colorize(getPrefixed(source.title, prefix));
+        msg.subtitle = COLORIZER.colorize(getPrefixed(source.subtitle, prefix));
+        return msg;
+    }
+
+    private MessagesConfig.Player.Title.TitleMessageDelayed createTitleMessageDelayed(MessagesConfig.Player.Title.TitleMessageDelayed source) {
+        MessagesConfig.Player.Title.TitleMessageDelayed msg = new MessagesConfig.Player.Title.TitleMessageDelayed();
+        msg.title = COLORIZER.colorize(getPrefixed(source.title, prefix));
+        msg.subtitle = COLORIZER.colorize(getPrefixed(source.subtitle, prefix));
+        msg.delays.start = source.delays.start;
+        msg.delays.duration = source.delays.duration;
+        msg.delays.end = source.delays.end;
+        return msg;
     }
 
     private String getPrefixed(String rawMessage, String prefix) {

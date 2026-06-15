@@ -31,44 +31,70 @@ public class MainConfig extends YamlSerializable {
         this.database = new Database();
         this.auth = new Auth();
         this.bossBar = new BossBar();
-        this.title = new Title();
+        this.title = new TitleConfig();
         this.actionBar = new ActionBar();
     }
 
     @Comment({
-            @CommentValue("Доступные варианты:"),
-            @CommentValue("LEGACY - \"&fПример &#650dbdтекста\""),
-            @CommentValue("MINIMESSAGE - \"<white>Пример</white> <color:#650dbd>текста</color>\" (https://webui.advntr.dev/)")
+            @CommentValue("Available options:"),
+            @CommentValue("LEGACY - \"&fExample &#650dbdtext\""),
+            @CommentValue("MINIMESSAGE - \"<white>Example</white> <color:#650dbd>text</color>\" (https://webui.advntr.dev/)")
     })
     public Serializer serializer = Serializer.LEGACY;
 
     @Comment({
-            @CommentValue("Доступные языки: RU, EN")
+            @CommentValue("Available languages: RU, EN (file messages_<lang>.yml in lang folder)")
     })
-    public MessagesConfig.Lang lang = MessagesConfig.Lang.RU;
+    public String lang = "EN";
 
     public Servers servers;
 
     @NewLine
     public static class Servers {
         @Comment({
-                @CommentValue("Использовать ли виртуальный сервер NanoLimbo для сервера авторизации"),
-                @CommentValue("Настройка виртуального сервера в plugins/tiAuth/limbo/settings.yml"),
-                @CommentValue("Функция не тестировалась должным образом, возможны баги")
+                @CommentValue("Server selection mode after authentication"),
+                @CommentValue("BACKEND - always send to the server from the backend setting"),
+                @CommentValue("FORCED_HOST - send to the server from proxy forced_hosts if available")
+        })
+        public PostAuthServerMode postAuthServerMode = PostAuthServerMode.BACKEND;
+
+        @NewLine
+        @Comment({
+                @CommentValue("Use NanoLimbo virtual server for the auth server"),
+                @CommentValue("Virtual server settings in plugins/tiAuth/limbo/settings.yml"),
+                @CommentValue("This feature has not been properly tested, bugs may occur")
         })
         public boolean useVirtualServer = false;
 
         @NewLine
         @Comment({
-                @CommentValue("Сервер авторизации на который будет перемещать игроков для регистрации/авторизации"),
-                @CommentValue("При использовании виртуального сервера убедитесь, что в конфигурации BungeeCord у вас нет сервера с таким же названием")
+                @CommentValue("Auth server where players are sent for registration/login"),
+                @CommentValue("When using a virtual server, make sure there is no server with the same name in your BungeeCord config")
         })
         public String auth = "auth";
 
         @Comment({
-                @CommentValue("Бэкенд сервер на который будет перемещать игроков после регистрации/авторизации")
+                @CommentValue("Backend server where players are sent after registration/login")
         })
         public String backend = "hub";
+
+        @NewLine
+        @Comment({
+                @CommentValue("Forced hosts settings"),
+                @CommentValue("List of servers considered as forced hosts"),
+                @CommentValue("If empty - all servers except auth are considered"),
+                @CommentValue("If not empty - only servers from the list are considered")
+        })
+        public ForcedHosts forcedHosts = new ForcedHosts();
+
+        public static class ForcedHosts {
+            public List<String> servers = List.of();
+        }
+    }
+
+    public enum PostAuthServerMode {
+        BACKEND,
+        FORCED_HOST
     }
 
     public Database database;
@@ -76,10 +102,10 @@ public class MainConfig extends YamlSerializable {
     @NewLine
     public static class Database {
         @Comment({
-                @CommentValue("Тип базы данных"),
-                @CommentValue("Доступные варианты: SQLITE, H2, MYSQL, POSTGRESQL")
+                @CommentValue("Database type"),
+                @CommentValue("Available options: SQLITE, H2, MYSQL, POSTGRESQL")
         })
-        public DatabaseType type = DatabaseType.H2;
+        public DatabaseType type = DatabaseType.SQLITE;
         public String host;
         public int port;
         public String database;
@@ -88,35 +114,35 @@ public class MainConfig extends YamlSerializable {
 
         @NewLine
         @Comment({
-                @CommentValue("Параметры пула соединений (H2, MySQL, PostgreSQL")
+                @CommentValue("Connection pool settings (H2, MySQL, PostgreSQL")
         })
         @Comment(
-                value = @CommentValue("Максимальное время ожидания соединения из пула"),
+                value = @CommentValue("Maximum time to wait for a connection from the pool"),
                 at = Comment.At.SAME_LINE
         )
         public long connectionTimeoutMs = 30000;
         @Comment(
-                value = @CommentValue("Максимальное время простоя соединения в пуле. Применяется только если min-idle меньше max-pool-size"),
+                value = @CommentValue("Maximum idle time for a connection in the pool. Only applies if min-idle is less than max-pool-size"),
                 at = Comment.At.SAME_LINE
         )
         public long idleTimeoutMs = 600000;
         @Comment(
-                value = @CommentValue("Максимальное время жизни соединения в пуле. После этого соединение будет закрыто и открыто новое, если требуется"),
+                value = @CommentValue("Maximum lifetime of a connection in the pool. After this, the connection will be closed and a new one opened if needed"),
                 at = Comment.At.SAME_LINE
         )
         public long maxLifetimeMs = 1800000;
         @Comment(
                 value = {
-                        @CommentValue("Максимальное количество соединений в пуле"),
-                        @CommentValue("Для H2 рекомендуется использовать небольшое количество соединений, например 2"),
-                        @CommentValue("Для MySQL и PostgreSQL можно выставить больше, например 10")
+                        @CommentValue("Maximum number of connections in the pool"),
+                        @CommentValue("For H2 it is recommended to use a small number of connections, e.g. 2"),
+                        @CommentValue("For MySQL and PostgreSQL you can set more, e.g. 10")
                 },
                 at = Comment.At.SAME_LINE
         )
         public int maxPoolSize = 2;
         @Comment(
                 value = {
-                        @CommentValue("Минимальное количество простаивающих соединений в пуле. -1 = max-pool-size")
+                        @CommentValue("Minimum number of idle connections in the pool. -1 = max-pool-size")
                 },
                 at = Comment.At.SAME_LINE
         )
@@ -128,94 +154,145 @@ public class MainConfig extends YamlSerializable {
     @NewLine
     public static class Auth {
         @Comment({
-                @CommentValue("Количество попыток ввода пароля")
+                @CommentValue("Number of login attempts")
         })
         public int loginAttempts = 3;
 
         @Comment({
-                @CommentValue("Банить ли игрока при исчерпании попыток авторизации")
+                @CommentValue("Ban player when login attempts are exhausted")
         })
         public boolean banPlayer = true;
 
         @Comment({
-                @CommentValue("На сколько секунд банить игрока при исчерпании попыток авторизации")
+                @CommentValue("How many seconds to ban the player when login attempts are exhausted")
         })
         public int banTime = 60;
 
         @Comment({
-                @CommentValue("Раз в сколько секунд игроку отправляется сообщение о требованием в регистрации/авторизации")
+                @CommentValue("How often (in seconds) the player is reminded to register/login")
         })
         public int reminderInterval = 3;
 
         @Comment({
-                @CommentValue("Сколько секунд дается игроку на регистрацию/авторизацию")
+                @CommentValue("How many seconds the player has to register/login")
         })
         public int timeoutSeconds = 60;
 
         @Comment({
-                @CommentValue("Сколько игрок может заходить без авторизации, если его IP не изменился")
+                @CommentValue("How long a player can rejoin without logging in if their IP hasn't changed")
         })
         public int sessionLifetimeMinutes = 60;
 
         @Comment({
-                @CommentValue("Минимальная длина пароля")
+                @CommentValue("Minimum password length")
         })
         public int minPasswordLength = 6;
 
         @Comment({
-                @CommentValue("Максимальная длина пароля")
+                @CommentValue("Maximum password length")
         })
         public int maxPasswordLength = 32;
 
         @Comment({
-                @CommentValue("Регулярное выражение для пароля")
+                @CommentValue("Password regex pattern")
         })
         public String passwordPattern = "^[a-zA-Z0-9!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]*$";
 
         @Comment({
-                @CommentValue("Алгоритм хеширования пароля"),
-                @CommentValue("Доступные варианты:"),
-                @CommentValue("BCRYPT (рекомендуемый)"),
+                @CommentValue("Password hashing algorithm"),
+                @CommentValue("Available options:"),
+                @CommentValue("BCRYPT (recommended)"),
                 @CommentValue("SHA256"),
                 @CommentValue("ARGON2")
         })
         public HashType hashAlgorithm = HashType.BCRYPT;
 
         @Comment({
-                @CommentValue("Сложность алгоритма Bcrypt"),
-                @CommentValue("Значение по умолчанию оптимально, не трогайте если не знаете как это работает!")
+                @CommentValue("Bcrypt algorithm cost"),
+                @CommentValue("Default value is optimal, do not change if you don't know how it works!")
         })
         public int bcryptCost = 12;
 
         @Comment({
-                @CommentValue("Настройки алгоритма Argon2"),
-                @CommentValue("Значения по умолчанию оптимальны, не трогайте если не знаете как это работает!")
+                @CommentValue("Argon2 algorithm settings"),
+                @CommentValue("Default values are optimal, do not change if you don't know how it works!")
         })
         public int argon2Iterations = 2;
         public int argon2Memory = 65536;
         public int argon2Parallelism = 1;
 
         @Comment({
-                @CommentValue("Команды, которые можно использовать во время авторизации")
+                @CommentValue("Commands that can be used while not authenticated")
         })
         public List<String> allowedCommands = List.of(
                 "/login",
                 "/log",
                 "/l",
                 "/register",
-                "/reg"
+                "/reg",
+                "/2fa",
+                "/totp"
         );
 
         @Comment({
-                @CommentValue("Использовать ли диалоговое окно для регистрации/авторизации"),
-                @CommentValue("Работает только на клиентах 1.21.6+")
+                @CommentValue("Use dialog window for registration/login"),
+                @CommentValue("Only works on clients 1.21.6+")
         })
         public boolean useDialogs = true;
 
         @Comment({
-                @CommentValue("Нужно ли повторять игроку пароль в /register")
+                @CommentValue("Require password confirmation in /register")
         })
         public boolean repeatPasswordWhenRegister = true;
+
+        @NewLine
+        @Comment({
+                @CommentValue("Two-factor authentication settings (2FA/TOTP)")
+        })
+        public Totp totp = new Totp();
+
+        public static class Totp {
+            @Comment({
+                    @CommentValue("Enable 2FA")
+            })
+            public boolean enabled = true;
+
+            @Comment({
+                    @CommentValue("Issuer name displayed in the authenticator app")
+            })
+            public String issuer = "tiAuth";
+
+            @Comment({
+                    @CommentValue("URL for QR code generation. {data} is replaced with otpauth:// URI")
+            })
+            public String qrGeneratorUrl = "https://api.qrserver.com/v1/create-qr-code/?data={data}&size=200x200&ecc=M&margin=30";
+
+            @Comment({
+                    @CommentValue("Require password when enabling 2FA")
+            })
+            public boolean needPassword = true;
+
+            @Comment({
+                    @CommentValue("Number of recovery codes")
+            })
+            public int recoveryCodesAmount = 16;
+
+            @NewLine
+            @Comment({
+                    @CommentValue("Maximum invalid TOTP attempts before ban")
+            })
+            public int maxAttempts = 3;
+
+            @Comment({
+                    @CommentValue("Ban player when TOTP attempts are exhausted")
+            })
+            public boolean banPlayer = true;
+
+            @Comment({
+                    @CommentValue("How many seconds to ban the player when TOTP attempts are exhausted")
+            })
+            public int banTime = 60;
+        }
     }
 
     public BossBar bossBar;
@@ -235,12 +312,37 @@ public class MainConfig extends YamlSerializable {
         public BarStyle style = BarStyle.SEGMENTED_12;
     }
 
-    public Title title;
-
     @NewLine
-    public static class Title {
-        public boolean enabled = false;
-        public boolean enabledOnAuth = false;
+    @Comment({
+            @CommentValue("Title during authentication waiting")
+    })
+    public TitleConfig title;
+
+    public static class TitleConfig {
+        @Comment({
+                @CommentValue("Title before login (countdown timer)")
+        })
+        public TitleSubSection beforeLogin = new TitleSubSection();
+        @NewLine
+        @Comment({
+                @CommentValue("Title before registration")
+        })
+        public TitleSubSection beforeRegister = new TitleSubSection();
+        @NewLine
+        @Comment({
+                @CommentValue("Title after login (when connecting to target server)")
+        })
+        public TitleSubSection afterLogin = new TitleSubSection();
+        @NewLine
+        @Comment({
+                @CommentValue("Title after registration")
+        })
+        public TitleSubSection afterRegister = new TitleSubSection();
+
+        @NewLine
+        public static class TitleSubSection {
+            public boolean enabled = false;
+        }
     }
 
     public ActionBar actionBar;
@@ -252,19 +354,25 @@ public class MainConfig extends YamlSerializable {
 
     @NewLine
     @Comment({
-            @CommentValue("Регулярное выражение для ника")
+            @CommentValue("Nickname regex pattern")
     })
     public String nickPattern = "^[a-zA-Z0-9_]{3,16}$";
     @Comment({
-            @CommentValue("Максимальное количество одновременно играющих аккаунтов с одного IP")
+            @CommentValue("Maximum number of accounts playing simultaneously from one IP")
     })
     public int maxOnlineAccountsPerIp = 10;
     @Comment({
-            @CommentValue("Максимальное количество зарегистрированных аккаунтов с одного IP")
-    })
+            @CommentValue("Maximum number of registered accounts from one IP")
+        })
     public int maxRegisteredAccountsPerIp = 10;
 
     public List<String> excludedIps = List.of("127.0.0.1");
+
+    @NewLine
+    @Comment({
+            @CommentValue("Check for updates on GitHub")
+    })
+    public boolean checkUpdates = true;
 
     public Libraries libraries = new Libraries();
 

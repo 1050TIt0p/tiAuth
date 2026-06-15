@@ -34,7 +34,7 @@ import java.nio.file.Path;
         id = "tiauth",
         name = "tiAuth",
         version = "1.3.6",
-        authors = {"1050TI_top", "OverwriteMC"}
+        authors = {"1050TI_top", "OverwriteMC", "lokspel"}
 )
 public final class TiAuth {
 
@@ -58,44 +58,52 @@ public final class TiAuth {
 
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
-        if (!isSupportedVersion()) {
-            logger.warn("*** ВНИМАНИЕ ***");
-            logger.warn("tiAuth поддерживает Velocity версии 3.4.0 и выше!");
-            logger.warn("Вы пытаетесь запустить плагин на версии {}", server.getVersion().getVersion());
-            logger.warn("Обновите прокси, если хотите использовать tiAuth.");
-            return;
+        try {
+            if (!isSupportedVersion()) {
+                logger.warn("*** WARNING ***");
+                logger.warn("tiAuth supports Velocity version 3.4.0 and above!");
+                logger.warn("You are trying to run the plugin on version {}", server.getVersion().getVersion());
+                logger.warn("Update your proxy if you want to use tiAuth.");
+                return;
+            }
+            MainConfig.IMP.reload();
+            MessagesConfig.IMP = new MessagesConfig(MessagesConfig.getMessagesPath(MainConfig.IMP.lang));
+            MessagesConfig.IMP.reload();
+            loadLibraries();
+            initializeDatabase(dataFolder.toFile());
+            startLimboServer(dataFolder.toFile());
+
+            Utils.initializeColorizer(MainConfig.IMP.serializer);
+            taskManager = new TaskManager(this);
+            authManager = new AuthManager(this);
+
+            registerListeners();
+            registerCommands();
+
+            metricsFactory.make(this, 27629);
+
+            new TiAuthAPI(this);
+
+            if (MainConfig.IMP.checkUpdates) {
+                Utils.checkUpdates()
+                        .thenAccept(version -> {
+                            if (version.equals(getPluginVersion())) {
+                                logger.info("You are using the latest version");
+                                return;
+                            }
+
+                            logger.info("A new version is available: " + version);
+                            logger.info("Download: https://github.com/1050TIt0p/tiAuth/releases");
+                        })
+                        .exceptionally(e -> {
+                            logger.warn("Update check failed", e);
+                            return null;
+                        });
+            }
+        } catch (Exception e) {
+            logger.error("Error during plugin initialization. Stopping server...", e);
+            server.shutdown();
         }
-        MainConfig.IMP.reload();
-        MessagesConfig.IMP.reload();
-        loadLibraries();
-        initializeDatabase(dataFolder.toFile());
-        startLimboServer(dataFolder.toFile());
-
-        Utils.initializeColorizer(MainConfig.IMP.serializer);
-        taskManager = new TaskManager(this);
-        authManager = new AuthManager(this);
-
-        registerListeners();
-        registerCommands();
-
-        metricsFactory.make(this, 27629);
-
-        new TiAuthAPI(this);
-
-        Utils.checkUpdates()
-                .thenAccept(version -> {
-                    if (version.equals(getPluginVersion())) {
-                        logger.info("You are using the latest version");
-                        return;
-                    }
-
-                    logger.info("A new version is available: " + version);
-                    logger.info("Download: https://github.com/1050TIt0p/tiAuth/releases");
-                })
-                .exceptionally(e -> {
-                    logger.warn("Update check failed", e);
-                    return null;
-                });
     }
 
     private boolean isSupportedVersion() {
@@ -234,6 +242,7 @@ public final class TiAuth {
         commandManager.register(commandManager.metaBuilder("changepassword").aliases("changepass").build(), new ChangePasswordCommand(this));
         commandManager.register(commandManager.metaBuilder("premium").build(), new PremiumCommand(this));
         commandManager.register(commandManager.metaBuilder("logout").build(), new LogoutCommand(this));
+        commandManager.register(commandManager.metaBuilder("2fa").aliases("totp").build(), new TotpCommand(this));
     }
 
     private String getPluginVersion() {

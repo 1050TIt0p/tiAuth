@@ -1,23 +1,23 @@
 plugins {
-    id("java")
+    java
     id("com.gradleup.shadow") version "9.1.0"
 }
 
 allprojects {
-    group = 'ru.matveylegenda'
-    version = '1.3.6'
+    group = "ru.matveylegenda"
+    version = "1.3.7"
 
     repositories {
         mavenCentral()
-        maven { url "https://libraries.minecraft.net" }
-        maven { url 'https://jitpack.io' }
-        maven { url 'https://repo.alessiodp.com/releases/' }
-        maven { url 'https://repo.papermc.io/repository/maven-public/' }
+        maven("https://libraries.minecraft.net")
+        maven("https://jitpack.io")
+        maven("https://repo.alessiodp.com/releases/")
+        maven("https://repo.papermc.io/repository/maven-public/")
     }
 }
 
 subprojects {
-    apply plugin: "java"
+    apply(plugin = "java")
 
     dependencies {
         implementation("com.github.1050TIt0p:NanoLimbo:1.12.0-3")
@@ -27,6 +27,7 @@ subprojects {
         implementation("de.mkammerer:argon2-jvm:2.12")
         implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
         implementation("net.elytrium:serializer:1.1.1")
+        implementation("dev.samstevens.totp:totp:1.7.1")
 
         compileOnly("net.kyori:adventure-api:4.24.0")
         compileOnly("net.kyori:adventure-text-minimessage:4.24.0")
@@ -39,18 +40,18 @@ subprojects {
         annotationProcessor("org.projectlombok:lombok:1.18.42")
     }
 
-    def targetJavaVersion = 17
+    val targetJavaVersion = 21
     java {
-        def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+        val javaVersion = JavaVersion.toVersion(targetJavaVersion)
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
         if (JavaVersion.current() < javaVersion) {
-            toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+            toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
         }
     }
 
-    tasks.withType(JavaCompile).configureEach {
-        options.encoding = 'UTF-8'
+    tasks.withType<JavaCompile>().configureEach {
+        options.encoding = "UTF-8"
         if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
             options.release.set(targetJavaVersion)
         }
@@ -75,6 +76,7 @@ tasks.shadowJar {
     relocate("com.google.errorprone", "ru.matveylegenda.tiauth.thirdparty.com.google.errorprone")
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
     relocate("net.elytrium.serializer", "ru.matveylegenda.tiauth.thirdparty.net.elytrium.serializer")
+    relocate("dev.samstevens.totp", "ru.matveylegenda.tiauth.thirdparty.dev.samstevens.totp")
     relocate("ua.nanit.limbo", "ru.matveylegenda.tiauth.thirdparty.ua.nanit.limbo")
     relocate("org.spongepowered.configurate", "ru.matveylegenda.tiauth.thirdparty.org.spongepowered.configurate")
     relocate("io.leangen.geantyref", "ru.matveylegenda.tiauth.thirdparty.io.leangen.geantyref")
@@ -96,5 +98,9 @@ tasks.shadowJar {
     }
 }
 
-tasks.jar.enabled = false
-tasks.build.dependsOn tasks.shadowJar
+tasks.jar {
+    enabled = false
+}
+tasks.build {
+    dependsOn(tasks.shadowJar)
+}

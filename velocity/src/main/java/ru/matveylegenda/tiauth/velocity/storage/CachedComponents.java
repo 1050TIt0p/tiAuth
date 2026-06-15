@@ -82,6 +82,7 @@ public class CachedComponents {
         public Login login;
         public ChangePassword changePassword;
         public Logout logout;
+        public Totp totp;
         public Premium premium;
         public Kick kick;
         public Reminder reminder;
@@ -131,6 +132,24 @@ public class CachedComponents {
             public Component disabled;
         }
 
+        public static class Totp {
+            public Component usage;
+            public Component enableUsage;
+            public Component verifyUsage;
+            public Component disableUsage;
+            public Component successful;
+            public Component verified;
+            public Component disabled;
+            public Component wrong;
+            public Component alreadyEnabled;
+            public Component alreadyDisabled;
+            public Component qr;
+            public Component token;
+            public Component recovery;
+            public Component needPassword;
+            public Component prompt;
+        }
+
         public static class Kick {
             public Component notAuth;
             public Component timeout;
@@ -138,6 +157,8 @@ public class CachedComponents {
             public Component tooManyAttempts;
             public Component ban;
             public Component invalidNickPattern;
+            public Component authServerNotFound;
+            public Component forcedHostNotFound;
             public Component ipLimitOnlineReached;
             public Component ipLimitRegisteredReached;
         }
@@ -179,10 +200,23 @@ public class CachedComponents {
         }
 
         public static class Title {
-            public Component title;
-            public Component subTitle;
-            public Component onAuthTitle;
-            public Component onAuthSubTitle;
+            public TitleMessage beforeLogin;
+            public TitleMessage beforeRegister;
+            public TitleMessageDelayed afterLogin;
+            public TitleMessageDelayed afterRegister;
+
+            public static class TitleMessage {
+                public Component title;
+                public Component subtitle;
+            }
+
+            public static class TitleMessageDelayed {
+                public Component title;
+                public Component subtitle;
+                public int fadeIn;
+                public int stay;
+                public int fadeOut;
+            }
         }
 
         public static class ActionBar {
@@ -271,12 +305,31 @@ public class CachedComponents {
         player.premium.enabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.premium.enabled, prefixRaw)));
         player.premium.disabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.premium.disabled, prefixRaw)));
 
+        player.totp = new Player.Totp();
+        player.totp.usage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.usage, prefixRaw)));
+        player.totp.enableUsage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.enableUsage, prefixRaw)));
+        player.totp.verifyUsage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.verifyUsage, prefixRaw)));
+        player.totp.disableUsage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.disableUsage, prefixRaw)));
+        player.totp.successful = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.successful, prefixRaw)));
+        player.totp.verified = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.verified, prefixRaw)));
+        player.totp.disabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.disabled, prefixRaw)));
+        player.totp.wrong = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.wrong, prefixRaw)));
+        player.totp.alreadyEnabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.alreadyEnabled, prefixRaw)));
+        player.totp.alreadyDisabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.alreadyDisabled, prefixRaw)));
+        player.totp.qr = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.qr, prefixRaw)));
+        player.totp.token = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.token, prefixRaw)));
+        player.totp.recovery = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.recovery, prefixRaw)));
+        player.totp.needPassword = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.needPassword, prefixRaw)));
+        player.totp.prompt = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.prompt, prefixRaw)));
+
         player.kick = new Player.Kick();
         player.kick.timeout = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.timeout, prefixRaw)));
         player.kick.realname = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.realname, prefixRaw)));
         player.kick.tooManyAttempts = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.tooManyAttempts, prefixRaw)));
         player.kick.ban = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.ban, prefixRaw)));
         player.kick.invalidNickPattern = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefixRaw)));
+        player.kick.authServerNotFound = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.authServerNotFound, prefixRaw)));
+        player.kick.forcedHostNotFound = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.forcedHostNotFound, prefixRaw)));
         player.kick.ipLimitOnlineReached = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefixRaw)));
         player.kick.ipLimitRegisteredReached = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefixRaw)));
 
@@ -308,13 +361,30 @@ public class CachedComponents {
         player.bossBar.message = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.bossBar.message, prefixRaw)));
 
         player.title = new Player.Title();
-        player.title.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.title, prefixRaw)));
-        player.title.subTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.subTitle, prefixRaw)));
-        player.title.onAuthTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.onAuthTitle, prefixRaw)));
-        player.title.onAuthSubTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.onAuthSubTitle, prefixRaw)));
+        player.title.beforeLogin = createTitleMessage(config.player.title.beforeLogin, prefixRaw);
+        player.title.beforeRegister = createTitleMessage(config.player.title.beforeRegister, prefixRaw);
+        player.title.afterLogin = createTitleMessageDelayed(config.player.title.afterLogin, prefixRaw);
+        player.title.afterRegister = createTitleMessageDelayed(config.player.title.afterRegister, prefixRaw);
 
         player.actionBar = new Player.ActionBar();
         player.actionBar.message = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.actionBar.message, prefixRaw)));
+    }
+
+    private Player.Title.TitleMessage createTitleMessage(MessagesConfig.Player.Title.TitleMessage source, String prefixRaw) {
+        Player.Title.TitleMessage msg = new Player.Title.TitleMessage();
+        msg.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(source.title, prefixRaw)));
+        msg.subtitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(source.subtitle, prefixRaw)));
+        return msg;
+    }
+
+    private Player.Title.TitleMessageDelayed createTitleMessageDelayed(MessagesConfig.Player.Title.TitleMessageDelayed source, String prefixRaw) {
+        Player.Title.TitleMessageDelayed msg = new Player.Title.TitleMessageDelayed();
+        msg.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(source.title, prefixRaw)));
+        msg.subtitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(source.subtitle, prefixRaw)));
+        msg.fadeIn = source.delays.start;
+        msg.stay = source.delays.duration;
+        msg.fadeOut = source.delays.end;
+        return msg;
     }
 
     private String getPrefixed(String rawMessage, String prefix) {
