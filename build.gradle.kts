@@ -28,9 +28,9 @@ subprojects {
         implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
         implementation("net.elytrium:serializer:1.1.1")
 
-        compileOnly("net.kyori:adventure-api:4.24.0")
-        compileOnly("net.kyori:adventure-text-minimessage:4.24.0")
-        compileOnly("net.kyori:adventure-text-serializer-legacy:4.24.0")
+        compileOnly("net.kyori:adventure-api:5.1.1")
+        compileOnly("net.kyori:adventure-text-minimessage:5.1.1")
+        compileOnly("net.kyori:adventure-text-serializer-legacy:5.1.1")
         compileOnly("org.xerial:sqlite-jdbc:3.50.3.0")
         compileOnly("com.h2database:h2:2.3.232")
         compileOnly("com.mysql:mysql-connector-j:9.7.0")
