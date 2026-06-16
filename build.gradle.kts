@@ -31,7 +31,7 @@ subprojects {
         compileOnly("net.kyori:adventure-api:5.1.1")
         compileOnly("net.kyori:adventure-text-minimessage:5.1.1")
         compileOnly("net.kyori:adventure-text-serializer-legacy:5.1.1")
-        compileOnly("org.xerial:sqlite-jdbc:3.50.3.0")
+        compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
         compileOnly("com.h2database:h2:2.3.232")
         compileOnly("com.mysql:mysql-connector-j:9.7.0")
         compileOnly("org.postgresql:postgresql:42.7.11")
