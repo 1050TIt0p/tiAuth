@@ -25,7 +25,7 @@ subprojects {
         implementation("com.zaxxer:HikariCP:7.1.0")
         implementation("at.favre.lib:bcrypt:0.10.2")
         implementation("de.mkammerer:argon2-jvm:2.12")
-        implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
+        implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
         implementation("net.elytrium:serializer:1.1.1")
 
         compileOnly("net.kyori:adventure-api:5.1.1")
