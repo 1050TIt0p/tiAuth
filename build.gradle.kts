@@ -1,23 +1,23 @@
 plugins {
-    id("java")
+    java
     id("com.gradleup.shadow") version "9.1.0"
 }
 
 allprojects {
-    group = 'ru.matveylegenda'
-    version = '1.3.6'
+    group = "ru.matveylegenda"
+    version = "1.3.7"
 
     repositories {
         mavenCentral()
-        maven { url "https://libraries.minecraft.net" }
-        maven { url 'https://jitpack.io' }
-        maven { url 'https://repo.alessiodp.com/releases/' }
-        maven { url 'https://repo.papermc.io/repository/maven-public/' }
+        maven("https://libraries.minecraft.net")
+        maven("https://jitpack.io")
+        maven("https://repo.alessiodp.com/releases/")
+        maven("https://repo.papermc.io/repository/maven-public/")
     }
 }
 
 subprojects {
-    apply plugin: "java"
+    apply(plugin = "java")
 
     dependencies {
         implementation("com.github.1050TIt0p:NanoLimbo:1.12.0-3")
@@ -39,18 +39,18 @@ subprojects {
         annotationProcessor("org.projectlombok:lombok:1.18.42")
     }
 
-    def targetJavaVersion = 17
+    val targetJavaVersion = 21
     java {
-        def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+        val javaVersion = JavaVersion.toVersion(targetJavaVersion)
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
         if (JavaVersion.current() < javaVersion) {
-            toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+            toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
         }
     }
 
-    tasks.withType(JavaCompile).configureEach {
-        options.encoding = 'UTF-8'
+    tasks.withType<JavaCompile>().configureEach {
+        options.encoding = "UTF-8"
         if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
             options.release.set(targetJavaVersion)
         }
@@ -96,5 +96,9 @@ tasks.shadowJar {
     }
 }
 
-tasks.jar.enabled = false
-tasks.build.dependsOn tasks.shadowJar
+tasks.jar {
+    enabled = false
+}
+tasks.build {
+    dependsOn(tasks.shadowJar)
+}
