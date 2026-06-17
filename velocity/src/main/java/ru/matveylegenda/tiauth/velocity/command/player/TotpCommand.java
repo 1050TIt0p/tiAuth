@@ -9,6 +9,7 @@ import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.secret.SecretGenerator;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import ru.matveylegenda.tiauth.config.MainConfig;
@@ -120,22 +121,19 @@ public class TotpCommand implements SimpleCommand {
 
             player.sendMessage(CachedComponents.IMP.player.totp.qr.clickEvent(ClickEvent.openUrl(qrUrl)));
 
-            String tokenMsg = CachedComponents.IMP.player.totp.token.toString();
             player.sendMessage(
-                    Component.text()
-                            .append(CachedComponents.IMP.player.totp.token)
+                    CachedComponents.IMP.player.totp.token
+                            .replaceText(builder -> builder.match(Pattern.compile("\\{0}")).replacement(secret))
                             .clickEvent(ClickEvent.copyToClipboard(secret))
-                            .build()
             );
 
             String[] codes = codesGenerator.generateCodes(MainConfig.IMP.auth.totp.recoveryCodesAmount);
             String codesStr = String.join(", ", codes);
 
             player.sendMessage(
-                    Component.text()
-                            .append(CachedComponents.IMP.player.totp.recovery)
+                    CachedComponents.IMP.player.totp.recovery
+                            .replaceText(builder -> builder.match(Pattern.compile("\\{0}")).replacement(codesStr))
                             .clickEvent(ClickEvent.copyToClipboard(codesStr))
-                            .build()
             );
 
             VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.verified);
