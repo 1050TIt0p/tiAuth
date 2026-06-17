@@ -3,6 +3,8 @@ plugins {
     id("com.gradleup.shadow") version "9.4.2"
 }
 
+val targetJavaVersion = 21
+
 allprojects {
     group = "ru.matveylegenda"
     version = "1.3.7"
@@ -17,7 +19,7 @@ allprojects {
 }
 
 subprojects {
-    apply(plugin = "java")
+    pluginManager.apply("java")
 
     dependencies {
         implementation("com.github.1050TIt0p:NanoLimbo:1.12.0-3")
@@ -31,19 +33,22 @@ subprojects {
         compileOnly("net.kyori:adventure-api:5.1.1")
         compileOnly("net.kyori:adventure-text-minimessage:5.1.1")
         compileOnly("net.kyori:adventure-text-serializer-legacy:5.1.1")
+
         compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
         compileOnly("com.h2database:h2:2.4.240")
         compileOnly("com.mysql:mysql-connector-j:9.7.0")
         compileOnly("org.postgresql:postgresql:42.7.11")
+
         compileOnly("org.projectlombok:lombok:1.18.42")
         annotationProcessor("org.projectlombok:lombok:1.18.42")
     }
 
-    val targetJavaVersion = 21
-    java {
+    extensions.configure<JavaPluginExtension> {
         val javaVersion = JavaVersion.toVersion(targetJavaVersion)
+
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
+
         if (JavaVersion.current() < javaVersion) {
             toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
         }
@@ -51,9 +56,7 @@ subprojects {
 
     tasks.withType<JavaCompile>().configureEach {
         options.encoding = "UTF-8"
-        if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-            options.release.set(targetJavaVersion)
-        }
+        options.release.set(targetJavaVersion)
     }
 }
 
@@ -99,6 +102,7 @@ tasks.shadowJar {
 tasks.jar {
     enabled = false
 }
-tasks.build {
+
+tasks.assemble {
     dependsOn(tasks.shadowJar)
 }
