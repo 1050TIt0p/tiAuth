@@ -10,7 +10,13 @@ import net.md_5.bungee.api.plugin.PluginManager;
 import org.bstats.bungeecord.Metrics;
 import ru.matveylegenda.tiauth.bungee.api.TiAuthAPI;
 import ru.matveylegenda.tiauth.bungee.command.admin.TiAuthCommand;
-import ru.matveylegenda.tiauth.bungee.command.player.*;
+import ru.matveylegenda.tiauth.bungee.command.player.ChangePasswordCommand;
+import ru.matveylegenda.tiauth.bungee.command.player.LoginCommand;
+import ru.matveylegenda.tiauth.bungee.command.player.LogoutCommand;
+import ru.matveylegenda.tiauth.bungee.command.player.PremiumCommand;
+import ru.matveylegenda.tiauth.bungee.command.player.RegisterCommand;
+import ru.matveylegenda.tiauth.bungee.command.player.TotpCommand;
+import ru.matveylegenda.tiauth.bungee.command.player.UnregisterCommand;
 import ru.matveylegenda.tiauth.bungee.listener.AuthListener;
 import ru.matveylegenda.tiauth.bungee.listener.ChatListener;
 import ru.matveylegenda.tiauth.bungee.listener.DialogListener;
@@ -294,5 +300,6 @@ public final class TiAuth extends Plugin {
         pluginManager.registerCommand(this, new ChangePasswordCommand(this, "changepassword", "changepass"));
         pluginManager.registerCommand(this, new PremiumCommand(this, "premium"));
         pluginManager.registerCommand(this, new LogoutCommand(this, "logout"));
+        pluginManager.registerCommand(this, new TotpCommand(this, "2fa", "totp"));
     }
 }
