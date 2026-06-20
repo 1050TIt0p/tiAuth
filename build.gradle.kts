@@ -1,59 +1,63 @@
 plugins {
-    id("java")
-    id("com.gradleup.shadow") version "9.1.0"
+    java
+    id("com.gradleup.shadow") version "9.4.2"
 }
 
+val targetJavaVersion = 21
+
 allprojects {
-    group = 'ru.matveylegenda'
-    version = '1.3.6'
+    group = "ru.matveylegenda"
+    version = "1.3.7"
 
     repositories {
         mavenCentral()
-        maven { url "https://libraries.minecraft.net" }
-        maven { url 'https://jitpack.io' }
-        maven { url 'https://repo.alessiodp.com/releases/' }
-        maven { url 'https://repo.papermc.io/repository/maven-public/' }
+        maven("https://libraries.minecraft.net")
+        maven("https://jitpack.io")
+        maven("https://repo.alessiodp.com/releases/")
+        maven("https://repo.papermc.io/repository/maven-public/")
     }
 }
 
 subprojects {
-    apply plugin: "java"
+    pluginManager.apply("java")
 
     dependencies {
         implementation("com.github.1050TIt0p:NanoLimbo:1.12.0-3")
         implementation("com.j256.ormlite:ormlite-jdbc:6.1")
-        implementation("com.zaxxer:HikariCP:7.0.1")
+        implementation("com.zaxxer:HikariCP:7.1.0")
         implementation("at.favre.lib:bcrypt:0.10.2")
         implementation("de.mkammerer:argon2-jvm:2.12")
-        implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
+        implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
         implementation("net.elytrium:serializer:1.1.1")
+        implementation("dev.samstevens.totp:totp:1.7.1")
 
-        compileOnly("net.kyori:adventure-api:4.24.0")
-        compileOnly("net.kyori:adventure-text-minimessage:4.24.0")
-        compileOnly("net.kyori:adventure-text-serializer-legacy:4.24.0")
-        compileOnly("org.xerial:sqlite-jdbc:3.50.3.0")
-        compileOnly("com.h2database:h2:2.3.232")
-        compileOnly("com.mysql:mysql-connector-j:9.4.0")
-        compileOnly("org.postgresql:postgresql:42.7.7")
+        compileOnly("net.kyori:adventure-api:5.1.1")
+        compileOnly("net.kyori:adventure-text-minimessage:5.1.1")
+        compileOnly("net.kyori:adventure-text-serializer-legacy:5.1.1")
+
+        compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
+        compileOnly("com.h2database:h2:2.4.240")
+        compileOnly("com.mysql:mysql-connector-j:9.7.0")
+        compileOnly("org.postgresql:postgresql:42.7.11")
+
         compileOnly("org.projectlombok:lombok:1.18.42")
         annotationProcessor("org.projectlombok:lombok:1.18.42")
     }
 
-    def targetJavaVersion = 17
-    java {
-        def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    extensions.configure<JavaPluginExtension> {
+        val javaVersion = JavaVersion.toVersion(targetJavaVersion)
+
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
+
         if (JavaVersion.current() < javaVersion) {
-            toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+            toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
         }
     }
 
-    tasks.withType(JavaCompile).configureEach {
-        options.encoding = 'UTF-8'
-        if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-            options.release.set(targetJavaVersion)
-        }
+    tasks.withType<JavaCompile>().configureEach {
+        options.encoding = "UTF-8"
+        options.release.set(targetJavaVersion)
     }
 }
 
@@ -75,6 +79,7 @@ tasks.shadowJar {
     relocate("com.google.errorprone", "ru.matveylegenda.tiauth.thirdparty.com.google.errorprone")
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
     relocate("net.elytrium.serializer", "ru.matveylegenda.tiauth.thirdparty.net.elytrium.serializer")
+    relocate("dev.samstevens.totp", "ru.matveylegenda.tiauth.thirdparty.dev.samstevens.totp")
     relocate("ua.nanit.limbo", "ru.matveylegenda.tiauth.thirdparty.ua.nanit.limbo")
     relocate("org.spongepowered.configurate", "ru.matveylegenda.tiauth.thirdparty.org.spongepowered.configurate")
     relocate("io.leangen.geantyref", "ru.matveylegenda.tiauth.thirdparty.io.leangen.geantyref")
@@ -96,5 +101,10 @@ tasks.shadowJar {
     }
 }
 
-tasks.jar.enabled = false
-tasks.build.dependsOn tasks.shadowJar
+tasks.jar {
+    enabled = false
+}
+
+tasks.assemble {
+    dependsOn(tasks.shadowJar)
+}

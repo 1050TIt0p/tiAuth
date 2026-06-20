@@ -203,7 +203,9 @@ public class MainConfig extends YamlSerializable {
                 "/log",
                 "/l",
                 "/register",
-                "/reg"
+                "/reg",
+                "/2fa",
+                "/totp"
         );
 
         @Comment({
@@ -216,6 +218,55 @@ public class MainConfig extends YamlSerializable {
                 @CommentValue("Нужно ли повторять игроку пароль в /register")
         })
         public boolean repeatPasswordWhenRegister = true;
+
+        @NewLine
+        @Comment({
+                @CommentValue("Настройки двухфакторной аутентификации (2FA/TOTP)")
+        })
+        public Totp totp = new Totp();
+
+        public static class Totp {
+            @Comment({
+                    @CommentValue("Включить 2FA")
+            })
+            public boolean enabled = true;
+
+            @Comment({
+                    @CommentValue("Название издателя, отображаемое в приложении-аутентификаторе")
+            })
+            public String issuer = "tiAuth";
+
+            @Comment({
+                    @CommentValue("URL для генерации QR-кода. {data} заменяется на otpauth:// URI")
+            })
+            public String qrGeneratorUrl = "https://api.qrserver.com/v1/create-qr-code/?data={data}&size=200x200&ecc=M&margin=30";
+
+            @Comment({
+                    @CommentValue("Требовать пароль при включении 2FA")
+            })
+            public boolean needPassword = true;
+
+            @Comment({
+                    @CommentValue("Количество кодов восстановления")
+            })
+            public int recoveryCodesAmount = 16;
+
+            @NewLine
+            @Comment({
+                    @CommentValue("Максимальное количество неверных попыток TOTP перед баном")
+            })
+            public int maxAttempts = 3;
+
+            @Comment({
+                    @CommentValue("Банить игрока при исчерпании попыток TOTP")
+            })
+            public boolean banPlayer = true;
+
+            @Comment({
+                    @CommentValue("На сколько секунд банить игрока при исчерпании попыток TOTP")
+            })
+            public int banTime = 60;
+        }
     }
 
     public BossBar bossBar;

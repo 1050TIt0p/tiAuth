@@ -3,6 +3,7 @@ package ru.matveylegenda.tiauth.database.repository;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.support.DatabaseConnection;
 import com.j256.ormlite.table.TableUtils;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
@@ -23,7 +24,18 @@ public class AuthUserRepository {
     public AuthUserRepository(ConnectionSource connectionSource, ExecutorService executor) throws SQLException {
         authUserDao = DaoManager.createDao(connectionSource, AuthUser.class);
         TableUtils.createTableIfNotExists(connectionSource, AuthUser.class);
+        migrateTotpColumn();
         this.executor = executor;
+    }
+
+    private void migrateTotpColumn() {
+        try {
+            authUserDao.executeRawNoArgs(
+                    "ALTER TABLE auth_users ADD COLUMN totpToken VARCHAR(255) DEFAULT ''"
+            );
+        } catch (SQLException ignored) {
+            // column already exists
+        }
     }
 
     public void registerUser(AuthUser user, Consumer<Boolean> callback) {
@@ -159,6 +171,27 @@ public class AuthUserRepository {
                     authUserDao.update(user);
                 }
             } catch (SQLException e) {
+                Database.LOGGER.log(Level.WARNING, "Error during database query", e);
+            }
+        });
+    }
+
+    public void updateTotpToken(String username, String totpToken, Consumer<Boolean> callback) {
+        executor.submit(() -> {
+            try {
+                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
+                if (user != null) {
+                    user.setTotpToken(totpToken);
+                    authUserDao.update(user);
+                }
+
+                if (callback != null) {
+                    callback.accept(true);
+                }
+            } catch (SQLException e) {
+                if (callback != null) {
+                    callback.accept(false);
+                }
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });

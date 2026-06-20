@@ -82,6 +82,7 @@ public class CachedComponents {
         public Login login;
         public ChangePassword changePassword;
         public Logout logout;
+        public Totp totp;
         public Premium premium;
         public Kick kick;
         public Reminder reminder;
@@ -124,6 +125,24 @@ public class CachedComponents {
 
         public static class Logout {
             public Component logoutByPremium;
+        }
+
+        public static class Totp {
+            public Component usage;
+            public Component enableUsage;
+            public Component verifyUsage;
+            public Component disableUsage;
+            public Component successful;
+            public Component verified;
+            public Component disabled;
+            public Component wrong;
+            public Component alreadyEnabled;
+            public Component alreadyDisabled;
+            public Component qr;
+            public Component token;
+            public Component recovery;
+            public Component needPassword;
+            public Component prompt;
         }
 
         public static class Premium {
@@ -270,6 +289,23 @@ public class CachedComponents {
         player.premium = new Player.Premium();
         player.premium.enabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.premium.enabled, prefixRaw)));
         player.premium.disabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.premium.disabled, prefixRaw)));
+
+        player.totp = new Player.Totp();
+        player.totp.usage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.usage, prefixRaw)));
+        player.totp.enableUsage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.enableUsage, prefixRaw)));
+        player.totp.verifyUsage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.verifyUsage, prefixRaw)));
+        player.totp.disableUsage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.disableUsage, prefixRaw)));
+        player.totp.successful = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.successful, prefixRaw)));
+        player.totp.verified = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.verified, prefixRaw)));
+        player.totp.disabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.disabled, prefixRaw)));
+        player.totp.wrong = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.wrong, prefixRaw)));
+        player.totp.alreadyEnabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.alreadyEnabled, prefixRaw)));
+        player.totp.alreadyDisabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.alreadyDisabled, prefixRaw)));
+        player.totp.qr = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.qr, prefixRaw)));
+        player.totp.token = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.token, prefixRaw)));
+        player.totp.recovery = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.recovery, prefixRaw)));
+        player.totp.needPassword = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.needPassword, prefixRaw)));
+        player.totp.prompt = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.totp.prompt, prefixRaw)));
 
         player.kick = new Player.Kick();
         player.kick.timeout = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.timeout, prefixRaw)));

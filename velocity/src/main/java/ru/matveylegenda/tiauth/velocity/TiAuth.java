@@ -18,7 +18,13 @@ import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.util.Utils;
 import ru.matveylegenda.tiauth.velocity.api.TiAuthAPI;
 import ru.matveylegenda.tiauth.velocity.command.admin.TiAuthCommand;
-import ru.matveylegenda.tiauth.velocity.command.player.*;
+import ru.matveylegenda.tiauth.velocity.command.player.ChangePasswordCommand;
+import ru.matveylegenda.tiauth.velocity.command.player.LoginCommand;
+import ru.matveylegenda.tiauth.velocity.command.player.LogoutCommand;
+import ru.matveylegenda.tiauth.velocity.command.player.PremiumCommand;
+import ru.matveylegenda.tiauth.velocity.command.player.RegisterCommand;
+import ru.matveylegenda.tiauth.velocity.command.player.TotpCommand;
+import ru.matveylegenda.tiauth.velocity.command.player.UnregisterCommand;
 import ru.matveylegenda.tiauth.velocity.listener.AuthListener;
 import ru.matveylegenda.tiauth.velocity.listener.ChatListener;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
@@ -234,6 +240,7 @@ public final class TiAuth {
         commandManager.register(commandManager.metaBuilder("changepassword").aliases("changepass").build(), new ChangePasswordCommand(this));
         commandManager.register(commandManager.metaBuilder("premium").build(), new PremiumCommand(this));
         commandManager.register(commandManager.metaBuilder("logout").build(), new LogoutCommand(this));
+        commandManager.register(commandManager.metaBuilder("2fa").aliases("totp").build(), new TotpCommand(this));
     }
 
     private String getPluginVersion() {

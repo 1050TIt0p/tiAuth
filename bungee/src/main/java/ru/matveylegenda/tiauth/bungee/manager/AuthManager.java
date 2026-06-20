@@ -1,5 +1,6 @@
 package ru.matveylegenda.tiauth.bungee.manager;
 
+import lombok.Getter;
 import lombok.Setter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.Title;
@@ -30,6 +31,11 @@ import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 
+import dev.samstevens.totp.code.CodeVerifier;
+import dev.samstevens.totp.code.DefaultCodeGenerator;
+import dev.samstevens.totp.code.DefaultCodeVerifier;
+import dev.samstevens.totp.time.SystemTimeProvider;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +46,13 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class AuthManager {
+    public static final CodeVerifier TOTP_CODE_VERIFIER = new DefaultCodeVerifier(new DefaultCodeGenerator(), new SystemTimeProvider());
+
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
+    private final Set<String> totpPendingPlayers = ConcurrentHashMap.newKeySet();
+    private final Map<String, Integer> totpAttempts = new ConcurrentHashMap<>();
+    private final Map<String, String> totpEnableSecrets = new ConcurrentHashMap<>();
     private final TiAuth plugin;
     private final Database database;
     private final TaskManager taskManager;
@@ -49,6 +60,7 @@ public class AuthManager {
     @Setter
     private Pattern passwordPattern;
     @Setter
+    @Getter
     private Hash hash;
 
     public AuthManager(TiAuth plugin) {
@@ -134,7 +146,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                player.disconnect(CachedMessages.IMP.queryError);
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
                 endProcess(player);
                 return;
             }
@@ -148,9 +160,9 @@ public class AuthManager {
                 return;
             }
 
-            registerPlayer(player.getName(), password, player.getAddress().getAddress().getHostAddress(), success1 -> {
+            registerPlayer(player.getName(), password, ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress(), success1 -> {
                 if (!success1) {
-                    player.disconnect(CachedMessages.IMP.queryError);
+                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
                     endProcess(player);
                     return;
                 }
@@ -161,7 +173,7 @@ public class AuthManager {
                 );
                 AuthCache.setAuthenticated(player.getName());
 
-                SessionCache.addPlayer(player.getName(), player.getAddress().getAddress().getHostAddress());
+                SessionCache.addPlayer(player.getName(), ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
                 taskManager.cancelTasks(player);
 
                 PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
@@ -246,7 +258,7 @@ public class AuthManager {
 
                 SessionCache.removePlayer(player.getName());
 
-                player.disconnect(CachedMessages.IMP.player.unregister.success);
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.unregister.success));
 
                 endProcess(player);
             });
@@ -295,7 +307,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                player.disconnect(CachedMessages.IMP.queryError);
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
                 endProcess(player);
                 return;
             }
@@ -316,10 +328,10 @@ public class AuthManager {
                 int attempts = loginAttempts.merge(player.getName(), 1, Integer::sum);
 
                 if (attempts >= MainConfig.IMP.auth.loginAttempts) {
-                    player.disconnect(CachedMessages.IMP.player.kick.tooManyAttempts);
+                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
 
                     if (MainConfig.IMP.auth.banPlayer) {
-                        BanCache.addPlayer(player.getAddress().getAddress().getHostAddress());
+                        BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
                     }
 
                     loginAttempts.remove(player.getName());
@@ -341,6 +353,15 @@ public class AuthManager {
                     );
                 }
                 endProcess(player);
+                return;
+            }
+
+            String totpToken = user.getTotpToken();
+            if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
+                endProcess(player);
+                totpPendingPlayers.add(player.getName().toLowerCase());
+                taskManager.cancelTasks(player);
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.prompt);
                 return;
             }
 
@@ -372,7 +393,7 @@ public class AuthManager {
     }
 
     public void loginPlayer(ProxiedPlayer player, Runnable callback) {
-        String ip = player.getAddress().getAddress().getHostAddress();
+        String ip = ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress();
 
         AuthCache.setAuthenticated(player.getName());
         database.getAuthUserRepository().updateLastLogin(player.getName());
@@ -487,6 +508,83 @@ public class AuthManager {
         SessionCache.removePlayer(player.getName());
     }
 
+    public boolean isTotpPending(String playerName) {
+        return totpPendingPlayers.contains(playerName.toLowerCase());
+    }
+
+    public void setTotpEnableSecret(String playerName, String secret) {
+        totpEnableSecrets.put(playerName.toLowerCase(), secret);
+    }
+
+    public String getTotpEnableSecret(String playerName) {
+        return totpEnableSecrets.get(playerName.toLowerCase());
+    }
+
+    public void removeTotpEnableSecret(String playerName) {
+        totpEnableSecrets.remove(playerName.toLowerCase());
+    }
+
+    public void verifyTotpLogin(ProxiedPlayer player, String code) {
+        String name = player.getName();
+
+        if (!totpPendingPlayers.contains(name.toLowerCase())) {
+            return;
+        }
+
+        if (!beginProcess(player)) {
+            return;
+        }
+
+        database.getAuthUserRepository().getUser(name, (user, success) -> {
+            if (!success) {
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
+                endProcess(player);
+                return;
+            }
+
+            if (user == null) {
+                totpPendingPlayers.remove(name.toLowerCase());
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.notRegistered);
+                endProcess(player);
+                return;
+            }
+
+            String totpToken = user.getTotpToken();
+            if (totpToken == null || totpToken.isEmpty()) {
+                totpPendingPlayers.remove(name.toLowerCase());
+                loginPlayer(player, () -> {
+                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+                    endProcess(player);
+                });
+                return;
+            }
+
+            if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
+                totpPendingPlayers.remove(name.toLowerCase());
+                totpAttempts.remove(name.toLowerCase());
+                loginPlayer(player, () -> {
+                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+                    loginAttempts.remove(name);
+                    endProcess(player);
+                });
+            } else {
+                int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
+                if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+                    totpPendingPlayers.remove(name.toLowerCase());
+                    totpAttempts.remove(name.toLowerCase());
+                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
+                    if (MainConfig.IMP.auth.totp.banPlayer) {
+                        BanCache.addPlayer(player.getAddress().getAddress().getHostAddress());
+                    }
+                    endProcess(player);
+                    return;
+                }
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
+                endProcess(player);
+            }
+        });
+    }
+
     public void togglePremium(ProxiedPlayer player) {
         if (!beginProcess(player)) {
             return;
@@ -534,14 +632,14 @@ public class AuthManager {
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             try {
                 if (!success) {
-                    player.disconnect(CachedMessages.IMP.queryError);
+                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
                     return;
                 }
 
                 if (user != null && !player.getName().equals(user.getRealName())) {
-                    player.disconnect(CachedMessages.IMP.player.kick.realname
+                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.realname
                             .replace("{realname}", user.getRealName())
-                            .replace("{name}", player.getName())
+                            .replace("{name}", player.getName()))
                     );
 
                     return;
@@ -550,7 +648,7 @@ public class AuthManager {
                 String sessionIP = SessionCache.getIP(player.getName());
 
                 if (PremiumCache.isPremium(player.getName()) ||
-                        (sessionIP != null && sessionIP.equals(player.getAddress().getAddress().getHostAddress()))) {
+                        (sessionIP != null && sessionIP.equals(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress()))) {
                     AuthCache.setAuthenticated(player.getName());
 
                     if (event != null) {
@@ -597,7 +695,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
-                player.disconnect(CachedMessages.IMP.queryError);
+                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
                 return;
             }
 
