@@ -24,15 +24,14 @@ public class AuthUserRepository {
     public AuthUserRepository(ConnectionSource connectionSource, ExecutorService executor) throws SQLException {
         authUserDao = DaoManager.createDao(connectionSource, AuthUser.class);
         TableUtils.createTableIfNotExists(connectionSource, AuthUser.class);
-        migrateColumn("totpToken", "VARCHAR(255)");
-        migrateColumn("recoveryCodes", "VARCHAR(1000)");
+        migrateTotpColumn();
         this.executor = executor;
     }
 
-    private void migrateColumn(String columnName, String type) {
+    private void migrateTotpColumn() {
         try {
             authUserDao.executeRawNoArgs(
-                    "ALTER TABLE auth_users ADD COLUMN " + columnName + " " + type + " DEFAULT ''"
+                    "ALTER TABLE auth_users ADD COLUMN totpToken VARCHAR(255) DEFAULT ''"
             );
         } catch (SQLException ignored) {
             // column already exists
@@ -183,49 +182,6 @@ public class AuthUserRepository {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
                     user.setTotpToken(totpToken);
-                    authUserDao.update(user);
-                }
-
-                if (callback != null) {
-                    callback.accept(true);
-                }
-            } catch (SQLException e) {
-                if (callback != null) {
-                    callback.accept(false);
-                }
-                Database.LOGGER.log(Level.WARNING, "Error during database query", e);
-            }
-        });
-    }
-
-    public void updateTotpAndRecoveryCodes(String username, String totpToken, String recoveryCodes, Consumer<Boolean> callback) {
-        executor.submit(() -> {
-            try {
-                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
-                if (user != null) {
-                    user.setTotpToken(totpToken);
-                    user.setRecoveryCodes(recoveryCodes);
-                    authUserDao.update(user);
-                }
-
-                if (callback != null) {
-                    callback.accept(true);
-                }
-            } catch (SQLException e) {
-                if (callback != null) {
-                    callback.accept(false);
-                }
-                Database.LOGGER.log(Level.WARNING, "Error during database query", e);
-            }
-        });
-    }
-
-    public void updateRecoveryCodes(String username, String recoveryCodes, Consumer<Boolean> callback) {
-        executor.submit(() -> {
-            try {
-                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
-                if (user != null) {
-                    user.setRecoveryCodes(recoveryCodes);
                     authUserDao.update(user);
                 }
 
