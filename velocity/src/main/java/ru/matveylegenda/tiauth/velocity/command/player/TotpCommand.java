@@ -9,6 +9,9 @@ import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.secret.SecretGenerator;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -136,6 +139,8 @@ public class TotpCommand implements SimpleCommand {
                             .clickEvent(ClickEvent.copyToClipboard(codesStr))
             );
 
+            authManager.setTotpEnableRecoveryCodes(name, String.join(";", codes));
+
             VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.verified);
         });
     }
@@ -155,12 +160,14 @@ public class TotpCommand implements SimpleCommand {
         }
 
         if (AuthManager.TOTP_CODE_VERIFIER.isValidCode(secret, args[1])) {
-            plugin.getDatabase().getAuthUserRepository().updateTotpToken(name, secret, updateSuccess -> {
+            String recoveryCodes = authManager.getTotpEnableRecoveryCodes(name);
+            plugin.getDatabase().getAuthUserRepository().updateTotpAndRecoveryCodes(name, secret, recoveryCodes != null ? recoveryCodes : "", updateSuccess -> {
                 if (!updateSuccess) {
                     VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
                     return;
                 }
                 authManager.removeTotpEnableSecret(name);
+                authManager.removeTotpEnableRecoveryCodes(name);
                 VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.successful);
             });
         } else {
@@ -202,6 +209,26 @@ public class TotpCommand implements SimpleCommand {
                     VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.disabled);
                 });
             } else {
+                String recoveryCodes = user.getRecoveryCodes();
+                if (recoveryCodes != null && !recoveryCodes.isEmpty()) {
+                    String[] codes = recoveryCodes.split(";");
+                    for (int i = 0; i < codes.length; i++) {
+                        if (codes[i].equals(args[1])) {
+                            List<String> remaining = new ArrayList<>(Arrays.asList(codes));
+                            remaining.remove(i);
+                            String newCodes = String.join(";", remaining);
+                            int index = i;
+                            plugin.getDatabase().getAuthUserRepository().updateRecoveryCodes(name, newCodes, updateSuccess -> {
+                                if (!updateSuccess) {
+                                    VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
+                                    return;
+                                }
+                                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.disabled);
+                            });
+                            return;
+                        }
+                    }
+                }
                 VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.wrong);
             }
         });

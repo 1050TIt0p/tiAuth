@@ -36,6 +36,9 @@ public class AuthUser {
     @DatabaseField
     private String totpToken = "";
 
+    @DatabaseField
+    private String recoveryCodes = "";
+
     public AuthUser(String username, String realName, String password, boolean premium, String regIp) {
         this.username = username;
         this.realName = realName;
