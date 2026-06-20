@@ -6,9 +6,6 @@ import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.secret.SecretGenerator;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -198,7 +195,7 @@ public class TotpCommand extends Command {
             }
 
             if (AuthManager.TOTP_CODE_VERIFIER.isValidCode(totpToken, args[1])) {
-                plugin.getDatabase().getAuthUserRepository().updateTotpToken(name, "", updateSuccess -> {
+                plugin.getDatabase().getAuthUserRepository().updateTotpAndRecoveryCodes(name, "", "", updateSuccess -> {
                     if (!updateSuccess) {
                         BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
                         return;
@@ -211,11 +208,7 @@ public class TotpCommand extends Command {
                     String[] codes = recoveryCodes.split(";");
                     for (int i = 0; i < codes.length; i++) {
                         if (codes[i].equals(args[1])) {
-                            List<String> remaining = new ArrayList<>(Arrays.asList(codes));
-                            remaining.remove(i);
-                            String newCodes = String.join(";", remaining);
-                            int index = i;
-                            plugin.getDatabase().getAuthUserRepository().updateRecoveryCodes(name, newCodes, updateSuccess -> {
+                            plugin.getDatabase().getAuthUserRepository().updateTotpAndRecoveryCodes(name, "", "", updateSuccess -> {
                                 if (!updateSuccess) {
                                     BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
                                     return;
