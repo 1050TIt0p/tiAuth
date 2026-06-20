@@ -574,7 +574,7 @@ public class AuthManager {
                     totpAttempts.remove(name.toLowerCase());
                     player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
                     if (MainConfig.IMP.auth.totp.banPlayer) {
-                        BanCache.addPlayer(player.getAddress().getAddress().getHostAddress());
+                        BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
                     }
                     endProcess(player);
                     return;
