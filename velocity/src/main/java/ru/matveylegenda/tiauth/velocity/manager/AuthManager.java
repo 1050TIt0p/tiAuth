@@ -16,6 +16,7 @@ import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
+import ru.matveylegenda.tiauth.util.EncryptionUtils;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 
 import dev.samstevens.totp.code.CodeVerifier;
@@ -492,13 +493,21 @@ public class AuthManager {
                 return;
             }
 
-            String totpToken = user.getTotpToken();
-            if (totpToken == null || totpToken.isEmpty()) {
+            if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
                 totpPendingPlayers.remove(name.toLowerCase());
                 loginPlayer(player, () -> {
                     player.sendMessage(CachedComponents.IMP.player.login.success);
                     endProcess(name);
                 });
+                return;
+            }
+
+            String totpToken;
+
+            try {
+                totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
+            } catch (Exception e) {
+                plugin.getLogger().error("Error during secret decryption", e);
                 return;
             }
 

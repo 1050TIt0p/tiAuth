@@ -35,6 +35,8 @@ import dev.samstevens.totp.code.CodeVerifier;
 import dev.samstevens.totp.code.DefaultCodeGenerator;
 import dev.samstevens.totp.code.DefaultCodeVerifier;
 import dev.samstevens.totp.time.SystemTimeProvider;
+import ru.matveylegenda.tiauth.util.EncryptionUtils;
+
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 public class AuthManager {
@@ -549,13 +552,21 @@ public class AuthManager {
                 return;
             }
 
-            String totpToken = user.getTotpToken();
-            if (totpToken == null || totpToken.isEmpty()) {
+            if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
                 totpPendingPlayers.remove(name.toLowerCase());
                 loginPlayer(player, () -> {
                     BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
                     endProcess(player);
                 });
+                return;
+            }
+
+            String totpToken;
+
+            try {
+                totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.SEVERE, "Error during secret decryption", e);
                 return;
             }
 

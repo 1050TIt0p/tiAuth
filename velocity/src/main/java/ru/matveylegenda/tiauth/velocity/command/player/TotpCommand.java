@@ -9,10 +9,12 @@ import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.secret.SecretGenerator;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import ru.matveylegenda.tiauth.config.MainConfig;
+import ru.matveylegenda.tiauth.util.EncryptionUtils;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
@@ -154,8 +156,17 @@ public class TotpCommand implements SimpleCommand {
             return;
         }
 
+        String secretEncrypted;
+
+        try {
+            secretEncrypted = EncryptionUtils.encrypt(secret, plugin.getSecretKey());
+        } catch (Exception e) {
+            plugin.getLogger().error("Error during secret encryption", e);
+            return;
+        }
+
         if (AuthManager.TOTP_CODE_VERIFIER.isValidCode(secret, args[1])) {
-            plugin.getDatabase().getAuthUserRepository().updateTotpToken(name, secret, updateSuccess -> {
+            plugin.getDatabase().getAuthUserRepository().updateTotpToken(name, secretEncrypted, updateSuccess -> {
                 if (!updateSuccess) {
                     VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
                     return;
@@ -187,9 +198,17 @@ public class TotpCommand implements SimpleCommand {
                 return;
             }
 
-            String totpToken = user.getTotpToken();
-            if (totpToken == null || totpToken.isEmpty()) {
+            if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
                 VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.alreadyDisabled);
+                return;
+            }
+
+            String totpToken;
+
+            try {
+                totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
+            } catch (Exception e) {
+                plugin.getLogger().error("Error during secret decryption", e);
                 return;
             }
 

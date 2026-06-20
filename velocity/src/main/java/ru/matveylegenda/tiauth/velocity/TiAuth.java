@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.util.KeyLoader;
 import ru.matveylegenda.tiauth.util.Utils;
 import ru.matveylegenda.tiauth.velocity.api.TiAuthAPI;
 import ru.matveylegenda.tiauth.velocity.command.admin.TiAuthCommand;
@@ -32,6 +33,7 @@ import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
 import ua.nanit.limbo.server.LimboServer;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 
@@ -54,6 +56,8 @@ public final class TiAuth {
     private TaskManager taskManager;
     private AuthManager authManager;
 
+    private byte[] secretKey;
+
     @Inject
     public TiAuth(ProxyServer server, Logger logger, Metrics.Factory metricsFactory) {
         this.server = server;
@@ -73,6 +77,7 @@ public final class TiAuth {
         }
         MainConfig.IMP.reload();
         MessagesConfig.IMP.reload();
+        initializeSecretKey(dataFolder.toFile());
         loadLibraries();
         initializeDatabase(dataFolder.toFile());
         startLimboServer(dataFolder.toFile());
@@ -157,6 +162,15 @@ public final class TiAuth {
         libraryManager.loadLibrary(h2Jdbc);
         libraryManager.loadLibrary(mysqlJdbc);
         libraryManager.loadLibrary(postgresqlJdbc);
+    }
+
+    private void initializeSecretKey(File dataFolder) {
+        try {
+            secretKey = KeyLoader.loadOrGenerateKey(dataFolder.toPath());
+        } catch (IOException e) {
+            logger.error("Error during secret key initialization. Stopping server...", e);
+            server.shutdown();
+        }
     }
 
     private void initializeDatabase(File dataFolder) {

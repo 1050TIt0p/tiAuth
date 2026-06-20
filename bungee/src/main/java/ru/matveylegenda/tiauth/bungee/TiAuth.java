@@ -25,10 +25,12 @@ import ru.matveylegenda.tiauth.bungee.manager.TaskManager;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.util.KeyLoader;
 import ru.matveylegenda.tiauth.util.Utils;
 import ua.nanit.limbo.server.LimboServer;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,6 +42,8 @@ public final class TiAuth extends Plugin {
     private TaskManager taskManager;
     private AuthManager authManager;
 
+    private byte[] secretKey;
+
     @Override
     public void onLoad() {
         File dataFolder = getDataFolder();
@@ -48,18 +52,12 @@ public final class TiAuth extends Plugin {
         }
         MainConfig.IMP.reload();
         MessagesConfig.IMP.reload();
+        initializeSecretKey(dataFolder);
         loadLibraries();
     }
 
     @Override
     public void onEnable() {
-//        if (!isSupportedVersion()) {
-//            logger.warning("*** ВНИМАНИЕ ***");
-//            logger.warning("tiAuth поддерживает BungeeCord версии 1.21 и выше!");
-//            logger.warning("Вы пытаетесь запустить плагин на версии " + ProxyServer.getInstance().getVersion());
-//            logger.warning("Обновите прокси, если хотите использовать tiAuth.");
-//            return;
-//        }
         logger = getLogger();
         File dataFolder = getDataFolder();
         if (!dataFolder.exists()) {
@@ -219,6 +217,15 @@ public final class TiAuth extends Plugin {
         libraryManager.loadLibrary(adventureKey);
         libraryManager.loadLibrary(kyoriExamination);
         libraryManager.loadLibrary(kyoriOption);
+    }
+
+    private void initializeSecretKey(File dataFolder) {
+        try {
+            secretKey = KeyLoader.loadOrGenerateKey(dataFolder.toPath());
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error during secret key initialization. Stopping server...", e);
+            getProxy().stop();
+        }
     }
 
     private void initializeDatabase(File dataFolder) {
