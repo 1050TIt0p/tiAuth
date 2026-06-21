@@ -9,17 +9,6 @@ import java.security.SecureRandom;
 
 public class Sha256AuthMeHash implements Hash {
     private static final SecureRandom RANDOM = new SecureRandom();
-    private static final MessageDigest MESSAGE_DIGEST;
-
-    static {
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-        MESSAGE_DIGEST = md;
-    }
 
     @Override
     public String hashPassword(String password) {
@@ -48,8 +37,13 @@ public class Sha256AuthMeHash implements Hash {
     }
 
     private String sha256(String message) {
-        byte[] digest = MESSAGE_DIGEST.digest(message.getBytes(StandardCharsets.UTF_8));
-        return bytesToHexString(digest);
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+            byte[] digest = messageDigest.digest(message.getBytes(StandardCharsets.UTF_8));
+            return bytesToHexString(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String bytesToHexString(byte[] bytes) {
