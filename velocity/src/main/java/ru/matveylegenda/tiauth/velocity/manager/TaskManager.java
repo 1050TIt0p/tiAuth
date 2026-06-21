@@ -77,7 +77,7 @@ public class TaskManager {
                 return;
             }
 
-            if (MainConfig.IMP.title.enabled) {
+            if (MainConfig.IMP.title.beforeLogin.enabled) {
                 sendTitle(player, c);
             }
             if (MainConfig.IMP.actionBar.enabled) {
@@ -131,6 +131,19 @@ public class TaskManager {
         BossBar bar = bossBars.remove(pid);
         if (bar != null) {
             player.hideBossBar(bar);
+        }
+    }
+
+    public void sendAuthTitle(Player player) {
+        MainConfig.Title.AfterLogin afterLogin = MainConfig.IMP.title.afterLogin;
+        if (afterLogin.enabled) {
+            Title componentTitle = Title.title(
+                    CachedComponents.IMP.player.title.onAuthTitle,
+                    CachedComponents.IMP.player.title.onAuthSubTitle,
+                    afterLogin.start,
+                    afterLogin.duration,
+                    afterLogin.end);
+            player.showTitle(componentTitle);
         }
     }
 

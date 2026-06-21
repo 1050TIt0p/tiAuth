@@ -337,16 +337,6 @@ public class AuthManager {
             loginPlayer(player, () -> {
                 player.sendMessage(CachedComponents.IMP.player.login.success);
 
-                if (MainConfig.IMP.title.enabledOnAuth) {
-                    Title componentTitle = Title.title(
-                            CachedComponents.IMP.player.title.onAuthTitle,
-                            CachedComponents.IMP.player.title.onAuthSubTitle,
-                            0,
-                            21,
-                            0);
-                    player.showTitle(componentTitle);
-                }
-
                 loginAttempts.remove(name);
                 endProcess(name);
             });

@@ -299,8 +299,19 @@ public class MainConfig extends YamlSerializable {
 
     @NewLine
     public static class Title {
-        public boolean enabled = false;
-        public boolean enabledOnAuth = false;
+        public BeforeLogin beforeLogin = new BeforeLogin();
+        public AfterLogin afterLogin = new AfterLogin();
+
+        public static class BeforeLogin {
+            public boolean enabled = false;
+        }
+
+        public static class AfterLogin {
+            public boolean enabled = false;
+            public int start = 0;
+            public int duration = 60;
+            public int end = 6;
+        }
     }
 
     public ActionBar actionBar;

@@ -152,6 +152,10 @@ public class AuthListener {
         } else {
             taskManager.cancelTasks(player);
         }
+
+        if (AuthCache.isAuthenticated(player.getUsername())) {
+            taskManager.sendAuthTitle(player);
+        }
     }
 
     @Subscribe
