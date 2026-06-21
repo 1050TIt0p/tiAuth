@@ -13,7 +13,9 @@ import ru.matveylegenda.tiauth.util.BarStyle;
 import ru.matveylegenda.tiauth.util.colorizer.Serializer;
 
 import java.nio.file.Paths;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainConfig extends YamlSerializable {
 
@@ -78,6 +80,17 @@ public class MainConfig extends YamlSerializable {
                 @CommentValue("Бэкенд сервер на который будет перемещать игроков после регистрации/авторизации")
         })
         public String backend = "hub";
+
+        @NewLine
+        @Comment({
+                @CommentValue("Принудительные хосты: виртуальный хост -> сервер"),
+                @CommentValue("Если игрок подключается через указанный хост, он будет направлен на соответствующий сервер после авторизации"),
+                @CommentValue("Если хост не указан в списке, используется бэкенд сервер")
+        })
+        public Map<String, String> forcedHosts = new LinkedHashMap<>(Map.of(
+                "play.example.com", "hub",
+                "creative.example.com", "creative"
+        ));
     }
 
     public Database database;
