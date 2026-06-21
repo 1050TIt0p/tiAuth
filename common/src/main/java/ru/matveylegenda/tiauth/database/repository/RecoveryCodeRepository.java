@@ -6,7 +6,6 @@ import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import ru.matveylegenda.tiauth.database.Database;
-import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.database.model.RecoveryCode;
 
 import java.sql.SQLException;
@@ -23,7 +22,7 @@ public class RecoveryCodeRepository {
 
     public RecoveryCodeRepository(ConnectionSource connectionSource, ExecutorService executor) throws SQLException {
         recoveryCodeDao = DaoManager.createDao(connectionSource, RecoveryCode.class);
-        TableUtils.createTableIfNotExists(connectionSource, AuthUser.class);
+        TableUtils.createTableIfNotExists(connectionSource, RecoveryCode.class);
         this.executor = executor;
     }
 
