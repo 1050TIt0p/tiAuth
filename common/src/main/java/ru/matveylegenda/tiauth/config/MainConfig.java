@@ -83,9 +83,8 @@ public class MainConfig extends YamlSerializable {
 
         @NewLine
         @Comment({
-                @CommentValue("Принудительные хосты: виртуальный хост -> сервер"),
-                @CommentValue("Если игрок подключается через указанный хост, он будет направлен на соответствующий сервер после авторизации"),
-                @CommentValue("Если хост не указан в списке, используется бэкенд сервер")
+                @CommentValue("Если игрок подключается через указанный домен, после авторизации он направляется на соответствующий сервер"),
+                @CommentValue("Если домен не указан в списке, используется бэкенд-сервер")
         })
         public Map<String, String> forcedHosts = new LinkedHashMap<>(Map.of(
                 "play.example.com", "hub",
