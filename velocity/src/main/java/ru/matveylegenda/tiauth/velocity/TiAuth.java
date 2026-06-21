@@ -77,6 +77,7 @@ public final class TiAuth {
             return;
         }
         MainConfig.IMP.reload();
+        MessagesConfig.IMP = new MessagesConfig(MessagesConfig.getMessagesPath(MainConfig.IMP.lang));
         MessagesConfig.IMP.reload();
         initializeSecretKey(dataFolder.toFile());
         loadLibraries();

@@ -81,7 +81,7 @@ public class TaskManager {
                 return;
             }
 
-            if (MainConfig.IMP.title.enabled) sendTitle(player, counter.get());
+            if (MainConfig.IMP.title.beforeLogin.enabled) sendTitle(player, counter.get());
             if (MainConfig.IMP.actionBar.enabled) sendActionBar(player, counter.get());
             if (MainConfig.IMP.bossBar.enabled) updateBossBar(player, counter.get(), barId);
 
@@ -124,11 +124,11 @@ public class TaskManager {
     private void sendTitle(ProxiedPlayer player, int counter) {
         Title title = ProxyServer.getInstance().createTitle();
         title.title(TextComponent.fromLegacy(
-                CachedMessages.IMP.player.title.title
+                CachedMessages.IMP.player.title.beforeLogin.title
                         .replace("{time}", String.valueOf(counter))
         ));
         title.subTitle(TextComponent.fromLegacy(
-                CachedMessages.IMP.player.title.subTitle
+                CachedMessages.IMP.player.title.beforeLogin.subtitle
                         .replace("{time}", String.valueOf(counter))
         ));
         title.fadeIn(0);
@@ -151,6 +151,20 @@ public class TaskManager {
         if (barId != null) {
             BossBar remove = new BossBar(barId, 1);
             player.unsafe().sendPacket(remove);
+        }
+    }
+
+    public void sendAuthTitle(ProxiedPlayer player) {
+        if (MainConfig.IMP.title.afterLogin.enabled) {
+            var msg = CachedMessages.IMP.player.title.afterLogin;
+            Title title = ProxyServer.getInstance().createTitle();
+            title.title(TextComponent.fromLegacy(msg.title));
+            title.subTitle(TextComponent.fromLegacy(msg.subtitle));
+            title.fadeIn(msg.delays.start);
+            title.stay(msg.delays.duration);
+            title.fadeOut(msg.delays.end);
+
+            player.sendTitle(title);
         }
     }
 

@@ -193,10 +193,10 @@ public class CachedMessages {
         }
 
         public static class Title {
-            public String title;
-            public String subTitle;
-            public String onAuthTitle;
-            public String onAuthSubTitle;
+            public MessagesConfig.Player.Title.TitleMessage beforeLogin;
+            public MessagesConfig.Player.Title.TitleMessage beforeRegister;
+            public MessagesConfig.Player.Title.TitleMessageDelayed afterLogin;
+            public MessagesConfig.Player.Title.TitleMessageDelayed afterRegister;
         }
 
         public static class ActionBar {
@@ -337,13 +337,30 @@ public class CachedMessages {
         player.bossBar.message = COLORIZER.colorize(getPrefixed(config.player.bossBar.message, prefix));
 
         player.title = new Player.Title();
-        player.title.title = COLORIZER.colorize(getPrefixed(config.player.title.title, prefix));
-        player.title.subTitle = COLORIZER.colorize(getPrefixed(config.player.title.subTitle, prefix));
-        player.title.onAuthTitle = COLORIZER.colorize(getPrefixed(config.player.title.onAuthTitle, prefix));
-        player.title.onAuthSubTitle = COLORIZER.colorize(getPrefixed(config.player.title.onAuthSubTitle, prefix));
+        player.title.beforeLogin = createTitleMessage(config.player.title.beforeLogin);
+        player.title.beforeRegister = createTitleMessage(config.player.title.beforeRegister);
+        player.title.afterLogin = createTitleMessageDelayed(config.player.title.afterLogin);
+        player.title.afterRegister = createTitleMessageDelayed(config.player.title.afterRegister);
 
         player.actionBar = new Player.ActionBar();
         player.actionBar.message = COLORIZER.colorize(getPrefixed(config.player.actionBar.message, prefix));
+    }
+
+    private MessagesConfig.Player.Title.TitleMessage createTitleMessage(MessagesConfig.Player.Title.TitleMessage source) {
+        MessagesConfig.Player.Title.TitleMessage msg = new MessagesConfig.Player.Title.TitleMessage();
+        msg.title = COLORIZER.colorize(getPrefixed(source.title, prefix));
+        msg.subtitle = COLORIZER.colorize(getPrefixed(source.subtitle, prefix));
+        return msg;
+    }
+
+    private MessagesConfig.Player.Title.TitleMessageDelayed createTitleMessageDelayed(MessagesConfig.Player.Title.TitleMessageDelayed source) {
+        MessagesConfig.Player.Title.TitleMessageDelayed msg = new MessagesConfig.Player.Title.TitleMessageDelayed();
+        msg.title = COLORIZER.colorize(getPrefixed(source.title, prefix));
+        msg.subtitle = COLORIZER.colorize(getPrefixed(source.subtitle, prefix));
+        msg.delays.start = source.delays.start;
+        msg.delays.duration = source.delays.duration;
+        msg.delays.end = source.delays.end;
+        return msg;
     }
 
     private String getPrefixed(String rawMessage, String prefix) {

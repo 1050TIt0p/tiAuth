@@ -31,7 +31,7 @@ public class MainConfig extends YamlSerializable {
         this.database = new Database();
         this.auth = new Auth();
         this.bossBar = new BossBar();
-        this.title = new Title();
+        this.title = new TitleConfig();
         this.actionBar = new ActionBar();
     }
 
@@ -43,9 +43,9 @@ public class MainConfig extends YamlSerializable {
     public Serializer serializer = Serializer.LEGACY;
 
     @Comment({
-            @CommentValue("Доступные языки: RU, EN")
+            @CommentValue("Доступные языки: RU, EN (файл messages_<lang>.yml в папке lang)")
     })
-    public MessagesConfig.Lang lang = MessagesConfig.Lang.RU;
+    public String lang = "RU";
 
     public Servers servers;
 
@@ -295,12 +295,22 @@ public class MainConfig extends YamlSerializable {
         public BarStyle style = BarStyle.SEGMENTED_12;
     }
 
-    public Title title;
+    public TitleConfig title;
 
     @NewLine
-    public static class Title {
-        public boolean enabled = false;
-        public boolean enabledOnAuth = false;
+    public static class TitleConfig {
+        public TitleSubSection beforeLogin = new TitleSubSection();
+        @NewLine
+        public TitleSubSection beforeRegister = new TitleSubSection();
+        @NewLine
+        public TitleSubSection afterLogin = new TitleSubSection();
+        @NewLine
+        public TitleSubSection afterRegister = new TitleSubSection();
+
+        @NewLine
+        public static class TitleSubSection {
+            public boolean enabled = false;
+        }
     }
 
     public ActionBar actionBar;

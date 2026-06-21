@@ -373,21 +373,6 @@ public class AuthManager {
                         CachedMessages.IMP.player.login.success
                 );
 
-                if (MainConfig.IMP.title.enabledOnAuth) {
-                    Title title = ProxyServer.getInstance().createTitle();
-                    title.title(TextComponent.fromLegacy(
-                            CachedMessages.IMP.player.title.onAuthTitle
-                    ));
-                    title.subTitle(TextComponent.fromLegacy(
-                            CachedMessages.IMP.player.title.onAuthSubTitle
-                    ));
-                    title.fadeIn(0);
-                    title.stay(21);
-                    title.fadeOut(0);
-
-                    player.sendTitle(title);
-                }
-
                 loginAttempts.remove(player.getName());
                 endProcess(player);
             });
