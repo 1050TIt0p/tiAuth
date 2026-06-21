@@ -4,19 +4,12 @@ import lombok.Getter;
 import net.byteflux.libby.BungeeLibraryManager;
 import net.byteflux.libby.Library;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import org.bstats.bungeecord.Metrics;
 import ru.matveylegenda.tiauth.bungee.api.TiAuthAPI;
 import ru.matveylegenda.tiauth.bungee.command.admin.TiAuthCommand;
-import ru.matveylegenda.tiauth.bungee.command.player.ChangePasswordCommand;
-import ru.matveylegenda.tiauth.bungee.command.player.LoginCommand;
-import ru.matveylegenda.tiauth.bungee.command.player.LogoutCommand;
-import ru.matveylegenda.tiauth.bungee.command.player.PremiumCommand;
-import ru.matveylegenda.tiauth.bungee.command.player.RegisterCommand;
-import ru.matveylegenda.tiauth.bungee.command.player.TotpCommand;
-import ru.matveylegenda.tiauth.bungee.command.player.UnregisterCommand;
+import ru.matveylegenda.tiauth.bungee.command.player.*;
 import ru.matveylegenda.tiauth.bungee.listener.AuthListener;
 import ru.matveylegenda.tiauth.bungee.listener.ChatListener;
 import ru.matveylegenda.tiauth.bungee.listener.DialogListener;
@@ -25,12 +18,15 @@ import ru.matveylegenda.tiauth.bungee.manager.TaskManager;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.picolimbo.LibraryLoader;
+import ru.matveylegenda.tiauth.picolimbo.PicoLimboRunner;
 import ru.matveylegenda.tiauth.util.KeyLoader;
 import ru.matveylegenda.tiauth.util.Utils;
-import ua.nanit.limbo.server.LimboServer;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,6 +39,8 @@ public final class TiAuth extends Plugin {
     private AuthManager authManager;
 
     private byte[] secretKey;
+
+    private PicoLimboRunner worker;
 
     @Override
     public void onLoad() {
@@ -273,21 +271,38 @@ public final class TiAuth extends Plugin {
 
     private void startLimboServer(File dataFolder) {
         if (MainConfig.IMP.servers.useVirtualServer) {
-            try {
-                Path limboPath = dataFolder.toPath().resolve("limbo");
-                if (!limboPath.toFile().exists()) {
-                    limboPath.toFile().mkdir();
-                }
-                LimboServer limboServer = new LimboServer();
-                limboServer.start(limboPath);
+            Path limboPath = dataFolder.toPath().resolve("picolimbo");
 
-                ServerInfo authServer = getProxy().constructServerInfo(MainConfig.IMP.servers.auth, limboServer.getConfig().getAddress(), "auth server", false);
+            if (!Files.exists(limboPath)) {
+                try {
+                    Files.createDirectories(limboPath);
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Error when starting the virtual server. Stopping server...", e);
+                    getProxy().stop();
+                    return;
+                }
+            }
+
+            Path configFile = limboPath.resolve("config.toml");
+
+            try {
+                LibraryLoader.RustLib lib = LibraryLoader.loadOrDownloadLib(limboPath);
+
+                this.worker = new PicoLimboRunner(MainConfig.IMP.servers.virtualServerPort, configFile, lib);
+
+                getProxy().getScheduler().runAsync(this, worker);
+
                 getProxy().getServers().put(
                         MainConfig.IMP.servers.auth,
-                        authServer
+                        getProxy().constructServerInfo(
+                                MainConfig.IMP.servers.auth,
+                                new InetSocketAddress("127.0.0.1", MainConfig.IMP.servers.virtualServerPort),
+                                "auth server",
+                                false
+                        )
                 );
             } catch (Exception e) {
-                logger.log(Level.WARNING, "Error when starting the virtual server. Stopping server...", e);
+                logger.log(Level.SEVERE, "Error when starting the virtual server. Stopping server...", e);
                 getProxy().stop();
             }
         }

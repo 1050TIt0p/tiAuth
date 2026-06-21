@@ -22,7 +22,7 @@ subprojects {
     pluginManager.apply("java")
 
     dependencies {
-        implementation("com.github.1050TIt0p:NanoLimbo:1.12.0-3")
+        //implementation("com.github.1050TIt0p:NanoLimbo:1.12.0-3")
         implementation("com.j256.ormlite:ormlite-jdbc:6.1")
         implementation("com.zaxxer:HikariCP:7.1.0")
         implementation("at.favre.lib:bcrypt:0.10.2")
@@ -42,6 +42,8 @@ subprojects {
 
         compileOnly("org.projectlombok:lombok:1.18.42")
         annotationProcessor("org.projectlombok:lombok:1.18.42")
+
+        implementation("net.java.dev.jna:jna:5.17.0")
     }
 
     extensions.configure<JavaPluginExtension> {
@@ -80,10 +82,10 @@ tasks.shadowJar {
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
     relocate("net.elytrium.serializer", "ru.matveylegenda.tiauth.thirdparty.net.elytrium.serializer")
     relocate("dev.samstevens.totp", "ru.matveylegenda.tiauth.thirdparty.dev.samstevens.totp")
-    relocate("ua.nanit.limbo", "ru.matveylegenda.tiauth.thirdparty.ua.nanit.limbo")
-    relocate("org.spongepowered.configurate", "ru.matveylegenda.tiauth.thirdparty.org.spongepowered.configurate")
-    relocate("io.leangen.geantyref", "ru.matveylegenda.tiauth.thirdparty.io.leangen.geantyref")
-    relocate("com.grack.nanojson", "ru.matveylegenda.tiauth.thirdparty.com.grack.nanojson")
+    //relocate("ua.nanit.limbo", "ru.matveylegenda.tiauth.thirdparty.ua.nanit.limbo")
+    //relocate("org.spongepowered.configurate", "ru.matveylegenda.tiauth.thirdparty.org.spongepowered.configurate")
+    //relocate("io.leangen.geantyref", "ru.matveylegenda.tiauth.thirdparty.io.leangen.geantyref")
+    //relocate("com.grack.nanojson", "ru.matveylegenda.tiauth.thirdparty.com.grack.nanojson")
     relocate("net.byteflux", "ru.matveylegenda.tiauth.thirdparty.net.byteflux")
 
     exclude("net/kyori/**")

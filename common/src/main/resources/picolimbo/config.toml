@@ -1,0 +1,82 @@
+bind = "127.0.0.1:65535"
+welcome_message = ""
+action_bar = ""
+default_game_mode = "adventure"
+hardcore = false
+fetch_player_skins = false
+reduced_debug_info = false
+accept_transfers = false
+
+[forwarding]
+method = "NONE"
+secret = ""
+
+[world]
+spawn_position = [
+    21.5,
+    16.0625,
+    22.5,
+]
+spawn_rotation = [
+    -90.0,
+    0.0,
+]
+dimension = "overworld"
+time = "day"
+
+[world.experimental]
+view_distance = 2
+schematic_file = "plugins/tiAuth/picolimbo/spawn.schem"
+lock_time = false
+
+[world.boundaries]
+enabled = true
+min_y = -64
+teleport_message = ""
+
+[server_list]
+reply_to_status = false
+max_players = 20
+message_of_the_day = "A PicoLimbo Server"
+show_online_player_count = true
+server_icon = "server-icon.png"
+
+[connection]
+keep_alive_interval_seconds = 15
+allow_unsupported_versions = false
+
+[compression]
+threshold = -1
+level = 6
+
+[tab_list]
+enabled = false
+header = "<bold>Welcome to PicoLimbo</bold>"
+footer = "<green>Enjoy your stay!</green>"
+player_listed = true
+
+[fly]
+allow_flight = false
+flying = false
+flying_speed = 0.05
+
+[boss_bar]
+enabled = false
+title = "<bold>Welcome to PicoLimbo!</bold>"
+health = 1.0
+color = "pink"
+division = 0
+
+[title]
+enabled = false
+title = "<bold>Welcome!</bold>"
+subtitle = "Enjoy your stay"
+fade_in = 10
+stay = 70
+fade_out = 20
+
+[commands]
+spawn = ""
+fly = ""
+fly_speed = ""
+transfer = ""

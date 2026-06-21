@@ -7,6 +7,8 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.scheduler.ScheduledTask;
 import lombok.Getter;
 import net.byteflux.libby.Library;
 import net.byteflux.libby.VelocityLibraryManager;
@@ -15,26 +17,22 @@ import org.slf4j.Logger;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.picolimbo.LibraryLoader;
+import ru.matveylegenda.tiauth.picolimbo.PicoLimboRunner;
 import ru.matveylegenda.tiauth.util.KeyLoader;
 import ru.matveylegenda.tiauth.util.Utils;
 import ru.matveylegenda.tiauth.velocity.api.TiAuthAPI;
 import ru.matveylegenda.tiauth.velocity.command.admin.TiAuthCommand;
-import ru.matveylegenda.tiauth.velocity.command.player.ChangePasswordCommand;
-import ru.matveylegenda.tiauth.velocity.command.player.LoginCommand;
-import ru.matveylegenda.tiauth.velocity.command.player.LogoutCommand;
-import ru.matveylegenda.tiauth.velocity.command.player.PremiumCommand;
-import ru.matveylegenda.tiauth.velocity.command.player.RegisterCommand;
-import ru.matveylegenda.tiauth.velocity.command.player.TotpCommand;
-import ru.matveylegenda.tiauth.velocity.command.player.UnregisterCommand;
+import ru.matveylegenda.tiauth.velocity.command.player.*;
 import ru.matveylegenda.tiauth.velocity.listener.AuthListener;
 import ru.matveylegenda.tiauth.velocity.listener.ChatListener;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
-import ua.nanit.limbo.server.LimboServer;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Getter
@@ -57,6 +55,9 @@ public final class TiAuth {
     private AuthManager authManager;
 
     private byte[] secretKey;
+
+    private PicoLimboRunner worker;
+    private ScheduledTask limboTask;
 
     @Inject
     public TiAuth(ProxyServer server, Logger logger, Metrics.Factory metricsFactory) {
@@ -121,6 +122,13 @@ public final class TiAuth {
             } catch (Exception e) {
                 logger.warn("Error during database closing", e);
             }
+        }
+
+        if (worker != null) {
+            worker.stop();
+        }
+        if (limboTask != null) {
+            limboTask.cancel();
         }
     }
 
@@ -218,19 +226,31 @@ public final class TiAuth {
 
     private void startLimboServer(File dataFolder) {
         if (MainConfig.IMP.servers.useVirtualServer) {
-            try {
-                Path limboPath = dataFolder.toPath().resolve("limbo");
-                if (!limboPath.toFile().exists()) {
-                    limboPath.toFile().mkdir();
-                }
+            Path limboPath = dataFolder.toPath().resolve("picolimbo");
 
-                LimboServer limboServer = new LimboServer();
-                limboServer.start(limboPath);
+            if (!Files.exists(limboPath)) {
+                try {
+                    Files.createDirectories(limboPath);
+                } catch (IOException e) {
+                    logger.warn("Error when starting the virtual server. Stopping server...", e);
+                    server.shutdown();
+                    return;
+                }
+            }
+
+            Path configFile = limboPath.resolve("config.toml");
+
+            try {
+                LibraryLoader.RustLib lib = LibraryLoader.loadOrDownloadLib(limboPath);
+
+                this.worker = new PicoLimboRunner(MainConfig.IMP.servers.virtualServerPort, configFile, lib);
+
+                limboTask = server.getScheduler().buildTask(this, worker).schedule();
 
                 server.registerServer(
-                        new com.velocitypowered.api.proxy.server.ServerInfo(
+                        new ServerInfo(
                                 MainConfig.IMP.servers.auth,
-                                (InetSocketAddress) limboServer.getConfig().getAddress()
+                                new InetSocketAddress("127.0.0.1", MainConfig.IMP.servers.virtualServerPort)
                         )
                 );
             } catch (Exception e) {
