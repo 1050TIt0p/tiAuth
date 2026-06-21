@@ -35,13 +35,11 @@ import dev.samstevens.totp.code.CodeVerifier;
 import dev.samstevens.totp.code.DefaultCodeGenerator;
 import dev.samstevens.totp.code.DefaultCodeVerifier;
 import dev.samstevens.totp.time.SystemTimeProvider;
+import ru.matveylegenda.tiauth.hash.HashType;
 import ru.matveylegenda.tiauth.util.EncryptionUtils;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -50,6 +48,7 @@ import java.util.regex.Pattern;
 
 public class AuthManager {
     public static final CodeVerifier TOTP_CODE_VERIFIER = new DefaultCodeVerifier(new DefaultCodeGenerator(), new SystemTimeProvider());
+    public static final Pattern RECOVERY_CODE_PATTERN = Pattern.compile("^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$");
 
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
@@ -567,31 +566,77 @@ public class AuthManager {
                 totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
             } catch (Exception e) {
                 plugin.getLogger().log(Level.SEVERE, "Error during secret decryption", e);
+                endProcess(player);
                 return;
             }
 
-            if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
-                totpPendingPlayers.remove(name.toLowerCase());
-                totpAttempts.remove(name.toLowerCase());
-                loginPlayer(player, () -> {
-                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
-                    loginAttempts.remove(name);
-                    endProcess(player);
+            if (AuthManager.RECOVERY_CODE_PATTERN.matcher(code).matches()) {
+                Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
+                String hashedCode = hash.hashPassword(code);
+
+                database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
+                    if (!success1) {
+                        BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
+                        endProcess(player);
+                        return;
+                    }
+
+                    if (recoveryCode != null && recoveryCode.getUsername().equalsIgnoreCase(name.toLowerCase(Locale.ROOT))) {
+                        database.getRecoveryCodeRepository().removeCode(hashedCode, success2 -> {
+                            if (!success2) {
+                                BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
+                                endProcess(player);
+                                return;
+                            }
+
+                            totpPendingPlayers.remove(name.toLowerCase(Locale.ROOT));
+                            totpAttempts.remove(name.toLowerCase(Locale.ROOT));
+                            loginPlayer(player, () -> {
+                                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+                                loginAttempts.remove(name);
+                                endProcess(player);
+                            });
+                        });
+                    } else {
+                        int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
+                        if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+                            totpPendingPlayers.remove(name.toLowerCase());
+                            totpAttempts.remove(name.toLowerCase());
+                            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
+                            if (MainConfig.IMP.auth.totp.banPlayer) {
+                                BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
+                            }
+                            endProcess(player);
+                            return;
+                        }
+                        BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
+                        endProcess(player);
+                    }
                 });
             } else {
-                int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
-                if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+                if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
                     totpPendingPlayers.remove(name.toLowerCase());
                     totpAttempts.remove(name.toLowerCase());
-                    player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
-                    if (MainConfig.IMP.auth.totp.banPlayer) {
-                        BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
+                    loginPlayer(player, () -> {
+                        BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+                        loginAttempts.remove(name);
+                        endProcess(player);
+                    });
+                } else {
+                    int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
+                    if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+                        totpPendingPlayers.remove(name.toLowerCase());
+                        totpAttempts.remove(name.toLowerCase());
+                        player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
+                        if (MainConfig.IMP.auth.totp.banPlayer) {
+                            BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
+                        }
+                        endProcess(player);
+                        return;
                     }
+                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
                     endProcess(player);
-                    return;
                 }
-                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
-                endProcess(player);
             }
         });
     }

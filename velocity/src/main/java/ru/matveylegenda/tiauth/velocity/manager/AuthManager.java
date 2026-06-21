@@ -16,6 +16,7 @@ import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
+import ru.matveylegenda.tiauth.hash.HashType;
 import ru.matveylegenda.tiauth.util.EncryptionUtils;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 
@@ -28,6 +29,8 @@ import ru.matveylegenda.tiauth.velocity.api.event.PlayerRegisterEvent;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
+import java.net.InetSocketAddress;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -38,6 +41,7 @@ import java.util.regex.Pattern;
 
 public class AuthManager {
     public static final CodeVerifier TOTP_CODE_VERIFIER = new DefaultCodeVerifier(new DefaultCodeGenerator(), new SystemTimeProvider());
+    public static final Pattern RECOVERY_CODE_PATTERN = Pattern.compile("^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$");
 
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
@@ -508,31 +512,77 @@ public class AuthManager {
                 totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
             } catch (Exception e) {
                 plugin.getLogger().error("Error during secret decryption", e);
+                endProcess(name);
                 return;
             }
 
-            if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
-                totpPendingPlayers.remove(name.toLowerCase());
-                totpAttempts.remove(name.toLowerCase());
-                loginPlayer(player, () -> {
-                    player.sendMessage(CachedComponents.IMP.player.login.success);
-                    loginAttempts.remove(name);
-                    endProcess(name);
+            if (AuthManager.RECOVERY_CODE_PATTERN.matcher(code).matches()) {
+                Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
+                String hashedCode = hash.hashPassword(code);
+
+                database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
+                    if (!success1) {
+                        VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
+                        endProcess(name);
+                        return;
+                    }
+
+                    if (recoveryCode != null && recoveryCode.getUsername().equalsIgnoreCase(name.toLowerCase(Locale.ROOT))) {
+                        database.getRecoveryCodeRepository().removeCode(hashedCode, success2 -> {
+                            if (!success2) {
+                                VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
+                                endProcess(name);
+                                return;
+                            }
+
+                            totpPendingPlayers.remove(name.toLowerCase(Locale.ROOT));
+                            totpAttempts.remove(name.toLowerCase(Locale.ROOT));
+                            loginPlayer(player, () -> {
+                                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.login.success);
+                                loginAttempts.remove(name);
+                                endProcess(name);
+                            });
+                        });
+                    } else {
+                        int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
+                        if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+                            totpPendingPlayers.remove(name.toLowerCase());
+                            totpAttempts.remove(name.toLowerCase());
+                            player.disconnect(CachedComponents.IMP.player.kick.tooManyAttempts);
+                            if (MainConfig.IMP.auth.totp.banPlayer) {
+                                BanCache.addPlayer(player.getRemoteAddress().getAddress().getHostAddress());
+                            }
+                            endProcess(name);
+                            return;
+                        }
+                        player.sendMessage(CachedComponents.IMP.player.totp.wrong);
+                        endProcess(name);
+                    }
                 });
             } else {
-                int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
-                if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+                if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
                     totpPendingPlayers.remove(name.toLowerCase());
                     totpAttempts.remove(name.toLowerCase());
-                    player.disconnect(CachedComponents.IMP.player.kick.tooManyAttempts);
-                    if (MainConfig.IMP.auth.totp.banPlayer) {
-                        BanCache.addPlayer(player.getRemoteAddress().getAddress().getHostAddress());
+                    loginPlayer(player, () -> {
+                        player.sendMessage(CachedComponents.IMP.player.login.success);
+                        loginAttempts.remove(name);
+                        endProcess(name);
+                    });
+                } else {
+                    int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
+                    if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+                        totpPendingPlayers.remove(name.toLowerCase());
+                        totpAttempts.remove(name.toLowerCase());
+                        player.disconnect(CachedComponents.IMP.player.kick.tooManyAttempts);
+                        if (MainConfig.IMP.auth.totp.banPlayer) {
+                            BanCache.addPlayer(player.getRemoteAddress().getAddress().getHostAddress());
+                        }
+                        endProcess(name);
+                        return;
                     }
+                    player.sendMessage(CachedComponents.IMP.player.totp.wrong);
                     endProcess(name);
-                    return;
                 }
-                player.sendMessage(CachedComponents.IMP.player.totp.wrong);
-                endProcess(name);
             }
         });
     }

@@ -6,6 +6,7 @@ import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.secret.SecretGenerator;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.logging.Level;
 
 import net.md_5.bungee.api.CommandSender;
@@ -19,10 +20,15 @@ import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
 import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
 import ru.matveylegenda.tiauth.bungee.util.BungeeUtils;
 import ru.matveylegenda.tiauth.config.MainConfig;
+import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.hash.Hash;
+import ru.matveylegenda.tiauth.hash.HashFactory;
+import ru.matveylegenda.tiauth.hash.HashType;
 import ru.matveylegenda.tiauth.util.EncryptionUtils;
 
 public class TotpCommand extends Command {
     private final AuthManager authManager;
+    private final Database database;
     private final TiAuth plugin;
     private final SecretGenerator secretGenerator = new DefaultSecretGenerator();
     private final RecoveryCodeGenerator codesGenerator = new RecoveryCodeGenerator();
@@ -31,6 +37,7 @@ public class TotpCommand extends Command {
         super(name, null, aliases);
         this.plugin = plugin;
         this.authManager = plugin.getAuthManager();
+        this.database = plugin.getDatabase();
     }
 
     @Override
@@ -130,13 +137,28 @@ public class TotpCommand extends Command {
             player.sendMessage(tokenMessage);
 
             String[] codes = codesGenerator.generateCodes(MainConfig.IMP.auth.totp.recoveryCodesAmount);
-            String codesStr = String.join(", ", codes);
-            String recoveryMsg = CachedMessages.IMP.player.totp.recovery.replace("{0}", codesStr);
-            BaseComponent recoveryMessage = TextComponent.fromLegacy(recoveryMsg);
-            recoveryMessage.setClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, codesStr));
-            player.sendMessage(recoveryMessage);
+            String[] hashedCodes = new String[codes.length];
 
-            BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.verified);
+            Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
+            for (int i = 0; i < codes.length; i++) {
+                hashedCodes[i] = hash.hashPassword(codes[i]);
+            }
+
+            database.getRecoveryCodeRepository().addCodes(hashedCodes, player.getName(), success1 -> {
+                if (!success1) {
+                    BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError
+                    );
+                    return;
+                }
+
+                String codesStr = String.join(", ", codes);
+                String recoveryMsg = CachedMessages.IMP.player.totp.recovery.replace("{0}", codesStr);
+                BaseComponent recoveryMessage = TextComponent.fromLegacy(recoveryMsg);
+                recoveryMessage.setClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, codesStr));
+                player.sendMessage(recoveryMessage);
+
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.verified);
+            });
         });
     }
 
@@ -178,14 +200,12 @@ public class TotpCommand extends Command {
     }
 
     private void handleDisable(ProxiedPlayer player, String[] args) {
-        String name = player.getName();
-
         if (args.length != 2) {
             BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.disableUsage);
             return;
         }
 
-        plugin.getDatabase().getAuthUserRepository().getUser(name, (user, success) -> {
+        plugin.getDatabase().getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             if (!success) {
                 BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
                 return;
@@ -210,16 +230,47 @@ public class TotpCommand extends Command {
                 return;
             }
 
-            if (AuthManager.TOTP_CODE_VERIFIER.isValidCode(totpToken, args[1])) {
-                plugin.getDatabase().getAuthUserRepository().updateTotpToken(name, "", updateSuccess -> {
-                    if (!updateSuccess) {
+            if (AuthManager.RECOVERY_CODE_PATTERN.matcher(args[1]).matches()) {
+                Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
+                String hashedCode = hash.hashPassword(args[1]);
+
+                database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
+                    if (!success1) {
                         BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
                         return;
                     }
-                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.disabled);
+
+                    if (recoveryCode != null && recoveryCode.getUsername().equals(player.getName().toLowerCase(Locale.ROOT))) {
+                        database.getRecoveryCodeRepository().removeCodesByUsername(player.getName(), success2 -> {
+                            if (!success2) {
+                                BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
+                                return;
+                            }
+
+                            plugin.getDatabase().getAuthUserRepository().updateTotpToken(player.getName(), "", success3 -> {
+                                if (!success3) {
+                                    BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
+                                    return;
+                                }
+                                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.disabled);
+                            });
+                        });
+                    } else {
+                        BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
+                    }
                 });
             } else {
-                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
+                if (AuthManager.TOTP_CODE_VERIFIER.isValidCode(totpToken, args[1])) {
+                    database.getAuthUserRepository().updateTotpToken(player.getName(), "", updateSuccess -> {
+                        if (!updateSuccess) {
+                            BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
+                            return;
+                        }
+                        BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.disabled);
+                    });
+                } else {
+                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
+                }
             }
         });
     }
