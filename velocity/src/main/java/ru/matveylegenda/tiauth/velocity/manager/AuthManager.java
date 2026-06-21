@@ -29,7 +29,6 @@ import ru.matveylegenda.tiauth.velocity.api.event.PlayerRegisterEvent;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
-import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -649,11 +648,10 @@ public class AuthManager {
 
                 if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
                     AuthCache.setAuthenticated(name);
-                    if (event == null && future == null) {
-                        connectToBackend(player);
+                    if (event != null) {
+                        connectToBackend(event);
                     } else {
-                        Optional<RegisteredServer> backendOpt = plugin.getServer().getServer(MainConfig.IMP.servers.backend);
-                        backendOpt.ifPresent(event::setInitialServer);
+                        connectToBackend(player);
                     }
                     return;
                 }
@@ -707,19 +705,32 @@ public class AuthManager {
         }, () -> player.createConnectionRequest(authServer).connect());
     }
 
+    private void connectToBackend(PlayerChooseInitialServerEvent event) {
+        String forcedHost = event.getPlayer().getVirtualHost()
+                .map(addr -> MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase()))
+                .orElse(null);
+        String targetName = forcedHost != null ? forcedHost : MainConfig.IMP.servers.backend;
+        plugin.getServer().getServer(targetName).ifPresent(event::setInitialServer);
+    }
+
     private void connectToBackend(Player player) {
-        java.util.Optional<RegisteredServer> serverOpt = plugin.getServer().getServer(MainConfig.IMP.servers.backend);
+        String forcedHost = player.getVirtualHost()
+                .map(addr -> MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase()))
+                .orElse(null);
+        String targetName = forcedHost != null ? forcedHost : MainConfig.IMP.servers.backend;
+
+        java.util.Optional<RegisteredServer> serverOpt = plugin.getServer().getServer(targetName);
         if (serverOpt.isEmpty()) {
             return;
         }
 
-        RegisteredServer backend = serverOpt.get();
+        RegisteredServer targetServer = serverOpt.get();
 
         player.getCurrentServer().ifPresentOrElse(current -> {
-            if (!current.getServer().equals(backend)) {
-                player.createConnectionRequest(backend).connect();
+            if (!current.getServer().equals(targetServer)) {
+                player.createConnectionRequest(targetServer).connect();
             }
-        }, () -> player.createConnectionRequest(backend).connect());
+        }, () -> player.createConnectionRequest(targetServer).connect());
     }
 
     private boolean supportDialog(Player player) {

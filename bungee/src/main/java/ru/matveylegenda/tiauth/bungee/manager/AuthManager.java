@@ -815,16 +815,22 @@ public class AuthManager {
     }
 
     private void connectToBackend(PostLoginEvent event) {
-        ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
+        InetSocketAddress virtualHost = event.getPlayer().getPendingConnection().getVirtualHost();
+        String forcedHost = virtualHost != null ? MainConfig.IMP.servers.forcedHosts.get(virtualHost.getHostString().toLowerCase()) : null;
+        String targetName = forcedHost != null ? forcedHost : MainConfig.IMP.servers.backend;
+        ServerInfo backendServer = plugin.getProxy().getServerInfo(targetName);
         event.setTarget(backendServer);
     }
 
     private void connectToBackend(ProxiedPlayer player) {
+        InetSocketAddress virtualHost = player.getPendingConnection().getVirtualHost();
+        String forcedHost = virtualHost != null ? MainConfig.IMP.servers.forcedHosts.get(virtualHost.getHostString().toLowerCase()) : null;
+        String targetName = forcedHost != null ? forcedHost : MainConfig.IMP.servers.backend;
         ServerInfo currentServer = player.getServer().getInfo();
-        ServerInfo backendServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
+        ServerInfo targetServer = plugin.getProxy().getServerInfo(targetName);
 
-        if (currentServer == null || !currentServer.equals(backendServer)) {
-            player.connect(backendServer);
+        if (currentServer == null || !currentServer.equals(targetServer)) {
+            player.connect(targetServer);
         }
     }
 
