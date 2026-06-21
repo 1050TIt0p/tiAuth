@@ -22,7 +22,6 @@ subprojects {
     pluginManager.apply("java")
 
     dependencies {
-        //implementation("com.github.1050TIt0p:NanoLimbo:1.12.0-3")
         implementation("com.j256.ormlite:ormlite-jdbc:6.1")
         implementation("com.zaxxer:HikariCP:7.1.0")
         implementation("at.favre.lib:bcrypt:0.10.2")
