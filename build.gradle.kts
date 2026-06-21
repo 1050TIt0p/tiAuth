@@ -40,8 +40,8 @@ subprojects {
         compileOnly("com.mysql:mysql-connector-j:9.7.0")
         compileOnly("org.postgresql:postgresql:42.7.11")
 
-        compileOnly("org.projectlombok:lombok:1.18.42")
-        annotationProcessor("org.projectlombok:lombok:1.18.42")
+        compileOnly("org.projectlombok:lombok:1.18.46")
+        annotationProcessor("org.projectlombok:lombok:1.18.46")
 
         implementation("net.java.dev.jna:jna:5.17.0")
     }
