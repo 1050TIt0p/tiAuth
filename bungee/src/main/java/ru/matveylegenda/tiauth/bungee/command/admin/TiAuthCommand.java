@@ -57,6 +57,7 @@ public class TiAuthCommand extends Command {
                 }
 
                 MainConfig.IMP.reload();
+                MessagesConfig.IMP = new MessagesConfig(MessagesConfig.getMessagesPath(MainConfig.IMP.lang));
                 MessagesConfig.IMP.reload();
                 plugin.getAuthManager().setPasswordPattern(Pattern.compile(MainConfig.IMP.auth.passwordPattern));
                 plugin.getAuthManager().setHash(HashFactory.create(MainConfig.IMP.auth.hashAlgorithm));

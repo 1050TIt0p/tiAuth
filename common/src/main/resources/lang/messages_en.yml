@@ -1,0 +1,151 @@
+prefix: "&#8833ECᴀ&#7F65E7ᴜ&#7796E3ᴛ&#6EC8DEʜ &8»"
+only-player: "{prefix} &fThis command can only be used by a player"
+query-error: "{prefix} &fAn error occurred while querying the database. Please contact the administration!"
+processing: "{prefix} &fPlease wait until the previous request is processed"
+player-not-found: "{prefix} &fPlayer not found"
+no-permission: "{prefix} &fInsufficient permissions"
+
+admin:
+  usage: "{prefix} &fUsage: &#8833EC/tiauth <reload|unregister|changepassword|forcelogin|forcepremium>"
+
+  config:
+    reload: "{prefix} &fConfigs reloaded"
+
+  unregister:
+    usage: "{prefix} &fUsage: &#8833EC/tiauth unregister"
+    success: "{prefix} &fYou have successfully deleted the account of player &#8833EC{player}"
+
+  change-password:
+    usage: "{prefix} &fUsage: &#8833EC/tiauth changepassword <player> <password>"
+    success: "{prefix} &fYou have successfully changed the password for player &#8833EC{player}"
+
+  force-login:
+    usage: "{prefix} &fUsage: &#8833EC/tiauth forcelogin <nickname>"
+    is-authenticated: "{prefix} &fPlayer &#8833EC{player} &fis already authenticated"
+    success: "{prefix} &fYou have successfully authenticated player &#8833EC{player}"
+
+  force-register:
+    usage: "{prefix} &fUsage: &#8833EC/tiauth forceregister <username> <password>"
+    already-registered: "{prefix} &fPlayer &#8833EC{player} &fis already registered"
+    success: "{prefix} &fYou have successfully registered the account &#8833EC{player}"
+
+  force-premium:
+    usage: "{prefix} &fUsage: &#8833EC/tiauth forcepremium <player>"
+    enabled: "{prefix} &fYou have successfully enabled premium mode for player &#8833EC{player}"
+    disabled: "{prefix} &fYou have successfully disabled premium mode for player &#8833EC{player}"
+
+  migrate:
+    usage: "{prefix} &Usage: &#8833EC/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]"
+    error: "{prefix} &fAn error occurred during database migration"
+    invalid-file-name: "{prefix} &fInvalid file name"
+    success: "{prefix} &fDatabase has been successfully migrated"
+
+player:
+  check-password:
+    wrong-password: "{prefix} &fWrong password"
+    invalid-length: "{prefix} &fPassword length must be between &#8833EC{min} &fand &#8833EC{max} &fcharacters"
+    invalid-pattern: "{prefix} &fPassword contains invalid characters"
+    password-empty: "{prefix} &fPassword cannot be empty"
+
+  register:
+    usage: "{prefix} &fUsage: &#8833EC/register <password> <password>"
+    mismatch: "{prefix} &fPasswords do not match"
+    already-registered: "{prefix} &fYou are already registered"
+    success: "{prefix} &fYou have successfully registered"
+
+  unregister:
+    usage: "{prefix} &fUsage: &#8833EC/unregister <password>"
+    success: "{prefix} &fYou have successfully deleted your account"
+
+  login:
+    usage: "{prefix} &fUsage: &#8833EC/login <password>"
+    not-registered: "{prefix} &fYou are not registered yet"
+    already-logged: "{prefix} &fYou are already logged in"
+    wrong-password: "{prefix} &fWrong password. &#8833EC{attempts} attempts left"
+    success: "{prefix} &fYou have successfully logged in"
+
+  change-password:
+    usage: "{prefix} &fUsage: &#8833EC/changepassword <old password> <new password>"
+    success: "{prefix} &fYou have successfully changed your password"
+
+  logout:
+    logout-by-premium: "{prefix} &fYou cannot log out due to &#8833ECpremium mode"
+
+  totp:
+    usage: "{prefix} &fUsage: &#8833EC/2fa enable [password]&f, &#8833EC/2fa verify <code>&f or &#8833EC/2fa disable <code>"
+    enable-usage: "{prefix} &fUsage: &#8833EC/2fa enable [password]"
+    verify-usage: "{prefix} &fUsage: &#8833EC/2fa verify <code>"
+    disable-usage: "{prefix} &fUsage: &#8833EC/2fa disable <code>"
+    successful: "{prefix} &f2FA has been &#8833ECenabled"
+    verified: "{prefix} &fQR code generated. Confirm using &#8833EC/2fa verify <code>"
+    disabled: "{prefix} &f2FA has been &#8833ECdisabled"
+    wrong: "{prefix} &fWrong 2FA key"
+    already-enabled: "{prefix} &f2FA is already enabled. Disable it using &#8833EC/2fa disable <code>"
+    already-disabled: "{prefix} &f2FA is already disabled"
+    qr: "{prefix} &fClick &#8833EChere &fto open QR code in browser"
+    token: "{prefix} &fYour 2FA token &7(click to copy)&f: &6{0}"
+    recovery: "{prefix} &fYour recovery codes &7(click to copy)&f: &6{0}"
+    need-password: "{prefix} &fYou need to enter your password to enable 2FA"
+    prompt: "{prefix} &fPlease enter your 2FA key using &#8833EC/2fa <key>"
+
+  premium:
+    enabled: "{prefix} &fPremium mode &#8833ECenabled\n&fIf you don't have a Minecraft license, disable it using /premium, otherwise you won't be able to join the server"
+    disabled: "{prefix} &fPremium mode &#8833ECdisabled"
+
+  kick:
+    timeout: "{prefix} &fYou did not authenticate in time"
+    realname: "{prefix} &fCorrect nickname: &#8833EC{realname}\n&fYour nickname: &#8833EC{name}"
+    too-many-attempts: "{prefix} &fYou exceeded the number of password attempts"
+    ban: "{prefix} &fYour account has been locked for &#8833EC{time} &fseconds due to exceeding password attempts"
+    invalid-nick-pattern: "{prefix} &fYour nickname contains invalid characters"
+    ip-limit-online-reached: "{prefix} &fToo many accounts are currently playing from this IP address"
+    ip-limit-registered-reached: "{prefix} &fToo many accounts registered from this IP address"
+
+  reminder:
+    login: "{prefix} &fAuthenticate using &#8833EC/login <password>"
+    register: "{prefix} &fRegister using &#8833EC/register <password> <password>"
+
+  dialog:
+    register:
+      title: "Registration"
+      password-field: "Password"
+      repeat-password-field: "Repeat Password"
+      confirm-button: "Register"
+    login:
+      title: "Login"
+      password-field: "Password"
+      confirm-button: "Login"
+    notifications:
+      wrong-password: "&cWrong password\n{attempts} attempts left"
+      invalid-length: "&cPassword length must be between {min} and {max} characters"
+      invalid-pattern: "&cPassword contains invalid characters"
+      mismatch: "&cPasswords do not match"
+      password-empty: "&cPassword cannot be empty"
+
+  boss-bar:
+    message: "{prefix} &fTime remaining: &#8833EC{time} &fseconds"
+
+  title:
+    before-login:
+      title: "{prefix}"
+      subtitle: "&fTime remaining: &#8833EC{time} &fseconds"
+    before-register:
+      title: "{prefix}"
+      subtitle: "&fTime remaining: &#8833EC{time} &fseconds"
+    after-login:
+      title: "{prefix}"
+      subtitle: "&fYou have &#8833ECsuccessfully &flogged in"
+      delays:
+        start: 0
+        duration: 60
+        end: 6
+    after-register:
+      title: "{prefix}"
+      subtitle: "&fYou have &#8833ECsuccessfully &fregistered"
+      delays:
+        start: 0
+        duration: 60
+        end: 6
+
+  action-bar:
+    message: "{prefix} &fTime remaining: &#8833EC{time} &fseconds"

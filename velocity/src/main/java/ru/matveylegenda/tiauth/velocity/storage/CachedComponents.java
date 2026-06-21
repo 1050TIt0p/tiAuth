@@ -151,7 +151,6 @@ public class CachedComponents {
         }
 
         public static class Kick {
-            public Component notAuth;
             public Component timeout;
             public Component realname;
             public Component tooManyAttempts;
@@ -198,10 +197,23 @@ public class CachedComponents {
         }
 
         public static class Title {
-            public Component title;
-            public Component subTitle;
-            public Component onAuthTitle;
-            public Component onAuthSubTitle;
+            public TitleMessage beforeLogin;
+            public TitleMessage beforeRegister;
+            public TitleMessageDelayed afterLogin;
+            public TitleMessageDelayed afterRegister;
+
+            public static class TitleMessage {
+                public Component title;
+                public Component subtitle;
+            }
+
+            public static class TitleMessageDelayed {
+                public Component title;
+                public Component subtitle;
+                public int fadeIn;
+                public int stay;
+                public int fadeOut;
+            }
         }
 
         public static class ActionBar {
@@ -344,13 +356,30 @@ public class CachedComponents {
         player.bossBar.message = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.bossBar.message, prefixRaw)));
 
         player.title = new Player.Title();
-        player.title.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.title, prefixRaw)));
-        player.title.subTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.subTitle, prefixRaw)));
-        player.title.onAuthTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.onAuthTitle, prefixRaw)));
-        player.title.onAuthSubTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.onAuthSubTitle, prefixRaw)));
+        player.title.beforeLogin = createTitleMessage(config.player.title.beforeLogin, prefixRaw);
+        player.title.beforeRegister = createTitleMessage(config.player.title.beforeRegister, prefixRaw);
+        player.title.afterLogin = createTitleMessageDelayed(config.player.title.afterLogin, prefixRaw);
+        player.title.afterRegister = createTitleMessageDelayed(config.player.title.afterRegister, prefixRaw);
 
         player.actionBar = new Player.ActionBar();
         player.actionBar.message = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.actionBar.message, prefixRaw)));
+    }
+
+    private Player.Title.TitleMessage createTitleMessage(MessagesConfig.Player.Title.TitleMessage source, String prefixRaw) {
+        Player.Title.TitleMessage msg = new Player.Title.TitleMessage();
+        msg.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(source.title, prefixRaw)));
+        msg.subtitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(source.subtitle, prefixRaw)));
+        return msg;
+    }
+
+    private Player.Title.TitleMessageDelayed createTitleMessageDelayed(MessagesConfig.Player.Title.TitleMessageDelayed source, String prefixRaw) {
+        Player.Title.TitleMessageDelayed msg = new Player.Title.TitleMessageDelayed();
+        msg.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(source.title, prefixRaw)));
+        msg.subtitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(source.subtitle, prefixRaw)));
+        msg.fadeIn = source.delays.start;
+        msg.stay = source.delays.duration;
+        msg.fadeOut = source.delays.end;
+        return msg;
     }
 
     private String getPrefixed(String rawMessage, String prefix) {

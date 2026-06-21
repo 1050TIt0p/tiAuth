@@ -49,6 +49,7 @@ public final class TiAuth extends Plugin {
             dataFolder.mkdir();
         }
         MainConfig.IMP.reload();
+        MessagesConfig.IMP = new MessagesConfig(MessagesConfig.getMessagesPath(MainConfig.IMP.lang));
         MessagesConfig.IMP.reload();
         initializeSecretKey(dataFolder);
         loadLibraries();

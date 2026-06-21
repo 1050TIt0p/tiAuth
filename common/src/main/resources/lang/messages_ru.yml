@@ -1,0 +1,151 @@
+prefix: "&#8833ECᴀ&#7F65E7ᴜ&#7796E3ᴛ&#6EC8DEʜ &8»"
+only-player: "{prefix} &fКоманду может использовать только игрок"
+query-error: "{prefix} &fПроизошла ошибка при запросе к базе данных. Сообщите администрации!"
+processing: "{prefix} &fПодождите, пока завершится обработка предыдущего запроса"
+player-not-found: "{prefix} &fИгрок не найден"
+no-permission: "{prefix} &fНедостаточно прав"
+
+admin:
+  usage: "{prefix} &fИспользование: &#8833EC/tiauth <reload|unregister|changepassword|forcelogin|forcepremium>"
+
+  config:
+    reload: "{prefix} &fКонфиги перезагружены"
+
+  unregister:
+    usage: "{prefix} &fИспользование: &#8833EC/tiauth unregister"
+    success: "{prefix} &fВы успешно удалили аккаунт игрока &#8833EC{player}"
+
+  change-password:
+    usage: "{prefix} &fИспользование: &#8833EC/tiauth changepassword <игрок> <пароль>"
+    success: "{prefix} &fВы успешно изменили пароль игрока &#8833EC{player}"
+
+  force-login:
+    usage: "{prefix} &fИспользование: &#8833EC/tiauth forcelogin <ник>"
+    is-authenticated: "{prefix} &fИгрок &#8833EC{player} &fуже авторизован"
+    success: "{prefix} &fВы успешно авторизовали игрока &#8833EC{player}"
+
+  force-register:
+    usage: "{prefix} &fИспользование: &#8833EC/tiauth forceregister <ник> <пароль>"
+    already-registered: "{prefix} &fИгрок &#8833EC{player} &fуже зарегистрирован"
+    success: "{prefix} &fВы успешно зарегистрировали аккаунт &#8833EC{player}"
+
+  force-premium:
+    usage: "{prefix} &fИспользование: &#8833EC/tiauth forcepremium <ник>"
+    enabled: "{prefix} &fВы успешно включили премиум-режим для игрока &#8833EC{player}"
+    disabled: "{prefix} &fВы успешно выключили премиум-режим для игрока &#8833EC{player}"
+
+  migrate:
+    usage: "{prefix} &fИспользование: &#8833EC/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]"
+    error: "{prefix} &fПроизошла ошибка при миграции базы данных"
+    invalid-file-name: "{prefix} &fНедопустимое имя файла"
+    success: "{prefix} &fБаза данных успешно мигрирована"
+
+player:
+  check-password:
+    wrong-password: "{prefix} &fНеверный пароль"
+    invalid-length: "{prefix} &fДлина пароля должна быть от &#8833EC{min} &fдо &#8833EC{max} &fсимволов"
+    invalid-pattern: "{prefix} &fПароль содержит недопустимые символы"
+    password-empty: "{prefix} &fПароль не может быть пустым"
+
+  register:
+    usage: "{prefix} &fИспользование: &#8833EC/register <пароль> <пароль>"
+    mismatch: "{prefix} &fПароли не совпадают"
+    already-registered: "{prefix} &fВы уже зарегистрированы"
+    success: "{prefix} &fВы успешно зарегистрировались"
+
+  unregister:
+    usage: "{prefix} &fИспользование: &#8833EC/unregister <пароль>"
+    success: "{prefix} &fВы успешно удалили аккаунт"
+
+  login:
+    usage: "{prefix} &fИспользование: &#8833EC/login <пароль>"
+    not-registered: "{prefix} &fВы еще не зарегистрированы"
+    already-logged: "{prefix} &fВы уже авторизованы"
+    wrong-password: "{prefix} &fНеверный пароль. Осталось &#8833EC{attempts} &fпопыток"
+    success: "{prefix} &fВы успешно авторизовались"
+
+  change-password:
+    usage: "{prefix} &fИспользование: &#8833EC/changepassword <старый пароль> <новый пароль>"
+    success: "{prefix} &fВы успешно изменили пароль"
+
+  logout:
+    logout-by-premium: "{prefix} &fВы не можете разлогиниться из-за &#8833ECпремиум режима"
+
+  totp:
+    usage: "{prefix} &fИспользование: &#8833EC/2fa enable [пароль]&f, &#8833EC/2fa verify <код>&f или &#8833EC/2fa disable <код>"
+    enable-usage: "{prefix} &fИспользование: &#8833EC/2fa enable [пароль]"
+    verify-usage: "{prefix} &fИспользование: &#8833EC/2fa verify <код>"
+    disable-usage: "{prefix} &fИспользование: &#8833EC/2fa disable <код>"
+    successful: "{prefix} &f2FA успешно &#8833ECвключена"
+    verified: "{prefix} &fQR-код сгенерирован. Подтвердите через &#8833EC/2fa verify <код>"
+    disabled: "{prefix} &f2FA успешно &#8833ECотключена"
+    wrong: "{prefix} &fНеверный 2FA ключ"
+    already-enabled: "{prefix} &f2FA уже включена. Отключите её через &#8833EC/2fa disable <код>"
+    already-disabled: "{prefix} &f2FA уже отключена"
+    qr: "{prefix} &fНажмите &#8833ECздесь &fчтобы открыть QR-код в браузере"
+    token: "{prefix} &fВаш 2FA токен &7(нажмите чтобы скопировать)&f: &6{0}"
+    recovery: "{prefix} &fВаши коды восстановления &7(нажмите чтобы скопировать)&f: &6{0}"
+    need-password: "{prefix} &fДля включения 2FA требуется ввести пароль от аккаунта"
+    prompt: "{prefix} &fПожалуйста, введите 2FA ключ используя &#8833EC/2fa <ключ>"
+
+  premium:
+    enabled: "{prefix} &fПремиум режим &#8833ECвключен\n&fЕсли у вас нет лицензии Minecraft, выключите режим прописав /premium, иначе вы не сможете войти на сервер"
+    disabled: "{prefix} &fПремиум режим &#8833ECвыключен"
+
+  kick:
+    timeout: "{prefix} &fВы не успели авторизоваться"
+    realname: "{prefix} &fПравильный ник: &#8833EC{realname}\n&fВаш ник: &#8833EC{name}"
+    too-many-attempts: "{prefix} &fВы превысили количество попыток для ввода пароля"
+    ban: "{prefix} &fВаш аккаунт заблокирован на &#8833EC{time} &fсекунд за превышение попыток ввода пароля"
+    invalid-nick-pattern: "{prefix} &fВаш ник содержит запрещенные символы"
+    ip-limit-online-reached: "{prefix} &fС этого IP-адреса играет максимальное количество аккаунтов"
+    ip-limit-registered-reached: "{prefix} &fС этого IP-адреса зарегистрировано слишком много аккаунтов"
+
+  reminder:
+    login: "{prefix} &fАвторизируйтесь командой &#8833EC/login <пароль>"
+    register: "{prefix} &fЗарегистрируйтесь командой &#8833EC/register <пароль> <пароль>"
+
+  dialog:
+    register:
+      title: "Регистрация"
+      password-field: "Пароль"
+      repeat-password-field: "Повторите пароль"
+      confirm-button: "Зарегистрироваться"
+    login:
+      title: "Авторизация"
+      password-field: "Пароль"
+      confirm-button: "Авторизоваться"
+    notifications:
+      wrong-password: "&cНеверный пароль\nОсталось {attempts} попыток"
+      invalid-length: "&cДлина пароля должна быть от {min} до {max} символов"
+      invalid-pattern: "&cПароль содержит недопустимые символы"
+      mismatch: "&cПароли не совпадают"
+      password-empty: "&cПароль не может быть пустым"
+
+  boss-bar:
+    message: "{prefix} &fОсталось &#8833EC{time} &fсекунд"
+
+  title:
+    before-login:
+      title: "{prefix}"
+      subtitle: "&fОсталось &#8833EC{time} &fсекунд"
+    before-register:
+      title: "{prefix}"
+      subtitle: "&fОсталось &#8833EC{time} &fсекунд"
+    after-login:
+      title: "{prefix}"
+      subtitle: "&fВы &#8833ECуспешно &fавторизовались"
+      delays:
+        start: 0
+        duration: 60
+        end: 6
+    after-register:
+      title: "{prefix}"
+      subtitle: "&fВы &#8833ECуспешно &fзарегистрировались"
+      delays:
+        start: 0
+        duration: 60
+        end: 6
+
+  action-bar:
+    message: "{prefix} &fОсталось &#8833EC{time} &fсекунд"

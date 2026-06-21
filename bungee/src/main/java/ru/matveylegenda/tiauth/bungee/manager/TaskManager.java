@@ -124,11 +124,11 @@ public class TaskManager {
     private void sendTitle(ProxiedPlayer player, int counter) {
         Title title = ProxyServer.getInstance().createTitle();
         title.title(TextComponent.fromLegacy(
-                CachedMessages.IMP.player.title.title
+                CachedMessages.IMP.player.title.beforeLogin.title
                         .replace("{time}", String.valueOf(counter))
         ));
         title.subTitle(TextComponent.fromLegacy(
-                CachedMessages.IMP.player.title.subTitle
+                CachedMessages.IMP.player.title.beforeLogin.subtitle
                         .replace("{time}", String.valueOf(counter))
         ));
         title.fadeIn(0);
@@ -155,18 +155,14 @@ public class TaskManager {
     }
 
     public void sendAuthTitle(ProxiedPlayer player) {
-        MainConfig.Title.AfterLogin afterLogin = MainConfig.IMP.title.afterLogin;
-        if (afterLogin.enabled) {
+        if (MainConfig.IMP.title.afterLogin.enabled) {
+            var msg = CachedMessages.IMP.player.title.afterLogin;
             Title title = ProxyServer.getInstance().createTitle();
-            title.title(TextComponent.fromLegacy(
-                    CachedMessages.IMP.player.title.onAuthTitle
-            ));
-            title.subTitle(TextComponent.fromLegacy(
-                    CachedMessages.IMP.player.title.onAuthSubTitle
-            ));
-            title.fadeIn(afterLogin.start);
-            title.stay(afterLogin.duration);
-            title.fadeOut(afterLogin.end);
+            title.title(TextComponent.fromLegacy(msg.title));
+            title.subTitle(TextComponent.fromLegacy(msg.subtitle));
+            title.fadeIn(msg.delays.start);
+            title.stay(msg.delays.duration);
+            title.fadeOut(msg.delays.end);
 
             player.sendTitle(title);
         }

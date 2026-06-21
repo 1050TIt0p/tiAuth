@@ -95,10 +95,10 @@ public class TaskManager {
 
     private void sendTitle(Player player, int counter) {
         Title componentTitle = Title.title(
-                CachedComponents.IMP.player.title.title.replaceText(builder -> builder
+                CachedComponents.IMP.player.title.beforeLogin.title.replaceText(builder -> builder
                         .match(VelocityUtils.TIME)
                         .replacement(String.valueOf(counter))),
-                CachedComponents.IMP.player.title.subTitle.replaceText(builder -> builder
+                CachedComponents.IMP.player.title.beforeLogin.subtitle.replaceText(builder -> builder
                         .match(VelocityUtils.TIME)
                         .replacement(String.valueOf(counter))),
                 0,
@@ -135,14 +135,14 @@ public class TaskManager {
     }
 
     public void sendAuthTitle(Player player) {
-        MainConfig.Title.AfterLogin afterLogin = MainConfig.IMP.title.afterLogin;
-        if (afterLogin.enabled) {
+        if (MainConfig.IMP.title.afterLogin.enabled) {
+            var msg = CachedComponents.IMP.player.title.afterLogin;
             Title componentTitle = Title.title(
-                    CachedComponents.IMP.player.title.onAuthTitle,
-                    CachedComponents.IMP.player.title.onAuthSubTitle,
-                    afterLogin.start,
-                    afterLogin.duration,
-                    afterLogin.end);
+                    msg.title,
+                    msg.subtitle,
+                    msg.fadeIn,
+                    msg.stay,
+                    msg.fadeOut);
             player.showTitle(componentTitle);
         }
     }
