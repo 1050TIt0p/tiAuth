@@ -29,6 +29,7 @@ import ru.matveylegenda.tiauth.velocity.api.event.PlayerRegisterEvent;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
+import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -706,20 +707,18 @@ public class AuthManager {
     }
 
     private void connectToBackend(PlayerChooseInitialServerEvent event) {
-        String forcedHost = event.getPlayer().getVirtualHost()
-                .map(addr -> MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase()))
-                .orElse(null);
-        String targetName = forcedHost != null ? forcedHost : MainConfig.IMP.servers.backend;
+        String targetName = event.getPlayer().getVirtualHost()
+                .flatMap(this::getForcedHost)
+                .orElse(MainConfig.IMP.servers.backend);
         plugin.getServer().getServer(targetName).ifPresent(event::setInitialServer);
     }
 
     private void connectToBackend(Player player) {
-        String forcedHost = player.getVirtualHost()
-                .map(addr -> MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase()))
-                .orElse(null);
-        String targetName = forcedHost != null ? forcedHost : MainConfig.IMP.servers.backend;
+        String targetName = player.getVirtualHost()
+                .flatMap(this::getForcedHost)
+                .orElse(MainConfig.IMP.servers.backend);
 
-        java.util.Optional<RegisteredServer> serverOpt = plugin.getServer().getServer(targetName);
+        Optional<RegisteredServer> serverOpt = plugin.getServer().getServer(targetName);
         if (serverOpt.isEmpty()) {
             return;
         }
@@ -731,6 +730,10 @@ public class AuthManager {
                 player.createConnectionRequest(targetServer).connect();
             }
         }, () -> player.createConnectionRequest(targetServer).connect());
+    }
+
+    private Optional<String> getForcedHost(InetSocketAddress virtualHost) {
+        return Optional.ofNullable(MainConfig.IMP.servers.forcedHosts.get(virtualHost.getHostString().toLowerCase()));
     }
 
     private boolean supportDialog(Player player) {
