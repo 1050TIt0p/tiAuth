@@ -1,4 +1,4 @@
-﻿package ru.matveylegenda.tiauth.velocity.manager;
+package ru.matveylegenda.tiauth.velocity.manager;
 
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.proxy.Player;
