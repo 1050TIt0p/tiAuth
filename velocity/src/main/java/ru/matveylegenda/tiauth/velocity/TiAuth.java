@@ -28,6 +28,7 @@ import ru.matveylegenda.tiauth.velocity.listener.AuthListener;
 import ru.matveylegenda.tiauth.velocity.listener.ChatListener;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
+import ru.matveylegenda.tiauth.velocity.manager.TotpManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +54,7 @@ public final class TiAuth {
     private Database database;
     private TaskManager taskManager;
     private AuthManager authManager;
+    private TotpManager totpManager;
 
     private byte[] secretKey;
 
@@ -86,6 +88,7 @@ public final class TiAuth {
         Utils.initializeColorizer(MainConfig.IMP.serializer);
         taskManager = new TaskManager(this);
         authManager = new AuthManager(this);
+        totpManager = new TotpManager(authManager, this);
 
         registerListeners();
         registerCommands();

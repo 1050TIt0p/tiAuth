@@ -15,6 +15,7 @@ import ru.matveylegenda.tiauth.bungee.listener.ChatListener;
 import ru.matveylegenda.tiauth.bungee.listener.DialogListener;
 import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
 import ru.matveylegenda.tiauth.bungee.manager.TaskManager;
+import ru.matveylegenda.tiauth.bungee.manager.TotpManager;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
@@ -37,6 +38,7 @@ public final class TiAuth extends Plugin {
     private Database database;
     private TaskManager taskManager;
     private AuthManager authManager;
+    private TotpManager totpManager;
 
     private byte[] secretKey;
 
@@ -66,6 +68,7 @@ public final class TiAuth extends Plugin {
         Utils.initializeColorizer(MainConfig.IMP.serializer);
         taskManager = new TaskManager(this);
         authManager = new AuthManager(this);
+        totpManager = new TotpManager(authManager, this);
 
         PluginManager pluginManager = getProxy().getPluginManager();
         registerListeners(pluginManager);

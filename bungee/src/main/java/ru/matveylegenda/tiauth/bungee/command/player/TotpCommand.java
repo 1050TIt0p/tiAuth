@@ -17,17 +17,16 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import ru.matveylegenda.tiauth.bungee.TiAuth;
 import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
+import ru.matveylegenda.tiauth.bungee.manager.TotpManager;
 import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
 import ru.matveylegenda.tiauth.bungee.util.BungeeUtils;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.database.Database;
-import ru.matveylegenda.tiauth.hash.Hash;
-import ru.matveylegenda.tiauth.hash.HashFactory;
-import ru.matveylegenda.tiauth.hash.HashType;
 import ru.matveylegenda.tiauth.util.EncryptionUtils;
 
 public class TotpCommand extends Command {
     private final AuthManager authManager;
+    private final TotpManager totpManager;
     private final Database database;
     private final TiAuth plugin;
     private final SecretGenerator secretGenerator = new DefaultSecretGenerator();
@@ -37,6 +36,7 @@ public class TotpCommand extends Command {
         super(name, null, aliases);
         this.plugin = plugin;
         this.authManager = plugin.getAuthManager();
+        this.totpManager = plugin.getTotpManager();
         this.database = plugin.getDatabase();
     }
 
@@ -50,8 +50,8 @@ public class TotpCommand extends Command {
         String name = player.getName();
 
         if (args.length == 1 && !args[0].equalsIgnoreCase("enable") && !args[0].equalsIgnoreCase("disable")) {
-            if (authManager.isTotpPending(name)) {
-                authManager.verifyTotpLogin(player, args[0]);
+            if (totpManager.isTotpPending(name)) {
+                totpManager.verifyTotpLogin(player, args[0]);
                 return;
             }
         }
@@ -117,7 +117,7 @@ public class TotpCommand extends Command {
             }
 
             String secret = secretGenerator.generate();
-            authManager.setTotpEnableSecret(name, secret);
+            totpManager.setTotpEnableSecret(name, secret);
 
             QrData qrData = new QrData.Builder()
                     .label(name)
@@ -139,9 +139,8 @@ public class TotpCommand extends Command {
             String[] codes = codesGenerator.generateCodes(MainConfig.IMP.auth.totp.recoveryCodesAmount);
             String[] hashedCodes = new String[codes.length];
 
-            Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
             for (int i = 0; i < codes.length; i++) {
-                hashedCodes[i] = hash.hashPassword(codes[i]);
+                hashedCodes[i] = TotpManager.RECOVERY_HASH.hashPassword(codes[i]);
             }
 
             database.getRecoveryCodeRepository().addCodes(hashedCodes, player.getName(), success1 -> {
@@ -170,7 +169,7 @@ public class TotpCommand extends Command {
             return;
         }
 
-        String secret = authManager.getTotpEnableSecret(name);
+        String secret = totpManager.getTotpEnableSecret(name);
         if (secret == null) {
             BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.enableUsage);
             return;
@@ -185,13 +184,13 @@ public class TotpCommand extends Command {
             return;
         }
 
-        if (AuthManager.TOTP_CODE_VERIFIER.isValidCode(secret, args[1])) {
+        if (TotpManager.TOTP_CODE_VERIFIER.isValidCode(secret, args[1])) {
             plugin.getDatabase().getAuthUserRepository().updateTotpToken(name, secretEncrypted, updateSuccess -> {
                 if (!updateSuccess) {
                     BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
                     return;
                 }
-                authManager.removeTotpEnableSecret(name);
+                totpManager.removeTotpEnableSecret(name);
                 BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.successful);
             });
         } else {
@@ -230,9 +229,8 @@ public class TotpCommand extends Command {
                 return;
             }
 
-            if (AuthManager.RECOVERY_CODE_PATTERN.matcher(args[1]).matches()) {
-                Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
-                String hashedCode = hash.hashPassword(args[1]);
+            if (TotpManager.RECOVERY_CODE_PATTERN.matcher(args[1]).matches()) {
+                String hashedCode = TotpManager.RECOVERY_HASH.hashPassword(args[1]);
 
                 database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
                     if (!success1) {
@@ -260,7 +258,7 @@ public class TotpCommand extends Command {
                     }
                 });
             } else {
-                if (AuthManager.TOTP_CODE_VERIFIER.isValidCode(totpToken, args[1])) {
+                if (TotpManager.TOTP_CODE_VERIFIER.isValidCode(totpToken, args[1])) {
                     database.getAuthUserRepository().updateTotpToken(player.getName(), "", updateSuccess -> {
                         if (!updateSuccess) {
                             BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
