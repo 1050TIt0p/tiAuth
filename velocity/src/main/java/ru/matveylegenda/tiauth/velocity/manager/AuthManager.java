@@ -336,12 +336,7 @@ public class AuthManager {
                 return;
             }
 
-            String totpToken = user.getTotpToken();
-            if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
-                endProcess(name);
-                totpPendingPlayers.add(name.toLowerCase());
-                taskManager.cancelTasks(player);
-                player.sendMessage(CachedComponents.IMP.player.totp.prompt);
+            if (isTotpLoginRequired(player, user)) {
                 return;
             }
 
@@ -750,6 +745,19 @@ public class AuthManager {
 
     private Optional<String> getForcedHost(InetSocketAddress virtualHost) {
         return Optional.ofNullable(MainConfig.IMP.servers.forcedHosts.get(virtualHost.getHostString().toLowerCase()));
+    }
+
+    private boolean isTotpLoginRequired(Player player, AuthUser user) {
+        String name = player.getUsername();
+        String totpToken = user.getTotpToken();
+        if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
+            endProcess(name);
+            totpPendingPlayers.add(name.toLowerCase());
+            taskManager.cancelTasks(player);
+            player.sendMessage(CachedComponents.IMP.player.totp.prompt);
+            return true;
+        }
+        return false;
     }
 
     private boolean supportDialog(Player player) {

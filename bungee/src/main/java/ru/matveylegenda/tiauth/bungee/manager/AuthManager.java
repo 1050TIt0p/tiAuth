@@ -370,12 +370,7 @@ public class AuthManager {
                 return;
             }
 
-            String totpToken = user.getTotpToken();
-            if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
-                endProcess(player);
-                totpPendingPlayers.add(player.getName().toLowerCase());
-                taskManager.cancelTasks(player);
-                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.prompt);
+            if (isTotpLoginRequired(player, user)) {
                 return;
             }
 
@@ -854,6 +849,18 @@ public class AuthManager {
 
     private Optional<String> getForcedHost(InetSocketAddress virtualHost) {
         return Optional.ofNullable(MainConfig.IMP.servers.forcedHosts.get(virtualHost.getHostString().toLowerCase()));
+    }
+
+    private boolean isTotpLoginRequired(ProxiedPlayer player, AuthUser user) {
+        String totpToken = user.getTotpToken();
+        if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
+            endProcess(player);
+            totpPendingPlayers.add(player.getName().toLowerCase());
+            taskManager.cancelTasks(player);
+            BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.prompt);
+            return true;
+        }
+        return false;
     }
 
     private boolean supportDialog(ProxiedPlayer player) {
