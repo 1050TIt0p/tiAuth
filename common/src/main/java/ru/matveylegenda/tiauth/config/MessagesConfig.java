@@ -306,7 +306,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.totp.token = "{prefix} &fВаш 2FA токен &7(нажмите чтобы скопировать)&f: &6{0}";
                 player.totp.recovery = "{prefix} &fВаши коды восстановления &7(нажмите чтобы скопировать)&f: &6{0}";
                 player.totp.needPassword = "{prefix} &fДля включения 2FA требуется ввести пароль от аккаунта";
-                player.totp.prompt = "{prefix} &fПожалуйста, введите 2FA ключ используя &#8833EC/2fa <ключ>";
+                player.totp.prompt = "{prefix} &fПожалуйста, введите 2FA ключ используя &#8833EC/2fa <код>";
                 player.premium.enabled = "{prefix} &fПремиум режим &#8833ECвключен\n&fЕсли у вас нет лицензии Minecraft, выключите режим прописав /premium, иначе вы не сможете войти на сервер";
                 player.premium.disabled = "{prefix} &fПремиум режим &#8833ECвыключен";
                 player.kick.timeout = "{prefix} &fВы не успели авторизоваться";
@@ -397,7 +397,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.totp.token = "{prefix} &fYour 2FA token &7(click to copy)&f: &6{0}";
                 player.totp.recovery = "{prefix} &fYour recovery codes &7(click to copy)&f: &6{0}";
                 player.totp.needPassword = "{prefix} &fYou need to enter your password to enable 2FA";
-                player.totp.prompt = "{prefix} &fPlease enter your 2FA key using &#8833EC/2fa <key>";
+                player.totp.prompt = "{prefix} &fPlease enter your 2FA key using &#8833EC/2fa <code>";
                 player.premium.enabled = "{prefix} &fPremium mode &#8833ECenabled\n&fIf you don't have a Minecraft license, disable it using /premium, otherwise you won't be able to join the server";
                 player.premium.disabled = "{prefix} &fPremium mode &#8833ECdisabled";
                 player.kick.timeout = "{prefix} &fYou did not authenticate in time";
