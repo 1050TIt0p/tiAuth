@@ -182,7 +182,7 @@ public class TotpManager {
     }
 
     private boolean beginProcess(String playerName) {
-        return !inProcess.add(playerName);
+        return inProcess.add(playerName);
     }
 
     private void endProcess(String playerName) {

@@ -575,7 +575,7 @@ public class AuthManager {
     }
 
     private boolean beginProcess(ProxiedPlayer player) {
-        return !inProcess.add(player.getName());
+        return inProcess.add(player.getName());
     }
 
     private void endProcess(ProxiedPlayer player) {
