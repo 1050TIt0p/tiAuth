@@ -360,7 +360,7 @@ public class MessagesConfig extends YamlSerializable {
                 admin.forcePremium.usage = "{prefix} &fUsage: &#8833EC/tiauth forcepremium <player>";
                 admin.forcePremium.enabled = "{prefix} &fYou have successfully enabled premium mode for player &#8833EC{player}";
                 admin.forcePremium.disabled = "{prefix} &fYou have successfully disabled premium mode for player &#8833EC{player}";
-                admin.migrate.usage = "{prefix} &Usage: &#8833EC/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]";
+                admin.migrate.usage = "{prefix} &fUsage: &#8833EC/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]";
                 admin.migrate.error = "{prefix} &fAn error occurred during database migration";
                 admin.migrate.invalidFileName = "{prefix} &fInvalid file name";
                 admin.migrate.success = "{prefix} &fDatabase has been successfully migrated";
