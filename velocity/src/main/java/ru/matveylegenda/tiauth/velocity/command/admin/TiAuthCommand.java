@@ -158,7 +158,7 @@ public class TiAuthCommand implements SimpleCommand {
                                 .replaceText(builder -> builder
                                         .match(VelocityUtils.PLAYER)
                                         .replacement(player.getUsername()))
-                ));
+                ), true);
             }
 
             case "forceregister" -> {

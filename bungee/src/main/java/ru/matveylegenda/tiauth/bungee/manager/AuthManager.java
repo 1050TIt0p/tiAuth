@@ -295,6 +295,10 @@ public class AuthManager {
     }
 
     public void loginPlayer(ProxiedPlayer player, Runnable callback) {
+        loginPlayer(player, callback, false);
+    }
+
+    public void loginPlayer(ProxiedPlayer player, Runnable callback, boolean forceLogin) {
         String name = player.getName();
         String lowerName = name.toLowerCase(Locale.ROOT);
         String ip = ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress();
@@ -306,7 +310,7 @@ public class AuthManager {
         SessionCache.addPlayer(name, ip);
         taskManager.cancelTasks(player);
 
-        PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player);
+        PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player, forceLogin);
         plugin.getProxy().getPluginManager().callEvent(playerAuthEvent);
 
         if (playerAuthEvent.isMoveToBackendServer()) {
