@@ -70,7 +70,7 @@ public class TotpManager {
             return;
         }
 
-        if (tryBeginProcess(name)) {
+        if (!beginProcess(name)) {
             return;
         }
 
@@ -183,7 +183,7 @@ public class TotpManager {
         });
     }
 
-    private boolean tryBeginProcess(String playerName) {
+    private boolean beginProcess(String playerName) {
         return !inProcess.add(playerName);
     }
 
