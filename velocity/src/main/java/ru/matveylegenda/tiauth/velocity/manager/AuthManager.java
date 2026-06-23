@@ -484,8 +484,9 @@ public class AuthManager {
 
     public void verifyTotpLogin(Player player, String code) {
         String name = player.getUsername();
+        String lowerName = name.toLowerCase();
 
-        if (!totpPendingPlayers.contains(name.toLowerCase())) {
+        if (!totpPendingPlayers.contains(lowerName)) {
             return;
         }
 
@@ -501,14 +502,14 @@ public class AuthManager {
             }
 
             if (user == null) {
-                totpPendingPlayers.remove(name.toLowerCase());
+                totpPendingPlayers.remove(lowerName);
                 player.sendMessage(CachedComponents.IMP.player.login.notRegistered);
                 endProcess(name);
                 return;
             }
 
             if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
-                totpPendingPlayers.remove(name.toLowerCase());
+                totpPendingPlayers.remove(lowerName);
                 loginPlayer(player, () -> {
                     player.sendMessage(CachedComponents.IMP.player.login.success);
                     endProcess(name);
@@ -517,7 +518,6 @@ public class AuthManager {
             }
 
             String totpToken;
-
             try {
                 totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
             } catch (Exception e) {
@@ -527,74 +527,86 @@ public class AuthManager {
             }
 
             if (AuthManager.RECOVERY_CODE_PATTERN.matcher(code).matches()) {
-                Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
-                String hashedCode = hash.hashPassword(code);
+                verifyRecoveryCodeLogin(player, name, code);
+            } else if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
+                completeTotpLogin(player, name);
+            } else {
+                handleWrongTotpAttempt(player, name);
+            }
+        });
+    }
 
-                database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
-                    if (!success1) {
+    private void completeTotpLogin(Player player, String name) {
+        String lowerName = name.toLowerCase();
+
+        totpPendingPlayers.remove(lowerName);
+        totpAttempts.remove(lowerName);
+
+        loginPlayer(player, () -> {
+            player.sendMessage(CachedComponents.IMP.player.login.success);
+            loginAttempts.remove(name);
+            endProcess(name);
+        });
+    }
+
+    private void handleWrongTotpAttempt(Player player, String name) {
+        String lowerName = name.toLowerCase();
+
+        int attempts = totpAttempts.merge(lowerName, 1, Integer::sum);
+        if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+            totpPendingPlayers.remove(lowerName);
+            totpAttempts.remove(lowerName);
+            player.disconnect(CachedComponents.IMP.player.kick.tooManyAttempts);
+            if (MainConfig.IMP.auth.totp.banPlayer) {
+                BanCache.addPlayer(player.getRemoteAddress().getAddress().getHostAddress());
+            }
+            endProcess(name);
+            return;
+        }
+
+        player.sendMessage(CachedComponents.IMP.player.totp.wrong);
+        endProcess(name);
+    }
+
+    private void verifyRecoveryCodeLogin(Player player, String name, String code) {
+        String lowerName = name.toLowerCase(Locale.ROOT);
+        Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
+        String hashedCode = hash.hashPassword(code);
+
+        database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
+            if (!success1) {
+                VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
+                endProcess(name);
+                return;
+            }
+
+            if (recoveryCode != null && recoveryCode.getUsername().equalsIgnoreCase(lowerName)) {
+                database.getRecoveryCodeRepository().removeCode(hashedCode, success2 -> {
+                    if (!success2) {
                         VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
                         endProcess(name);
                         return;
                     }
 
-                    if (recoveryCode != null && recoveryCode.getUsername().equalsIgnoreCase(name.toLowerCase(Locale.ROOT))) {
-                        database.getRecoveryCodeRepository().removeCode(hashedCode, success2 -> {
-                            if (!success2) {
-                                VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
-                                endProcess(name);
-                                return;
-                            }
-
-                            totpPendingPlayers.remove(name.toLowerCase(Locale.ROOT));
-                            totpAttempts.remove(name.toLowerCase(Locale.ROOT));
-                            loginPlayer(player, () -> {
-                                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.login.success);
-                                loginAttempts.remove(name);
-                                endProcess(name);
-                            });
-                        });
-                    } else {
-                        int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
-                        if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
-                            totpPendingPlayers.remove(name.toLowerCase());
-                            totpAttempts.remove(name.toLowerCase());
-                            player.disconnect(CachedComponents.IMP.player.kick.tooManyAttempts);
-                            if (MainConfig.IMP.auth.totp.banPlayer) {
-                                BanCache.addPlayer(player.getRemoteAddress().getAddress().getHostAddress());
-                            }
-                            endProcess(name);
-                            return;
-                        }
-                        player.sendMessage(CachedComponents.IMP.player.totp.wrong);
-                        endProcess(name);
-                    }
+                    completeTotpLogin(player, name);
                 });
             } else {
-                if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
-                    totpPendingPlayers.remove(name.toLowerCase());
-                    totpAttempts.remove(name.toLowerCase());
-                    loginPlayer(player, () -> {
-                        player.sendMessage(CachedComponents.IMP.player.login.success);
-                        loginAttempts.remove(name);
-                        endProcess(name);
-                    });
-                } else {
-                    int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
-                    if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
-                        totpPendingPlayers.remove(name.toLowerCase());
-                        totpAttempts.remove(name.toLowerCase());
-                        player.disconnect(CachedComponents.IMP.player.kick.tooManyAttempts);
-                        if (MainConfig.IMP.auth.totp.banPlayer) {
-                            BanCache.addPlayer(player.getRemoteAddress().getAddress().getHostAddress());
-                        }
-                        endProcess(name);
-                        return;
-                    }
-                    player.sendMessage(CachedComponents.IMP.player.totp.wrong);
-                    endProcess(name);
-                }
+                handleWrongTotpAttempt(player, name);
             }
         });
+    }
+
+    private boolean isTotpLoginRequired(Player player, AuthUser user) {
+        String name = player.getUsername();
+        String totpToken = user.getTotpToken();
+        if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
+            endProcess(name);
+            totpPendingPlayers.add(name.toLowerCase());
+            taskManager.cancelTasks(player);
+            player.sendMessage(CachedComponents.IMP.player.totp.prompt);
+            return true;
+        }
+        return false;
     }
 
     public void togglePremium(Player player) {
@@ -745,19 +757,6 @@ public class AuthManager {
 
     private Optional<String> getForcedHost(InetSocketAddress virtualHost) {
         return Optional.ofNullable(MainConfig.IMP.servers.forcedHosts.get(virtualHost.getHostString().toLowerCase()));
-    }
-
-    private boolean isTotpLoginRequired(Player player, AuthUser user) {
-        String name = player.getUsername();
-        String totpToken = user.getTotpToken();
-        if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
-            endProcess(name);
-            totpPendingPlayers.add(name.toLowerCase());
-            taskManager.cancelTasks(player);
-            player.sendMessage(CachedComponents.IMP.player.totp.prompt);
-            return true;
-        }
-        return false;
     }
 
     private boolean supportDialog(Player player) {

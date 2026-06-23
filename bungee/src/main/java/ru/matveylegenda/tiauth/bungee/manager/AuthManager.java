@@ -540,8 +540,9 @@ public class AuthManager {
 
     public void verifyTotpLogin(ProxiedPlayer player, String code) {
         String name = player.getName();
+        String lowerName = name.toLowerCase();
 
-        if (!totpPendingPlayers.contains(name.toLowerCase())) {
+        if (!totpPendingPlayers.contains(lowerName)) {
             return;
         }
 
@@ -557,14 +558,14 @@ public class AuthManager {
             }
 
             if (user == null) {
-                totpPendingPlayers.remove(name.toLowerCase());
+                totpPendingPlayers.remove(lowerName);
                 BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.notRegistered);
                 endProcess(player);
                 return;
             }
 
             if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
-                totpPendingPlayers.remove(name.toLowerCase());
+                totpPendingPlayers.remove(lowerName);
                 loginPlayer(player, () -> {
                     BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
                     endProcess(player);
@@ -573,7 +574,6 @@ public class AuthManager {
             }
 
             String totpToken;
-
             try {
                 totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
             } catch (Exception e) {
@@ -583,74 +583,85 @@ public class AuthManager {
             }
 
             if (AuthManager.RECOVERY_CODE_PATTERN.matcher(code).matches()) {
-                Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
-                String hashedCode = hash.hashPassword(code);
+                verifyRecoveryCodeLogin(player, name, code);
+            } else if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
+                completeTotpLogin(player, name);
+            } else {
+                handleWrongTotpAttempt(player, name);
+            }
+        });
+    }
 
-                database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
-                    if (!success1) {
+    private void completeTotpLogin(ProxiedPlayer player, String name) {
+        String lowerName = name.toLowerCase();
+
+        totpPendingPlayers.remove(lowerName);
+        totpAttempts.remove(lowerName);
+
+        loginPlayer(player, () -> {
+            BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+            loginAttempts.remove(name);
+            endProcess(player);
+        });
+    }
+
+    private void handleWrongTotpAttempt(ProxiedPlayer player, String name) {
+        String lowerName = name.toLowerCase();
+
+        int attempts = totpAttempts.merge(lowerName, 1, Integer::sum);
+        if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
+            totpPendingPlayers.remove(lowerName);
+            totpAttempts.remove(lowerName);
+            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
+            if (MainConfig.IMP.auth.totp.banPlayer) {
+                BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
+            }
+            endProcess(player);
+            return;
+        }
+
+        BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
+        endProcess(player);
+    }
+
+    private void verifyRecoveryCodeLogin(ProxiedPlayer player, String name, String code) {
+        String lowerName = name.toLowerCase(Locale.ROOT);
+        Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
+        String hashedCode = hash.hashPassword(code);
+
+        database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
+            if (!success1) {
+                BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
+                endProcess(player);
+                return;
+            }
+
+            if (recoveryCode != null && recoveryCode.getUsername().equalsIgnoreCase(lowerName)) {
+                database.getRecoveryCodeRepository().removeCode(hashedCode, success2 -> {
+                    if (!success2) {
                         BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
                         endProcess(player);
                         return;
                     }
 
-                    if (recoveryCode != null && recoveryCode.getUsername().equalsIgnoreCase(name.toLowerCase(Locale.ROOT))) {
-                        database.getRecoveryCodeRepository().removeCode(hashedCode, success2 -> {
-                            if (!success2) {
-                                BungeeUtils.sendMessage(player, CachedMessages.IMP.queryError);
-                                endProcess(player);
-                                return;
-                            }
-
-                            totpPendingPlayers.remove(name.toLowerCase(Locale.ROOT));
-                            totpAttempts.remove(name.toLowerCase(Locale.ROOT));
-                            loginPlayer(player, () -> {
-                                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
-                                loginAttempts.remove(name);
-                                endProcess(player);
-                            });
-                        });
-                    } else {
-                        int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
-                        if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
-                            totpPendingPlayers.remove(name.toLowerCase());
-                            totpAttempts.remove(name.toLowerCase());
-                            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
-                            if (MainConfig.IMP.auth.totp.banPlayer) {
-                                BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
-                            }
-                            endProcess(player);
-                            return;
-                        }
-                        BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
-                        endProcess(player);
-                    }
+                    completeTotpLogin(player, name);
                 });
             } else {
-                if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
-                    totpPendingPlayers.remove(name.toLowerCase());
-                    totpAttempts.remove(name.toLowerCase());
-                    loginPlayer(player, () -> {
-                        BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
-                        loginAttempts.remove(name);
-                        endProcess(player);
-                    });
-                } else {
-                    int attempts = totpAttempts.merge(name.toLowerCase(), 1, Integer::sum);
-                    if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
-                        totpPendingPlayers.remove(name.toLowerCase());
-                        totpAttempts.remove(name.toLowerCase());
-                        player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
-                        if (MainConfig.IMP.auth.totp.banPlayer) {
-                            BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
-                        }
-                        endProcess(player);
-                        return;
-                    }
-                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.wrong);
-                    endProcess(player);
-                }
+                handleWrongTotpAttempt(player, name);
             }
         });
+    }
+
+    private boolean isTotpLoginRequired(ProxiedPlayer player, AuthUser user) {
+        String totpToken = user.getTotpToken();
+        if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
+            endProcess(player);
+            totpPendingPlayers.add(player.getName().toLowerCase());
+            taskManager.cancelTasks(player);
+            BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.prompt);
+            return true;
+        }
+        return false;
     }
 
     public void togglePremium(ProxiedPlayer player) {
@@ -849,18 +860,6 @@ public class AuthManager {
 
     private Optional<String> getForcedHost(InetSocketAddress virtualHost) {
         return Optional.ofNullable(MainConfig.IMP.servers.forcedHosts.get(virtualHost.getHostString().toLowerCase()));
-    }
-
-    private boolean isTotpLoginRequired(ProxiedPlayer player, AuthUser user) {
-        String totpToken = user.getTotpToken();
-        if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
-            endProcess(player);
-            totpPendingPlayers.add(player.getName().toLowerCase());
-            taskManager.cancelTasks(player);
-            BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.prompt);
-            return true;
-        }
-        return false;
     }
 
     private boolean supportDialog(ProxiedPlayer player) {
