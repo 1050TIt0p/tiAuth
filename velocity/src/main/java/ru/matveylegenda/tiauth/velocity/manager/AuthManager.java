@@ -73,62 +73,19 @@ public class AuthManager {
 
         if (!password.equals(repeatPassword)) {
             player.sendMessage(CachedComponents.IMP.player.register.mismatch);
-
             if (supportDialog(player)) {
                 showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.mismatch);
             }
-
             return;
         }
 
-        if (password.isEmpty()) {
-            player.sendMessage(CachedComponents.IMP.player.checkPassword.passwordEmpty);
-
-            if (supportDialog(player)) {
-                showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.passwordEmpty);
-            }
-
+        if (checkPasswordEmpty(player, password) ||
+                checkPasswordLength(player, password) ||
+                checkPasswordPattern(player, password)) {
             return;
         }
 
-        if (password.length() < MainConfig.IMP.auth.minPasswordLength ||
-                password.length() > MainConfig.IMP.auth.maxPasswordLength) {
-            player.sendMessage(
-                    CachedComponents.IMP.player.checkPassword.invalidLength
-                            .replaceText(builder -> builder
-                                    .match(VelocityUtils.MIN)
-                                    .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
-                            .replaceText(builder -> builder
-                                    .match(VelocityUtils.MAX)
-                                    .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
-            );
-
-            if (supportDialog(player)) {
-                showLoginDialog(player,
-                        CachedComponents.IMP.player.dialog.notifications.invalidLength
-                                .replaceText(builder -> builder
-                                        .match(VelocityUtils.MIN)
-                                        .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
-                                .replaceText(builder -> builder
-                                        .match(VelocityUtils.MAX)
-                                        .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
-                );
-            }
-
-            return;
-        }
-
-        if (!passwordPattern.matcher(password).matches()) {
-            player.sendMessage(CachedComponents.IMP.player.checkPassword.invalidPattern);
-
-            if (supportDialog(player)) {
-                showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.invalidPattern);
-            }
-
-            return;
-        }
-
-        if (!beginProcess(name)) {
+        if (beginProcess(name)) {
             return;
         }
 
@@ -145,30 +102,32 @@ public class AuthManager {
                 return;
             }
 
-            String ip = player.getRemoteAddress().getAddress().getHostAddress();
+            completeRegistration(player, name, password);
+        });
+    }
 
-            registerPlayer(name, password, ip, success1 -> {
-                if (!success1) {
-                    player.disconnect(CachedComponents.IMP.queryError);
-                    endProcess(name);
-                    return;
-                }
+    private void completeRegistration(Player player, String name, String password) {
+        String ip = player.getRemoteAddress().getAddress().getHostAddress();
 
-                player.sendMessage(CachedComponents.IMP.player.register.success);
-                AuthCache.setAuthenticated(name);
-
-                SessionCache.addPlayer(name, ip);
-                taskManager.cancelTasks(player);
-
-                PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
-                plugin.getServer().getEventManager().fire(playerRegisterEvent).thenAccept(firedEvent -> {
-                    if (firedEvent.isMoveToBackendServer()) {
-                        connectToBackend(player);
-                    }
-                });
-
+        registerPlayer(name, password, ip, success1 -> {
+            if (!success1) {
+                player.disconnect(CachedComponents.IMP.queryError);
                 endProcess(name);
+                return;
+            }
+            player.sendMessage(CachedComponents.IMP.player.register.success);
+            AuthCache.setAuthenticated(name);
+            SessionCache.addPlayer(name, ip);
+            taskManager.cancelTasks(player);
+
+            PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
+            plugin.getServer().getEventManager().fire(playerRegisterEvent).thenAccept(firedEvent -> {
+                if (firedEvent.isMoveToBackendServer()) {
+                    connectToBackend(player);
+                }
             });
+
+            endProcess(name);
         });
     }
 
@@ -194,21 +153,11 @@ public class AuthManager {
     public void unregisterPlayer(Player player, String password) {
         String name = player.getUsername();
 
-        if (!beginProcess(name)) {
+        if (beginProcess(name)) {
             return;
         }
 
-        if (password.length() < MainConfig.IMP.auth.minPasswordLength || password.length() > MainConfig.IMP.auth.maxPasswordLength) {
-            player.sendMessage(
-                    CachedComponents.IMP.player.checkPassword.invalidLength
-                            .replaceText(builder -> builder
-                                    .match(VelocityUtils.MIN)
-                                    .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
-                            .replaceText(builder -> builder
-                                    .match(VelocityUtils.MAX)
-                                    .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
-            );
-
+        if (checkPasswordLength(player, password)) {
             endProcess(name);
             return;
         }
@@ -220,10 +169,7 @@ public class AuthManager {
                 return;
             }
 
-
-            String hashedPassword = user.getPassword();
-
-            if (!hash.verifyPassword(password, hashedPassword)) {
+            if (!hash.verifyPassword(password, user.getPassword())) {
                 player.sendMessage(CachedComponents.IMP.player.checkPassword.wrongPassword);
                 endProcess(name);
                 return;
@@ -273,17 +219,11 @@ public class AuthManager {
             return;
         }
 
-        if (password.isEmpty()) {
-            player.sendMessage(CachedComponents.IMP.player.checkPassword.passwordEmpty);
-
-            if (supportDialog(player)) {
-                showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.passwordEmpty);
-            }
-
+        if (checkPasswordEmpty(player, password)) {
             return;
         }
 
-        if (!beginProcess(name)) {
+        if (beginProcess(name)) {
             return;
         }
 
@@ -300,39 +240,8 @@ public class AuthManager {
                 return;
             }
 
-
-            String hashedPassword = user.getPassword();
-
-            if (!hash.verifyPassword(password, hashedPassword)) {
-                int attempts = loginAttempts.merge(name, 1, Integer::sum);
-
-                if (attempts >= MainConfig.IMP.auth.loginAttempts) {
-                    player.disconnect(CachedComponents.IMP.player.kick.tooManyAttempts);
-
-                    if (MainConfig.IMP.auth.banPlayer) {
-                        String ip = player.getRemoteAddress().getAddress().getHostAddress();
-                        BanCache.addPlayer(ip);
-                    }
-
-                    loginAttempts.remove(name);
-                    endProcess(name);
-                    return;
-                }
-
-                player.sendMessage(
-                        CachedComponents.IMP.player.login.wrongPassword.replaceText(builder -> builder
-                                .match(VelocityUtils.ATTEMPTS)
-                                .replacement(String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts)))
-                );
-
-                if (supportDialog(player)) {
-                    showLoginDialog(player,
-                            CachedComponents.IMP.player.dialog.notifications.wrongPassword.replaceText(builder -> builder
-                                    .match(VelocityUtils.ATTEMPTS)
-                                    .replacement(String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts)))
-                    );
-                }
-                endProcess(name);
+            if (!hash.verifyPassword(password, user.getPassword())) {
+                handleWrongPasswordAttempt(player, name);
                 return;
             }
 
@@ -340,22 +249,55 @@ public class AuthManager {
                 return;
             }
 
-            loginPlayer(player, () -> {
-                player.sendMessage(CachedComponents.IMP.player.login.success);
+            processSuccessfulLogin(player, name);
+        });
+    }
 
-                if (MainConfig.IMP.title.enabledOnAuth) {
-                    Title componentTitle = Title.title(
-                            CachedComponents.IMP.player.title.onAuthTitle,
-                            CachedComponents.IMP.player.title.onAuthSubTitle,
-                            0,
-                            21,
-                            0);
-                    player.showTitle(componentTitle);
-                }
+    private void handleWrongPasswordAttempt(Player player, String name) {
+        int attempts = loginAttempts.merge(name, 1, Integer::sum);
 
-                loginAttempts.remove(name);
-                endProcess(name);
-            });
+        if (attempts >= MainConfig.IMP.auth.loginAttempts) {
+            player.disconnect(CachedComponents.IMP.player.kick.tooManyAttempts);
+            if (MainConfig.IMP.auth.banPlayer) {
+                BanCache.addPlayer(player.getRemoteAddress().getAddress().getHostAddress());
+            }
+            loginAttempts.remove(name);
+            endProcess(name);
+            return;
+        }
+
+        player.sendMessage(
+                CachedComponents.IMP.player.login.wrongPassword.replaceText(builder -> builder
+                        .match(VelocityUtils.ATTEMPTS)
+                        .replacement(String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts)))
+        );
+
+        if (supportDialog(player)) {
+            showLoginDialog(player,
+                    CachedComponents.IMP.player.dialog.notifications.wrongPassword.replaceText(builder -> builder
+                            .match(VelocityUtils.ATTEMPTS)
+                            .replacement(String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts)))
+            );
+        }
+        endProcess(name);
+    }
+
+    private void processSuccessfulLogin(Player player, String name) {
+        loginPlayer(player, () -> {
+            player.sendMessage(CachedComponents.IMP.player.login.success);
+
+            if (MainConfig.IMP.title.enabledOnAuth) {
+                Title componentTitle = Title.title(
+                        CachedComponents.IMP.player.title.onAuthTitle,
+                        CachedComponents.IMP.player.title.onAuthSubTitle,
+                        0,
+                        21,
+                        0);
+                player.showTitle(componentTitle);
+            }
+
+            loginAttempts.remove(name);
+            endProcess(name);
         });
     }
 
@@ -386,34 +328,19 @@ public class AuthManager {
     public void changePasswordPlayer(Player player, String oldPassword, String newPassword) {
         String name = player.getUsername();
 
-        if (oldPassword.isEmpty() || newPassword.isEmpty()) {
-            player.sendMessage(CachedComponents.IMP.player.checkPassword.passwordEmpty);
-
+        if (checkPasswordEmpty(player, oldPassword) || checkPasswordEmpty(player, newPassword)) {
             return;
         }
 
-        if ((oldPassword.length() < MainConfig.IMP.auth.minPasswordLength || oldPassword.length() > MainConfig.IMP.auth.maxPasswordLength) ||
-                (newPassword.length() < MainConfig.IMP.auth.minPasswordLength || newPassword.length() > MainConfig.IMP.auth.maxPasswordLength)) {
-            player.sendMessage(
-                    CachedComponents.IMP.player.checkPassword.invalidLength
-                            .replaceText(builder -> builder
-                                    .match(VelocityUtils.MIN)
-                                    .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
-                            .replaceText(builder -> builder
-                                    .match(VelocityUtils.MAX)
-                                    .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
-            );
-
+        if (checkPasswordLength(player, oldPassword) || checkPasswordLength(player, newPassword)) {
             return;
         }
 
-        if (!passwordPattern.matcher(newPassword).matches()) {
-            player.sendMessage(CachedComponents.IMP.player.checkPassword.invalidPattern);
-
+        if (checkPasswordPattern(player, newPassword)) {
             return;
         }
 
-        if (!beginProcess(name)) {
+        if (beginProcess(name)) {
             return;
         }
 
@@ -424,10 +351,7 @@ public class AuthManager {
                 return;
             }
 
-
-            String hashedPassword = user.getPassword();
-
-            if (!hash.verifyPassword(oldPassword, hashedPassword)) {
+            if (!hash.verifyPassword(oldPassword, user.getPassword())) {
                 player.sendMessage(CachedComponents.IMP.player.checkPassword.wrongPassword);
                 endProcess(name);
                 return;
@@ -441,7 +365,6 @@ public class AuthManager {
                 }
 
                 player.sendMessage(CachedComponents.IMP.player.changePassword.success);
-
                 endProcess(name);
             });
         });
@@ -490,7 +413,7 @@ public class AuthManager {
             return;
         }
 
-        if (!beginProcess(name)) {
+        if (beginProcess(name)) {
             return;
         }
 
@@ -612,7 +535,7 @@ public class AuthManager {
     public void togglePremium(Player player) {
         String name = player.getUsername();
 
-        if (!beginProcess(name)) {
+        if (beginProcess(name)) {
             return;
         }
 
@@ -643,7 +566,7 @@ public class AuthManager {
     }
 
     /**
-     * Форсированный аутентификационный путь (для использования извне).
+     * Force-authenticates the player, bypassing the normal login flow.
      */
     public void forceAuth(Player player, PlayerChooseInitialServerEvent event, CompletableFuture<Void> future) {
         String name = player.getUsername();
@@ -680,10 +603,9 @@ public class AuthManager {
                     return;
                 }
 
-                // подключаем к auth-серверу
                 if (event == null && future == null) {
                     connectToAuthServer(player);
-                } else {
+                } else if (event != null) {
                     Optional<RegisteredServer> authOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
                     authOpt.ifPresent(event::setInitialServer);
                 }
@@ -766,12 +688,62 @@ public class AuthManager {
     private boolean beginProcess(String playerName) {
         if (!inProcess.add(playerName)) {
             plugin.getServer().getPlayer(playerName).ifPresent(p -> p.sendMessage(CachedComponents.IMP.processing));
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     private void endProcess(String playerName) {
         inProcess.remove(playerName);
+    }
+
+    private boolean checkPasswordEmpty(Player player, String password) {
+        if (password.isEmpty()) {
+            player.sendMessage(CachedComponents.IMP.player.checkPassword.passwordEmpty);
+            if (supportDialog(player)) {
+                showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.passwordEmpty);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkPasswordLength(Player player, String password) {
+        if (password.length() < MainConfig.IMP.auth.minPasswordLength ||
+                password.length() > MainConfig.IMP.auth.maxPasswordLength) {
+            player.sendMessage(
+                    CachedComponents.IMP.player.checkPassword.invalidLength
+                            .replaceText(builder -> builder
+                                    .match(VelocityUtils.MIN)
+                                    .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
+                            .replaceText(builder -> builder
+                                    .match(VelocityUtils.MAX)
+                                    .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
+            );
+            if (supportDialog(player)) {
+                showLoginDialog(player,
+                        CachedComponents.IMP.player.dialog.notifications.invalidLength
+                                .replaceText(builder -> builder
+                                        .match(VelocityUtils.MIN)
+                                        .replacement(String.valueOf(MainConfig.IMP.auth.minPasswordLength)))
+                                .replaceText(builder -> builder
+                                        .match(VelocityUtils.MAX)
+                                        .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
+                );
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkPasswordPattern(Player player, String password) {
+        if (!passwordPattern.matcher(password).matches()) {
+            player.sendMessage(CachedComponents.IMP.player.checkPassword.invalidPattern);
+            if (supportDialog(player)) {
+                showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.invalidPattern);
+            }
+            return true;
+        }
+        return false;
     }
 }

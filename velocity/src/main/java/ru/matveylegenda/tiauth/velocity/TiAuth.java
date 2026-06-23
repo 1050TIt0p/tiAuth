@@ -268,7 +268,7 @@ public final class TiAuth {
     private void registerCommands() {
         CommandManager commandManager = server.getCommandManager();
         commandManager.register(commandManager.metaBuilder("tiauth").aliases("auth").build(), new TiAuthCommand(this));
-        commandManager.register(commandManager.metaBuilder("login").aliases("l").build(), new LoginCommand(this));
+        commandManager.register(commandManager.metaBuilder("login").aliases("log", "l").build(), new LoginCommand(this));
         commandManager.register(commandManager.metaBuilder("register").aliases("reg").build(), new RegisterCommand(this));
         commandManager.register(commandManager.metaBuilder("unregister").aliases("unreg").build(), new UnregisterCommand(this));
         commandManager.register(commandManager.metaBuilder("changepassword").aliases("changepass").build(), new ChangePasswordCommand(this));
