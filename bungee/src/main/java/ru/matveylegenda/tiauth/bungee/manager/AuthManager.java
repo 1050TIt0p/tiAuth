@@ -44,7 +44,6 @@ public class AuthManager {
 
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
-    private final Set<String> authenticatedPlayers = ConcurrentHashMap.newKeySet();
     private final TiAuth plugin;
     private final Database database;
     private final TaskManager taskManager;
@@ -78,7 +77,7 @@ public class AuthManager {
             return;
         }
 
-        if (beginProcess(player)) {
+        if (!beginProcess(player)) {
             return;
         }
 
@@ -129,7 +128,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().registerUser(
                 new AuthUser(
-                        playerName.toLowerCase(),
+                        playerName.toLowerCase(Locale.ROOT),
                         playerName,
                         hash.hashPassword(password),
                         false,
@@ -145,7 +144,7 @@ public class AuthManager {
     }
 
     public void unregisterPlayer(ProxiedPlayer player, String password) {
-        if (beginProcess(player)) {
+        if (!beginProcess(player)) {
             return;
         }
 
@@ -198,14 +197,8 @@ public class AuthManager {
             return;
         }
 
-        String lowerName = player.getName().toLowerCase(Locale.ROOT);
         if (plugin.getTotpManager().isTotpPending(player.getName())) {
             BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.prompt);
-            return;
-        }
-
-        if (authenticatedPlayers.contains(lowerName)) {
-            BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.alreadyLogged);
             return;
         }
 
@@ -213,7 +206,7 @@ public class AuthManager {
             return;
         }
 
-        if (beginProcess(player)) {
+        if (!beginProcess(player)) {
             return;
         }
 
@@ -300,10 +293,8 @@ public class AuthManager {
 
     public void loginPlayer(ProxiedPlayer player, Runnable callback, boolean forceLogin) {
         String name = player.getName();
-        String lowerName = name.toLowerCase(Locale.ROOT);
         String ip = ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress();
 
-        authenticatedPlayers.add(lowerName);
         AuthCache.setAuthenticated(name);
         database.getAuthUserRepository().updateLastLogin(name);
         database.getAuthUserRepository().updateLastIp(name, ip);
@@ -333,7 +324,7 @@ public class AuthManager {
             return;
         }
 
-        if (beginProcess(player)) {
+        if (!beginProcess(player)) {
             return;
         }
 
@@ -381,7 +372,6 @@ public class AuthManager {
         taskManager.cancelTasks(player);
         AuthCache.logout(player.getName());
         SessionCache.removePlayer(player.getName());
-        authenticatedPlayers.remove(player.getName().toLowerCase(Locale.ROOT));
     }
 
     public void clearLoginAttempts(String lowerName) {
@@ -389,7 +379,7 @@ public class AuthManager {
     }
 
     public void togglePremium(ProxiedPlayer player) {
-        if (beginProcess(player)) {
+        if (!beginProcess(player)) {
             return;
         }
 
@@ -428,7 +418,6 @@ public class AuthManager {
     }
 
     public void forceAuth(ProxiedPlayer player, PostLoginEvent event) {
-        authenticatedPlayers.remove(player.getName().toLowerCase(Locale.ROOT));
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             try {
                 if (!success) {
@@ -550,12 +539,8 @@ public class AuthManager {
     }
 
     private void connectToAuthServer(ProxiedPlayer player) {
-        ServerInfo currentServer = player.getServer().getInfo();
         ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
-
-        if (currentServer == null || !currentServer.equals(authServer)) {
-            player.connect(authServer);
-        }
+        connect(player, authServer);
     }
 
     private void connectToBackend(PostLoginEvent event) {
@@ -570,11 +555,14 @@ public class AuthManager {
         String targetName = Optional.ofNullable(player.getPendingConnection().getVirtualHost())
                 .flatMap(this::getForcedHost)
                 .orElse(MainConfig.IMP.servers.backend);
-        ServerInfo currentServer = player.getServer().getInfo();
         ServerInfo targetServer = plugin.getProxy().getServerInfo(targetName);
+        connect(player, targetServer);
+    }
 
-        if (currentServer == null || !currentServer.equals(targetServer)) {
-            player.connect(targetServer);
+    private void connect(ProxiedPlayer player, ServerInfo target) {
+        ServerInfo currentServer = player.getServer().getInfo();
+        if (currentServer == null || !currentServer.equals(target)) {
+            player.connect(target);
         }
     }
 

@@ -1,4 +1,4 @@
-package ru.matveylegenda.tiauth.velocity.manager;
+﻿package ru.matveylegenda.tiauth.velocity.manager;
 
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.proxy.Player;
@@ -37,8 +37,6 @@ public class AuthManager {
 
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
-    private final Set<String> authenticatedPlayers = ConcurrentHashMap.newKeySet();
-
     private final TiAuth plugin;
     private final Database database;
     private final TaskManager taskManager;
@@ -74,7 +72,7 @@ public class AuthManager {
             return;
         }
 
-        if (beginProcess(name)) {
+        if (!beginProcess(name)) {
             return;
         }
 
@@ -124,7 +122,7 @@ public class AuthManager {
 
         database.getAuthUserRepository().registerUser(
                 new AuthUser(
-                        playerName.toLowerCase(),
+                        playerName.toLowerCase(Locale.ROOT),
                         playerName,
                         hash.hashPassword(password),
                         false,
@@ -142,7 +140,7 @@ public class AuthManager {
     public void unregisterPlayer(Player player, String password) {
         String name = player.getUsername();
 
-        if (beginProcess(name)) {
+        if (!beginProcess(name)) {
             return;
         }
 
@@ -192,7 +190,6 @@ public class AuthManager {
 
     public void loginPlayer(Player player, String password) {
         String name = player.getUsername();
-        String lowerName = name.toLowerCase(Locale.ROOT);
 
         if (AuthCache.isAuthenticated(name)) {
             player.sendMessage(CachedComponents.IMP.player.login.alreadyLogged);
@@ -204,16 +201,11 @@ public class AuthManager {
             return;
         }
 
-        if (authenticatedPlayers.contains(lowerName)) {
-            player.sendMessage(CachedComponents.IMP.player.login.alreadyLogged);
-            return;
-        }
-
         if (checkPasswordEmpty(player, password)) {
             return;
         }
 
-        if (beginProcess(name)) {
+        if (!beginProcess(name)) {
             return;
         }
 
@@ -300,10 +292,8 @@ public class AuthManager {
 
     public void loginPlayer(Player player, Runnable callback, boolean forceLogin) {
         String name = player.getUsername();
-        String lowerName = name.toLowerCase(Locale.ROOT);
         String ip = player.getRemoteAddress().getAddress().getHostAddress();
 
-        authenticatedPlayers.add(lowerName);
         AuthCache.setAuthenticated(name);
         database.getAuthUserRepository().updateLastLogin(name);
         database.getAuthUserRepository().updateLastIp(name, ip);
@@ -335,7 +325,7 @@ public class AuthManager {
             return;
         }
 
-        if (beginProcess(name)) {
+        if (!beginProcess(name)) {
             return;
         }
 
@@ -382,7 +372,6 @@ public class AuthManager {
         taskManager.cancelTasks(player);
         AuthCache.logout(player.getUsername());
         SessionCache.removePlayer(player.getUsername());
-        authenticatedPlayers.remove(player.getUsername().toLowerCase(Locale.ROOT));
     }
 
     public void clearLoginAttempts(String lowerName) {
@@ -392,7 +381,7 @@ public class AuthManager {
     public void togglePremium(Player player) {
         String name = player.getUsername();
 
-        if (beginProcess(name)) {
+        if (!beginProcess(name)) {
             return;
         }
 
@@ -419,12 +408,10 @@ public class AuthManager {
     }
 
     /**
-     * Force-authenticates the player, bypassing the normal login flow.
+     * Force-authenticates the player.
      */
     public void forceAuth(Player player, PlayerChooseInitialServerEvent event, CompletableFuture<Void> future) {
         String name = player.getUsername();
-        authenticatedPlayers.remove(name.toLowerCase(Locale.ROOT));
-
         database.getAuthUserRepository().getUser(name, (user, success) -> {
             try {
                 if (!success) {
@@ -478,15 +465,15 @@ public class AuthManager {
     }
 
     public void showLoginDialog(Player player) {
-        // Руки в очке, не знаем как реализовать диалоги на велосити
+        // Dialog support on Velocity is not implemented yet.
     }
 
     public void showLoginDialog(Player player, java.util.function.Supplier<?> notice) {
-        // Руки в очке, не знаем как реализовать диалоги на велосити
+        // Dialog support on Velocity is not implemented yet.
     }
 
     public void showLoginDialog(Player player, Object noticeComponent) {
-        // Руки в очке, не знаем как реализовать диалоги на велосити
+        // Dialog support on Velocity is not implemented yet.
     }
 
     private void connectToAuthServer(Player player) {
@@ -495,13 +482,7 @@ public class AuthManager {
             return;
         }
 
-        RegisteredServer authServer = serverOpt.get();
-
-        player.getCurrentServer().ifPresentOrElse(current -> {
-            if (!current.getServer().equals(authServer)) {
-                player.createConnectionRequest(authServer).connect();
-            }
-        }, () -> player.createConnectionRequest(authServer).connect());
+        connect(player, serverOpt.get());
     }
 
     private void connectToBackend(PlayerChooseInitialServerEvent event) {
@@ -521,13 +502,15 @@ public class AuthManager {
             return;
         }
 
-        RegisteredServer targetServer = serverOpt.get();
+        connect(player, serverOpt.get());
+    }
 
+    private void connect(Player player, RegisteredServer target) {
         player.getCurrentServer().ifPresentOrElse(current -> {
-            if (!current.getServer().equals(targetServer)) {
-                player.createConnectionRequest(targetServer).connect();
+            if (!current.getServer().equals(target)) {
+                player.createConnectionRequest(target).connect();
             }
-        }, () -> player.createConnectionRequest(targetServer).connect());
+        }, () -> player.createConnectionRequest(target).connect());
     }
 
     private Optional<String> getForcedHost(InetSocketAddress virtualHost) {

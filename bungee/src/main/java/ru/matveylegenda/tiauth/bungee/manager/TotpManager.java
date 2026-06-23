@@ -51,15 +51,15 @@ public class TotpManager {
     }
 
     public void setTotpEnableSecret(String playerName, String secret) {
-        totpEnableSecrets.put(playerName.toLowerCase(), secret);
+        totpEnableSecrets.put(playerName.toLowerCase(Locale.ROOT), secret);
     }
 
     public String getTotpEnableSecret(String playerName) {
-        return totpEnableSecrets.get(playerName.toLowerCase());
+        return totpEnableSecrets.get(playerName.toLowerCase(Locale.ROOT));
     }
 
     public void removeTotpEnableSecret(String playerName) {
-        totpEnableSecrets.remove(playerName.toLowerCase());
+        totpEnableSecrets.remove(playerName.toLowerCase(Locale.ROOT));
     }
 
     public void verifyTotpLogin(ProxiedPlayer player, String code) {
@@ -141,7 +141,7 @@ public class TotpManager {
     }
 
     private void handleWrongTotpAttempt(ProxiedPlayer player, String name) {
-        String lowerName = name.toLowerCase();
+        String lowerName = name.toLowerCase(Locale.ROOT);
         int attempts = totpAttempts.merge(lowerName, 1, Integer::sum);
         if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
             totpPendingPlayers.remove(lowerName);
