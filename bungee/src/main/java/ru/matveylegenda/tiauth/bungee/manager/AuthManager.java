@@ -54,6 +54,7 @@ public class AuthManager {
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
     private final Set<String> totpPendingPlayers = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> totpAttempts = new ConcurrentHashMap<>();
+    private final Set<String> pendingAuthPlayers = ConcurrentHashMap.newKeySet();
     private final Map<String, String> totpEnableSecrets = new ConcurrentHashMap<>();
     private final TiAuth plugin;
     private final Database database;
@@ -287,6 +288,17 @@ public class AuthManager {
             return;
         }
 
+        String name = player.getName().toLowerCase();
+        if (totpPendingPlayers.contains(name)) {
+            BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.prompt);
+            return;
+        }
+
+        if (pendingAuthPlayers.contains(name)) {
+            BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.alreadyLogged);
+            return;
+        }
+
         if (password.isEmpty()) {
             BungeeUtils.sendMessage(
                     player,
@@ -395,19 +407,24 @@ public class AuthManager {
     }
 
     public void loginPlayer(ProxiedPlayer player, Runnable callback) {
+        String name = player.getName();
         String ip = ((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress();
 
-        AuthCache.setAuthenticated(player.getName());
-        database.getAuthUserRepository().updateLastLogin(player.getName());
-        database.getAuthUserRepository().updateLastIp(player.getName(), ip);
-        SessionCache.addPlayer(player.getName(), ip);
+        pendingAuthPlayers.remove(name.toLowerCase());
+        AuthCache.setAuthenticated(name);
+        database.getAuthUserRepository().updateLastLogin(name);
+        database.getAuthUserRepository().updateLastIp(name, ip);
+        SessionCache.addPlayer(name, ip);
         taskManager.cancelTasks(player);
 
         PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player);
         plugin.getProxy().getPluginManager().callEvent(playerAuthEvent);
 
         if (playerAuthEvent.isMoveToBackendServer()) {
+            pendingAuthPlayers.remove(name.toLowerCase());
             connectToBackend(player);
+        } else {
+            pendingAuthPlayers.add(name.toLowerCase());
         }
 
         callback.run();
@@ -685,6 +702,7 @@ public class AuthManager {
     }
 
     public void forceAuth(ProxiedPlayer player, PostLoginEvent event) {
+        pendingAuthPlayers.remove(player.getName().toLowerCase());
         database.getAuthUserRepository().getUser(player.getName(), (user, success) -> {
             try {
                 if (!success) {

@@ -48,6 +48,7 @@ public class AuthManager {
     private final Set<String> totpPendingPlayers = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> totpAttempts = new ConcurrentHashMap<>();
     private final Map<String, String> totpEnableSecrets = new ConcurrentHashMap<>();
+    private final Set<String> pendingAuthPlayers = ConcurrentHashMap.newKeySet();
 
     private final TiAuth plugin;
     private final Database database;
@@ -262,6 +263,16 @@ public class AuthManager {
             return;
         }
 
+        if (totpPendingPlayers.contains(name.toLowerCase())) {
+            player.sendMessage(CachedComponents.IMP.player.totp.prompt);
+            return;
+        }
+
+        if (pendingAuthPlayers.contains(name.toLowerCase())) {
+            player.sendMessage(CachedComponents.IMP.player.login.alreadyLogged);
+            return;
+        }
+
         if (password.isEmpty()) {
             player.sendMessage(CachedComponents.IMP.player.checkPassword.passwordEmpty);
 
@@ -357,6 +368,7 @@ public class AuthManager {
         String name = player.getUsername();
         String ip = player.getRemoteAddress().getAddress().getHostAddress();
 
+        pendingAuthPlayers.remove(name.toLowerCase());
         AuthCache.setAuthenticated(name);
         database.getAuthUserRepository().updateLastLogin(name);
         database.getAuthUserRepository().updateLastIp(name, ip);
@@ -366,7 +378,10 @@ public class AuthManager {
         PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player);
         plugin.getServer().getEventManager().fire(playerAuthEvent).thenAccept(firedEvent -> {
             if (firedEvent.isMoveToBackendServer()) {
+                pendingAuthPlayers.remove(name.toLowerCase());
                 connectToBackend(player);
+            } else {
+                pendingAuthPlayers.add(name.toLowerCase());
             }
         });
 
@@ -625,6 +640,7 @@ public class AuthManager {
      */
     public void forceAuth(Player player, PlayerChooseInitialServerEvent event, CompletableFuture<Void> future) {
         String name = player.getUsername();
+        pendingAuthPlayers.remove(name.toLowerCase());
 
         database.getAuthUserRepository().getUser(name, (user, success) -> {
             try {
