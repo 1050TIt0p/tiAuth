@@ -10,8 +10,15 @@ public class PlayerAuthEvent extends Event {
     private final ProxiedPlayer player;
     @Setter
     private boolean moveToBackendServer = true;
+    @Setter
+    private boolean forceLogin;
 
     public PlayerAuthEvent(ProxiedPlayer player) {
         this.player = player;
+    }
+
+    public PlayerAuthEvent(ProxiedPlayer player, boolean forceLogin) {
+        this.player = player;
+        this.forceLogin = forceLogin;
     }
 }

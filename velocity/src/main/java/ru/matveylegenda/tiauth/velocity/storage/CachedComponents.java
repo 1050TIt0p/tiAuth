@@ -151,7 +151,6 @@ public class CachedComponents {
         }
 
         public static class Kick {
-            public Component notAuth;
             public Component timeout;
             public Component realname;
             public Component tooManyAttempts;

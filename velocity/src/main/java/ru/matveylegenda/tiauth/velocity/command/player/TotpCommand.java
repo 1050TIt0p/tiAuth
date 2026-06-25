@@ -16,17 +16,16 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.database.Database;
-import ru.matveylegenda.tiauth.hash.Hash;
-import ru.matveylegenda.tiauth.hash.HashFactory;
-import ru.matveylegenda.tiauth.hash.HashType;
 import ru.matveylegenda.tiauth.util.EncryptionUtils;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
+import ru.matveylegenda.tiauth.velocity.manager.TotpManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
 public class TotpCommand implements SimpleCommand {
     private final AuthManager authManager;
+    private final TotpManager totpManager;
     private final Database database;
     private final TiAuth plugin;
     private final SecretGenerator secretGenerator = new DefaultSecretGenerator();
@@ -35,6 +34,7 @@ public class TotpCommand implements SimpleCommand {
     public TotpCommand(TiAuth plugin) {
         this.plugin = plugin;
         this.authManager = plugin.getAuthManager();
+        this.totpManager = plugin.getTotpManager();
         this.database = plugin.getDatabase();
     }
 
@@ -51,8 +51,8 @@ public class TotpCommand implements SimpleCommand {
         String name = player.getUsername();
 
         if (args.length == 1 && !args[0].equalsIgnoreCase("enable") && !args[0].equalsIgnoreCase("disable")) {
-            if (authManager.isTotpPending(name)) {
-                authManager.verifyTotpLogin(player, args[0]);
+            if (totpManager.isTotpPending(name)) {
+                totpManager.verifyTotpLogin(player, args[0]);
                 return;
             }
         }
@@ -118,7 +118,7 @@ public class TotpCommand implements SimpleCommand {
             }
 
             String secret = secretGenerator.generate();
-            authManager.setTotpEnableSecret(name, secret);
+            totpManager.setTotpEnableSecret(name, secret);
 
             QrData qrData = new QrData.Builder()
                     .label(name)
@@ -139,9 +139,8 @@ public class TotpCommand implements SimpleCommand {
             String[] codes = codesGenerator.generateCodes(MainConfig.IMP.auth.totp.recoveryCodesAmount);
             String[] hashedCodes = new String[codes.length];
 
-            Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
             for (int i = 0; i < codes.length; i++) {
-                hashedCodes[i] = hash.hashPassword(codes[i]);
+                hashedCodes[i] = TotpManager.RECOVERY_HASH.hashPassword(codes[i]);
             }
 
             database.getRecoveryCodeRepository().addCodes(hashedCodes, player.getUsername(), success1 -> {
@@ -172,7 +171,7 @@ public class TotpCommand implements SimpleCommand {
             return;
         }
 
-        String secret = authManager.getTotpEnableSecret(name);
+        String secret = totpManager.getTotpEnableSecret(name);
         if (secret == null) {
             VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.enableUsage);
             return;
@@ -187,13 +186,13 @@ public class TotpCommand implements SimpleCommand {
             return;
         }
 
-        if (AuthManager.TOTP_CODE_VERIFIER.isValidCode(secret, args[1])) {
+        if (TotpManager.TOTP_CODE_VERIFIER.isValidCode(secret, args[1])) {
             plugin.getDatabase().getAuthUserRepository().updateTotpToken(name, secretEncrypted, updateSuccess -> {
                 if (!updateSuccess) {
                     VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
                     return;
                 }
-                authManager.removeTotpEnableSecret(name);
+                totpManager.removeTotpEnableSecret(name);
                 VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.successful);
             });
         } else {
@@ -232,9 +231,8 @@ public class TotpCommand implements SimpleCommand {
                 return;
             }
 
-            if (AuthManager.RECOVERY_CODE_PATTERN.matcher(args[1]).matches()) {
-                Hash hash = HashFactory.create(HashType.SHA256_DEFAULT);
-                String hashedCode = hash.hashPassword(args[1]);
+            if (TotpManager.RECOVERY_CODE_PATTERN.matcher(args[1]).matches()) {
+                String hashedCode = TotpManager.RECOVERY_HASH.hashPassword(args[1]);
 
                 database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
                     if (!success1) {
@@ -262,7 +260,7 @@ public class TotpCommand implements SimpleCommand {
                     }
                 });
             } else {
-                if (AuthManager.TOTP_CODE_VERIFIER.isValidCode(totpToken, args[1])) {
+                if (TotpManager.TOTP_CODE_VERIFIER.isValidCode(totpToken, args[1])) {
                     database.getAuthUserRepository().updateTotpToken(player.getUsername(), "", updateSuccess -> {
                         if (!updateSuccess) {
                             VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);

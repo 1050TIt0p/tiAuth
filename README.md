@@ -10,6 +10,8 @@ Authorization plugin for BungeeCord and Velocity
   - Allows licensed players to skip password entry by activating local `online-mode true`
 - Session support
   - Allows players to skip password entry for a certain period after successful authentication
+- Two-factor authentication
+  - Supports account linking with Google Authenticator, Discord, and Telegram via [tiAuth-SocialAddon](https://github.com/1050TIt0p/tiAuth-SocialAddon)
 - Multiple database types support
   - Supports `SQLite`, `H2`, `MySQL`, `PostgreSQL`
 - Virtual server

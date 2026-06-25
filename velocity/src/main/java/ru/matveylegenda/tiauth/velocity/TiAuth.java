@@ -28,6 +28,7 @@ import ru.matveylegenda.tiauth.velocity.listener.AuthListener;
 import ru.matveylegenda.tiauth.velocity.listener.ChatListener;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
+import ru.matveylegenda.tiauth.velocity.manager.TotpManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +40,7 @@ import java.nio.file.Path;
 @Plugin(
         id = "tiauth",
         name = "tiAuth",
-        version = "1.4.0",
+        version = "1.4.1",
         authors = {"1050TI_top", "OverwriteMC"}
 )
 public final class TiAuth {
@@ -53,6 +54,7 @@ public final class TiAuth {
     private Database database;
     private TaskManager taskManager;
     private AuthManager authManager;
+    private TotpManager totpManager;
 
     private byte[] secretKey;
 
@@ -86,6 +88,7 @@ public final class TiAuth {
         Utils.initializeColorizer(MainConfig.IMP.serializer);
         taskManager = new TaskManager(this);
         authManager = new AuthManager(this);
+        totpManager = new TotpManager(authManager, this);
 
         registerListeners();
         registerCommands();
@@ -268,7 +271,7 @@ public final class TiAuth {
     private void registerCommands() {
         CommandManager commandManager = server.getCommandManager();
         commandManager.register(commandManager.metaBuilder("tiauth").aliases("auth").build(), new TiAuthCommand(this));
-        commandManager.register(commandManager.metaBuilder("login").aliases("l").build(), new LoginCommand(this));
+        commandManager.register(commandManager.metaBuilder("login").aliases("log", "l").build(), new LoginCommand(this));
         commandManager.register(commandManager.metaBuilder("register").aliases("reg").build(), new RegisterCommand(this));
         commandManager.register(commandManager.metaBuilder("unregister").aliases("unreg").build(), new UnregisterCommand(this));
         commandManager.register(commandManager.metaBuilder("changepassword").aliases("changepass").build(), new ChangePasswordCommand(this));

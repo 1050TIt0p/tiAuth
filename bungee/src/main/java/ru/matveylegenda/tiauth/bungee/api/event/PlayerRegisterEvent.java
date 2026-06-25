@@ -10,8 +10,15 @@ public class PlayerRegisterEvent extends Event {
     private final ProxiedPlayer player;
     @Setter
     private boolean moveToBackendServer = true;
+    @Setter
+    private boolean forceLogin;
 
     public PlayerRegisterEvent(ProxiedPlayer player) {
         this.player = player;
+    }
+
+    public PlayerRegisterEvent(ProxiedPlayer player, boolean forceLogin) {
+        this.player = player;
+        this.forceLogin = forceLogin;
     }
 }

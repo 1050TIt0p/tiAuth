@@ -183,7 +183,7 @@ public class TiAuthCommand extends Command {
                         sender,
                         CachedMessages.IMP.admin.forceLogin.success
                                 .replace("{player}", player.getName())
-                ));
+                ), true);
             }
 
             case "forceregister" -> {
