@@ -30,14 +30,12 @@ import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
-import ru.matveylegenda.tiauth.bungee.TiAuth;
 
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 public class AuthManager {
@@ -529,7 +527,11 @@ public class AuthManager {
                 );
             }
 
-            plugin.getProxy().getScheduler().schedule(plugin, () -> player.showDialog(dialog), 50, TimeUnit.MILLISECONDS);
+            plugin.getProxy().getScheduler().schedule(plugin, () -> {
+                if (player.isConnected()) {
+                    player.showDialog(dialog);
+                }
+            }, 50, TimeUnit.MILLISECONDS);
         });
     }
 
