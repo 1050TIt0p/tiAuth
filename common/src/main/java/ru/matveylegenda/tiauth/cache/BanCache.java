@@ -9,45 +9,59 @@ import java.util.concurrent.TimeUnit;
 
 @UtilityClass
 public class BanCache {
-    private final Cache<String, Long> bans = Caffeine.newBuilder()
-            .expireAfterWrite(MainConfig.IMP.auth.banTime, TimeUnit.SECONDS)
-            .build();
-
-    private final Cache<String, Long> totpBans = Caffeine.newBuilder()
-            .expireAfterWrite(MainConfig.IMP.auth.totp.banTime, TimeUnit.SECONDS)
-            .build();
+    private static final BanInstance AUTH = new BanInstance(MainConfig.IMP.auth.banTime);
+    private static final BanInstance TOTP = new BanInstance(MainConfig.IMP.auth.totp.banTime);
 
     public void addPlayer(String ip) {
-        bans.put(ip, System.currentTimeMillis());
+        AUTH.add(ip);
     }
 
     public boolean isBanned(String ip) {
-        return bans.asMap().containsKey(ip);
+        return AUTH.isBanned(ip);
     }
 
     public int getRemainingSeconds(String ip) {
-        Long startTime = bans.getIfPresent(ip);
-        long currentTime = System.currentTimeMillis();
-
-        if (startTime == null) return 0;
-
-        return (int) (MainConfig.IMP.auth.banTime - TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime));
+        return AUTH.getRemainingSeconds(ip);
     }
 
     public void addTotpBan(String ip) {
-        totpBans.put(ip, System.currentTimeMillis());
+        TOTP.add(ip);
     }
 
     public boolean isTotpBanned(String ip) {
-        return totpBans.asMap().containsKey(ip);
+        return TOTP.isBanned(ip);
     }
 
     public int getTotpRemainingSeconds(String ip) {
-        Long startTime = totpBans.getIfPresent(ip);
-        long currentTime = System.currentTimeMillis();
+        return TOTP.getRemainingSeconds(ip);
+    }
 
-        if (startTime == null) return 0;
+    private static class BanInstance {
+        private final Cache<String, Long> bans;
+        private final int banTime;
 
-        return (int) (MainConfig.IMP.auth.totp.banTime - TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime));
+        BanInstance(int banTime) {
+            this.banTime = banTime;
+            this.bans = Caffeine.newBuilder()
+                    .expireAfterWrite(banTime, TimeUnit.SECONDS)
+                    .build();
+        }
+
+        void add(String ip) {
+            bans.put(ip, System.currentTimeMillis());
+        }
+
+        boolean isBanned(String ip) {
+            return bans.asMap().containsKey(ip);
+        }
+
+        int getRemainingSeconds(String ip) {
+            Long startTime = bans.getIfPresent(ip);
+            long currentTime = System.currentTimeMillis();
+
+            if (startTime == null) return 0;
+
+            return (int) (banTime - TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime));
+        }
     }
 }
