@@ -62,6 +62,13 @@ public class TotpManager {
         totpEnableSecrets.remove(playerName.toLowerCase(Locale.ROOT));
     }
 
+    public void cleanupPlayer(String playerName) {
+        String lowerName = playerName.toLowerCase(Locale.ROOT);
+        totpPendingPlayers.remove(lowerName);
+        totpAttempts.remove(lowerName);
+        inProcess.remove(playerName);
+    }
+
     public void verifyTotpLogin(ProxiedPlayer player, String code) {
         String name = player.getName();
         String lowerName = name.toLowerCase();

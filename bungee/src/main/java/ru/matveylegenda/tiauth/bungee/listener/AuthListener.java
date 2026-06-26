@@ -193,6 +193,7 @@ public class AuthListener implements Listener {
             AuthCache.logout(player.getName());
         }
 
+        plugin.getTotpManager().cleanupPlayer(player.getName());
         taskManager.cancelTasks(player);
     }
 

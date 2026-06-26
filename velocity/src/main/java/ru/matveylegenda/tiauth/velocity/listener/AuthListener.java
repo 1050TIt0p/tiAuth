@@ -21,6 +21,7 @@ import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
+import ru.matveylegenda.tiauth.velocity.manager.TotpManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
@@ -32,6 +33,7 @@ public class AuthListener {
     private final Database database;
     private final AuthManager authManager;
     private final TaskManager taskManager;
+    private final TotpManager totpManager;
     private final Pattern nickPattern;
     private final ProxyServer proxyServer;
 
@@ -39,6 +41,7 @@ public class AuthListener {
         this.database = plugin.getDatabase();
         this.authManager = plugin.getAuthManager();
         this.taskManager = plugin.getTaskManager();
+        this.totpManager = plugin.getTotpManager();
         this.nickPattern = Pattern.compile(MainConfig.IMP.nickPattern);
         this.proxyServer = plugin.getServer();
     }
@@ -170,6 +173,7 @@ public class AuthListener {
             AuthCache.logout(username);
         }
 
+        totpManager.cleanupPlayer(username);
         taskManager.cancelTasks(player);
     }
 
