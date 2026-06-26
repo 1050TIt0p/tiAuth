@@ -19,6 +19,7 @@ public class TaskManager {
     private final Map<UUID, ScheduledTask> authTimeoutTasks = new ConcurrentHashMap<>();
     private final Map<UUID, ScheduledTask> authReminderTasks = new ConcurrentHashMap<>();
     private final Map<UUID, ScheduledTask> displayTimerTasks = new ConcurrentHashMap<>();
+    private final Map<UUID, ScheduledTask> totpTimeoutTasks = new ConcurrentHashMap<>();
     private final Map<UUID, BossBar> bossBars = new ConcurrentHashMap<>();
 
     private final TiAuth plugin;
@@ -40,6 +41,19 @@ public class TaskManager {
         authTimeoutTasks.put(player.getUniqueId(), task);
     }
 
+    public void startTotpTimeoutTask(Player player) {
+        ScheduledTask task = plugin.getServer().getScheduler().buildTask(plugin, () -> {
+            if (!player.isActive()) {
+                ScheduledTask old = totpTimeoutTasks.remove(player.getUniqueId());
+                if (old != null) old.cancel();
+                return;
+            }
+            player.disconnect(CachedComponents.IMP.player.kick.totpTimeout);
+        }).delay(MainConfig.IMP.auth.totp.timeoutSeconds, java.util.concurrent.TimeUnit.SECONDS).schedule();
+
+        totpTimeoutTasks.put(player.getUniqueId(), task);
+    }
+
     public void startAuthReminderTask(Player player, Component reminder) {
         ScheduledTask task = plugin.getServer().getScheduler().buildTask(plugin, () -> {
             if (!player.isActive()) {
@@ -54,7 +68,11 @@ public class TaskManager {
     }
 
     public void startDisplayTimerTask(Player player) {
-        AtomicInteger counter = new AtomicInteger(MainConfig.IMP.auth.timeoutSeconds);
+        startDisplayTimerTask(player, MainConfig.IMP.auth.timeoutSeconds);
+    }
+
+    public void startDisplayTimerTask(Player player, int timeoutSeconds) {
+        AtomicInteger counter = new AtomicInteger(timeoutSeconds);
         UUID pid = player.getUniqueId();
 
         if (MainConfig.IMP.bossBar.enabled) {
@@ -84,7 +102,7 @@ public class TaskManager {
                 sendActionBar(player, c);
             }
             if (MainConfig.IMP.bossBar.enabled) {
-                updateBossBar(player, c);
+                updateBossBar(player, c, timeoutSeconds);
             }
 
             counter.decrementAndGet();
@@ -114,14 +132,14 @@ public class TaskManager {
         player.sendActionBar(comp);
     }
 
-    private void updateBossBar(Player player, int counter) {
+    private void updateBossBar(Player player, int counter, int timeoutSeconds) {
         UUID pid = player.getUniqueId();
         BossBar bar = bossBars.get(pid);
         if (bar != null) {
             bar.name(CachedComponents.IMP.player.bossBar.message.replaceText(builder -> builder
                     .match(VelocityUtils.TIME)
                     .replacement(String.valueOf(counter))));
-            bar.progress((float) counter / (float) MainConfig.IMP.auth.timeoutSeconds);
+            bar.progress((float) counter / (float) timeoutSeconds);
         }
     }
 
@@ -146,6 +164,9 @@ public class TaskManager {
         if (t != null) t.cancel();
 
         t = displayTimerTasks.remove(pid);
+        if (t != null) t.cancel();
+
+        t = totpTimeoutTasks.remove(pid);
         if (t != null) t.cancel();
 
         BossBar bar = bossBars.remove(pid);

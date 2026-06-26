@@ -61,6 +61,14 @@ public class AuthListener {
             return null;
         }
 
+        if (BanCache.isTotpBanned(ip)) {
+            Component kickMessage = CachedComponents.IMP.player.kick.totpBan.replaceText(builder -> builder
+                    .match(VelocityUtils.TIME)
+                    .replacement(String.valueOf(BanCache.getTotpRemainingSeconds(ip))));
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(kickMessage));
+            return null;
+        }
+
         if (PremiumCache.isPremium(username)) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
             return null;

@@ -122,6 +122,8 @@ public class TotpManager {
             String lowerName = player.getName().toLowerCase(Locale.ROOT);
             totpPendingPlayers.add(lowerName);
             plugin.getTaskManager().cancelTasks(player);
+            plugin.getTaskManager().startTotpTimeoutTask(player);
+            plugin.getTaskManager().startDisplayTimerTask(player, MainConfig.IMP.auth.totp.timeoutSeconds);
             BungeeUtils.sendMessage(player, CachedMessages.IMP.player.totp.prompt);
             return true;
         }
@@ -146,9 +148,9 @@ public class TotpManager {
         if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
             totpPendingPlayers.remove(lowerName);
             totpAttempts.remove(lowerName);
-            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.tooManyAttempts));
+            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.totpTooManyAttempts));
             if (MainConfig.IMP.auth.totp.banPlayer) {
-                BanCache.addPlayer(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
+                BanCache.addTotpBan(((InetSocketAddress) player.getSocketAddress()).getAddress().getHostAddress());
             }
             endProcess(name);
             return;

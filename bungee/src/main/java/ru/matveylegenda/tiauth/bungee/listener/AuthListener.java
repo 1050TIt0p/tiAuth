@@ -75,6 +75,13 @@ public class AuthListener implements Listener {
             return;
         }
 
+        if (BanCache.isTotpBanned(ip)) {
+            event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.totpBan
+                    .replace("{time}", String.valueOf(BanCache.getTotpRemainingSeconds(ip)))));
+            event.setCancelled(true);
+            return;
+        }
+
         if (PremiumCache.isPremium(connection.getName())) {
             connection.setOnlineMode(true);
             return;

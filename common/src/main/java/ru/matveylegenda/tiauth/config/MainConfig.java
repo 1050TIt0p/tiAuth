@@ -287,6 +287,12 @@ public class MainConfig extends YamlSerializable {
                     @CommentValue("На сколько секунд банить игрока при исчерпании попыток TOTP")
             })
             public int banTime = 60;
+
+            @NewLine
+            @Comment({
+                    @CommentValue("Сколько секунд дается игроку на ввод TOTP кода после успешного ввода пароля")
+            })
+            public int timeoutSeconds = 60;
         }
     }
 

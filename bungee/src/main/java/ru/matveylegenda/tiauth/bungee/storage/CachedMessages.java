@@ -154,6 +154,9 @@ public class CachedMessages {
             public String invalidNickPattern;
             public String ipLimitOnlineReached;
             public String ipLimitRegisteredReached;
+            public String totpTimeout;
+            public String totpTooManyAttempts;
+            public String totpBan;
         }
 
         public static class Reminder {
@@ -308,6 +311,9 @@ public class CachedMessages {
         player.kick.invalidNickPattern = COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefix));
         player.kick.ipLimitOnlineReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefix));
         player.kick.ipLimitRegisteredReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefix));
+        player.kick.totpTimeout = COLORIZER.colorize(getPrefixed(config.player.kick.totpTimeout, prefix));
+        player.kick.totpTooManyAttempts = COLORIZER.colorize(getPrefixed(config.player.kick.totpTooManyAttempts, prefix));
+        player.kick.totpBan = COLORIZER.colorize(getPrefixed(config.player.kick.totpBan, prefix));
 
         player.reminder = new Player.Reminder();
         player.reminder.login = COLORIZER.colorize(getPrefixed(config.player.reminder.login, prefix));
