@@ -9,7 +9,7 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.dialog.Dialog;
 import net.md_5.bungee.api.dialog.DialogBase;
-import net.md_5.bungee.api.dialog.NoticeDialog;
+import net.md_5.bungee.api.dialog.MultiActionDialog;
 import net.md_5.bungee.api.dialog.action.ActionButton;
 import net.md_5.bungee.api.dialog.action.CustomClickAction;
 import net.md_5.bungee.api.dialog.body.PlainMessageBody;
@@ -488,18 +488,18 @@ public class AuthManager {
 
             Dialog dialog;
             if (user != null) {
-                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.title))
-                        .inputs(
-                                List.of(
-                                        new TextInput("password", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.passwordField))
-                                )
-                        ))
-                        .action(
-                                new ActionButton(
-                                        TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.confirmButton),
-                                        new CustomClickAction("tiauth_login")
-                                )
-                        );
+                dialog = new MultiActionDialog(
+                        new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.title))
+                                .inputs(
+                                        List.of(
+                                                new TextInput("password", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.passwordField))
+                                        )
+                                ),
+                        new ActionButton(
+                                TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.confirmButton),
+                                new CustomClickAction("tiauth_login")
+                        )
+                );
             } else {
                 List<DialogInput> inputList = new ArrayList<>();
 
@@ -507,16 +507,14 @@ public class AuthManager {
                 if (MainConfig.IMP.auth.repeatPasswordWhenRegister) {
                     inputList.add(new TextInput("repeatPassword", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.repeatPasswordField)));
                 }
-                dialog = new NoticeDialog(new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.title))
-                        .inputs(
-                                inputList
-                        ))
-                        .action(
-                                new ActionButton(
-                                        TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.confirmButton),
-                                        new CustomClickAction("tiauth_register")
-                                )
-                        );
+                dialog = new MultiActionDialog(
+                        new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.title))
+                                .inputs(inputList),
+                        new ActionButton(
+                                TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.confirmButton),
+                                new CustomClickAction("tiauth_register")
+                        )
+                );
             }
 
             if (noticeMessage != null) {
