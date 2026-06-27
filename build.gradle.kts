@@ -42,7 +42,7 @@ subprojects {
         compileOnly("org.projectlombok:lombok:1.18.46")
         annotationProcessor("org.projectlombok:lombok:1.18.46")
 
-        implementation("net.java.dev.jna:jna:5.17.0")
+        implementation("net.java.dev.jna:jna:5.19.1")
     }
 
     extensions.configure<JavaPluginExtension> {
