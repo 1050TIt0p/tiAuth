@@ -30,9 +30,9 @@ subprojects {
         implementation("net.elytrium:serializer:1.1.1")
         implementation("dev.samstevens.totp:totp:1.7.1")
 
-        compileOnly("net.kyori:adventure-api:5.1.1")
-        compileOnly("net.kyori:adventure-text-minimessage:5.1.1")
-        compileOnly("net.kyori:adventure-text-serializer-legacy:5.1.1")
+        compileOnly("net.kyori:adventure-api:5.2.0")
+        compileOnly("net.kyori:adventure-text-minimessage:5.2.0")
+        compileOnly("net.kyori:adventure-text-serializer-legacy:5.2.0")
 
         compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
         compileOnly("com.h2database:h2:2.4.240")
