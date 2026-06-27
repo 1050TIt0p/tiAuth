@@ -21,6 +21,7 @@ import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
+import ru.matveylegenda.tiauth.velocity.manager.TotpManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
@@ -32,6 +33,7 @@ public class AuthListener {
     private final Database database;
     private final AuthManager authManager;
     private final TaskManager taskManager;
+    private final TotpManager totpManager;
     private final Pattern nickPattern;
     private final ProxyServer proxyServer;
 
@@ -39,6 +41,7 @@ public class AuthListener {
         this.database = plugin.getDatabase();
         this.authManager = plugin.getAuthManager();
         this.taskManager = plugin.getTaskManager();
+        this.totpManager = plugin.getTotpManager();
         this.nickPattern = Pattern.compile(MainConfig.IMP.nickPattern);
         this.proxyServer = plugin.getServer();
     }
@@ -57,6 +60,14 @@ public class AuthListener {
             Component kickMessage = CachedComponents.IMP.player.kick.ban.replaceText(builder -> builder
                     .match(VelocityUtils.TIME)
                     .replacement(String.valueOf(BanCache.getRemainingSeconds(ip))));
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(kickMessage));
+            return null;
+        }
+
+        if (BanCache.isTotpBanned(ip)) {
+            Component kickMessage = CachedComponents.IMP.player.kick.totpBan.replaceText(builder -> builder
+                    .match(VelocityUtils.TIME)
+                    .replacement(String.valueOf(BanCache.getTotpRemainingSeconds(ip))));
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(kickMessage));
             return null;
         }
@@ -162,6 +173,7 @@ public class AuthListener {
             AuthCache.logout(username);
         }
 
+        totpManager.cleanupPlayer(username);
         taskManager.cancelTasks(player);
     }
 

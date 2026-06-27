@@ -60,6 +60,13 @@ public class TotpManager {
         totpEnableSecrets.remove(playerName.toLowerCase(Locale.ROOT));
     }
 
+    public void cleanupPlayer(String playerName) {
+        String lowerName = playerName.toLowerCase(Locale.ROOT);
+        totpPendingPlayers.remove(lowerName);
+        totpAttempts.remove(lowerName);
+        inProcess.remove(playerName);
+    }
+
     public void verifyTotpLogin(Player player, String code) {
         String name = player.getUsername();
         String lowerName = name.toLowerCase();
@@ -120,6 +127,8 @@ public class TotpManager {
             String lowerName = player.getUsername().toLowerCase(Locale.ROOT);
             totpPendingPlayers.add(lowerName);
             plugin.getTaskManager().cancelTasks(player);
+            plugin.getTaskManager().startTotpTimeoutTask(player);
+            plugin.getTaskManager().startDisplayTimerTask(player, MainConfig.IMP.auth.totp.timeoutSeconds);
             player.sendMessage(CachedComponents.IMP.player.totp.prompt);
             return true;
         }
@@ -144,9 +153,9 @@ public class TotpManager {
         if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
             totpPendingPlayers.remove(lowerName);
             totpAttempts.remove(lowerName);
-            player.disconnect(CachedComponents.IMP.player.kick.tooManyAttempts);
+            player.disconnect(CachedComponents.IMP.player.kick.totpTooManyAttempts);
             if (MainConfig.IMP.auth.totp.banPlayer) {
-                BanCache.addPlayer(player.getRemoteAddress().getAddress().getHostAddress());
+                BanCache.addTotpBan(player.getRemoteAddress().getAddress().getHostAddress());
             }
             endProcess(name);
             return;

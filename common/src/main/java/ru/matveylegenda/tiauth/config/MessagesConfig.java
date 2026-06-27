@@ -191,6 +191,9 @@ public class MessagesConfig extends YamlSerializable {
             public String invalidNickPattern;
             public String ipLimitOnlineReached;
             public String ipLimitRegisteredReached;
+            public String totpTimeout;
+            public String totpTooManyAttempts;
+            public String totpBan;
         }
 
         @NewLine
@@ -316,6 +319,9 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.invalidNickPattern = "{prefix} &fВаш ник содержит запрещенные символы";
                 player.kick.ipLimitOnlineReached = "{prefix} &fС этого IP-адреса играет максимальное количество аккаунтов";
                 player.kick.ipLimitRegisteredReached = "{prefix} &fС этого IP-адреса зарегистрировано слишком много аккаунтов";
+                player.kick.totpTimeout = "{prefix} &fВы не успели ввести 2FA код";
+                player.kick.totpTooManyAttempts = "{prefix} &fВы превысили количество попыток для ввода 2FA кода";
+                player.kick.totpBan = "{prefix} &fВаш аккаунт заблокирован на &#8833EC{time} &fсекунд за превышение попыток ввода 2FA кода";
                 player.reminder.login = "{prefix} &fАвторизируйтесь командой &#8833EC/login <пароль>";
                 player.reminder.register = "{prefix} &fЗарегистрируйтесь командой &#8833EC/register <пароль> <пароль>";
                 player.dialog.register.title = "Регистрация";
@@ -407,6 +413,9 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.invalidNickPattern = "{prefix} &fYour nickname contains invalid characters";
                 player.kick.ipLimitOnlineReached = "{prefix} &fToo many accounts are currently playing from this IP address";
                 player.kick.ipLimitRegisteredReached = "{prefix} &fToo many accounts registered from this IP address";
+                player.kick.totpTimeout = "{prefix} &fYou did not enter the 2FA code in time";
+                player.kick.totpTooManyAttempts = "{prefix} &fYou exceeded the number of 2FA attempts";
+                player.kick.totpBan = "{prefix} &fYour account has been locked for &#8833EC{time} &fseconds due to exceeding 2FA attempts";
                 player.reminder.login = "{prefix} &fAuthenticate using &#8833EC/login <password>";
                 player.reminder.register = "{prefix} &fRegister using &#8833EC/register <password> <password>";
                 player.dialog.register.title = "Registration";
