@@ -13,7 +13,6 @@ import ru.matveylegenda.tiauth.cache.BanCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
-import ru.matveylegenda.tiauth.database.model.RecoveryCode;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.hash.HashType;
@@ -37,7 +36,6 @@ public class TotpManager {
     private final Database database;
 
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
-    private final Set<String> totpPendingPlayers = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> totpAttempts = new ConcurrentHashMap<>();
     private final Map<String, String> totpEnableSecrets = new ConcurrentHashMap<>();
 
@@ -48,8 +46,7 @@ public class TotpManager {
     }
 
     public boolean isTotpPending(String playerName) {
-        String lowerName = playerName.toLowerCase(Locale.ROOT);
-        return totpPendingPlayers.contains(lowerName);
+        return authManager.isTotpPending(playerName);
     }
 
     public void setTotpEnableSecret(String playerName, String secret) {
@@ -66,16 +63,16 @@ public class TotpManager {
 
     public void clearTotpState(String playerName) {
         String lowerName = playerName.toLowerCase(Locale.ROOT);
-        totpPendingPlayers.remove(lowerName);
+        authManager.clearTotpPending(playerName);
+        authManager.clearPendingVerification(playerName);
         totpAttempts.remove(lowerName);
         inProcess.remove(playerName);
     }
 
     public void processTotpChallenge(ProxiedPlayer player, String code) {
         String name = player.getName();
-        String lowerName = name.toLowerCase();
 
-        if (!totpPendingPlayers.contains(lowerName)) {
+        if (!authManager.isTotpPending(name)) {
             return;
         }
 
@@ -86,13 +83,13 @@ public class TotpManager {
         database.getAuthUserRepository().getUser(name)
                 .thenCompose(user -> {
                     if (user == null) {
-                        totpPendingPlayers.remove(lowerName);
+                        authManager.clearTotpPending(name);
                         BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.notRegistered);
                         return CompletableFuture.completedFuture(null);
                     }
 
                     if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
-                        totpPendingPlayers.remove(lowerName);
+                        authManager.clearTotpPending(name);
                         return authManager.loginPlayer(player, false)
                                 .thenRun(() -> BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success));
                     }
@@ -125,8 +122,7 @@ public class TotpManager {
     public boolean requireTotpChallenge(ProxiedPlayer player, AuthUser user) {
         String totpToken = user.getTotpToken();
         if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
-            String lowerName = player.getName().toLowerCase(Locale.ROOT);
-            totpPendingPlayers.add(lowerName);
+            authManager.setTotpPending(player.getName());
             plugin.getTaskManager().cancelTasks(player);
             plugin.getTaskManager().startTotpTimeoutTask(player);
             plugin.getTaskManager().startDisplayTimerTask(player, MainConfig.IMP.auth.totp.timeoutSeconds);
@@ -138,7 +134,7 @@ public class TotpManager {
 
     private CompletableFuture<Void> completeTotpLoginAsync(ProxiedPlayer player, String name) {
         String lowerName = name.toLowerCase(Locale.ROOT);
-        totpPendingPlayers.remove(lowerName);
+        authManager.clearTotpPending(name);
         totpAttempts.remove(lowerName);
 
         return authManager.loginPlayer(player, false)
@@ -152,7 +148,7 @@ public class TotpManager {
         String lowerName = name.toLowerCase(Locale.ROOT);
         int attempts = totpAttempts.merge(lowerName, 1, Integer::sum);
         if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
-            totpPendingPlayers.remove(lowerName);
+            authManager.clearTotpPending(name);
             totpAttempts.remove(lowerName);
             player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.totpTooManyAttempts));
             if (MainConfig.IMP.auth.totp.banPlayer) {

@@ -46,6 +46,8 @@ import java.util.regex.Pattern;
 public class AuthManager {
 
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
+    private final Set<String> pendingVerifications = ConcurrentHashMap.newKeySet();
+    private final Set<String> totpPendingPlayers = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
     private final TiAuth plugin;
     private final Database database;
@@ -161,6 +163,11 @@ public class AuthManager {
             return;
         }
 
+        if (isPendingVerification(name)) {
+            BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.alreadyLogged);
+            return;
+        }
+
         if (rejectEmptyPassword(player, password)) {
             return;
         }
@@ -254,6 +261,30 @@ public class AuthManager {
 
     public void resetLoginAttempts(String lowerName) {
         loginAttempts.remove(lowerName);
+    }
+
+    public boolean isPendingVerification(String playerName) {
+        return pendingVerifications.contains(playerName.toLowerCase(Locale.ROOT));
+    }
+
+    public void setPendingVerification(String playerName) {
+        pendingVerifications.add(playerName.toLowerCase(Locale.ROOT));
+    }
+
+    public void clearPendingVerification(String playerName) {
+        pendingVerifications.remove(playerName.toLowerCase(Locale.ROOT));
+    }
+
+    public boolean isTotpPending(String playerName) {
+        return totpPendingPlayers.contains(playerName.toLowerCase(Locale.ROOT));
+    }
+
+    public void setTotpPending(String playerName) {
+        totpPendingPlayers.add(playerName.toLowerCase(Locale.ROOT));
+    }
+
+    public void clearTotpPending(String playerName) {
+        totpPendingPlayers.remove(playerName.toLowerCase(Locale.ROOT));
     }
 
     public void togglePremium(ProxiedPlayer player) {
