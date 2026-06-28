@@ -173,7 +173,7 @@ public class AuthListener {
             AuthCache.logout(username);
         }
 
-        totpManager.cleanupPlayer(username);
+        totpManager.clearTotpState(username);
         taskManager.cancelTasks(player);
     }
 

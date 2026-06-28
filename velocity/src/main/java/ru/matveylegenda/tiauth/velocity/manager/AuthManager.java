@@ -17,7 +17,6 @@ import ru.matveylegenda.tiauth.database.model.AuthUser;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
-
 import ru.matveylegenda.tiauth.velocity.api.event.PlayerAuthEvent;
 import ru.matveylegenda.tiauth.velocity.api.event.PlayerRegisterEvent;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
@@ -60,132 +59,88 @@ public class AuthManager {
 
         if (!password.equals(repeatPassword)) {
             player.sendMessage(CachedComponents.IMP.player.register.mismatch);
-            if (supportDialog(player)) {
+            if (supportsDialog(player)) {
                 showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.mismatch);
             }
             return;
         }
 
-        if (checkPasswordEmpty(player, password) ||
-                checkPasswordLength(player, password) ||
-                checkPasswordPattern(player, password)) {
+        if (rejectEmptyPassword(player, password) ||
+                rejectInvalidPasswordLength(player, password) ||
+                rejectInvalidPasswordPattern(player, password)) {
             return;
         }
 
-        if (!beginProcess(name)) {
+        if (!inProcess.add(name)) {
             return;
         }
 
-        database.getAuthUserRepository().getUser(name, (user, success) -> {
-            if (!success) {
-                player.disconnect(CachedComponents.IMP.queryError);
-                endProcess(name);
-                return;
-            }
+        getUserAsync(name)
+                .thenCompose(user -> {
+                    if (user != null) {
+                        player.sendMessage(CachedComponents.IMP.player.register.alreadyRegistered);
+                        return CompletableFuture.completedFuture(null);
+                    }
 
-            if (user != null) {
-                player.sendMessage(CachedComponents.IMP.player.register.alreadyRegistered);
-                endProcess(name);
-                return;
-            }
-
-            completeRegistration(player, name, password);
-        });
-    }
-
-    private void completeRegistration(Player player, String name, String password) {
-        String ip = player.getRemoteAddress().getAddress().getHostAddress();
-
-        registerPlayer(name, password, ip, success1 -> {
-            if (!success1) {
-                player.disconnect(CachedComponents.IMP.queryError);
-                endProcess(name);
-                return;
-            }
-            player.sendMessage(CachedComponents.IMP.player.register.success);
-            AuthCache.setAuthenticated(name);
-            SessionCache.addPlayer(name, ip);
-            taskManager.cancelTasks(player);
-
-            PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
-            plugin.getServer().getEventManager().fire(playerRegisterEvent).thenAccept(firedEvent -> {
-                if (firedEvent.isMoveToBackendServer()) {
-                    connectToBackend(player);
-                }
-            });
-
-            endProcess(name);
-        });
+                    return completeRegistrationAsync(player, name, password);
+                })
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        player.disconnect(CachedComponents.IMP.queryError);
+                    }
+                    inProcess.remove(name);
+                });
     }
 
     public void registerPlayer(String playerName, String password, String ip, Consumer<Boolean> callback) {
-
-        database.getAuthUserRepository().registerUser(
-                new AuthUser(
-                        playerName.toLowerCase(Locale.ROOT),
-                        playerName,
-                        hash.hashPassword(password),
-                        false,
-                        ip
-                ), success -> {
-                    if (!success) {
-                        callback.accept(false);
-                        return;
-                    }
-                    callback.accept(true);
-                }
-        );
+        registerUserAsync(playerName, password, ip)
+                .thenAccept(result -> callback.accept(true))
+                .exceptionally(throwable -> {
+                    callback.accept(false);
+                    return null;
+                });
     }
 
     public void unregisterPlayer(Player player, String password) {
         String name = player.getUsername();
 
-        if (!beginProcess(name)) {
+        if (!inProcess.add(name)) {
             return;
         }
 
-        if (checkPasswordLength(player, password)) {
-            endProcess(name);
+        if (rejectInvalidPasswordLength(player, password)) {
+            inProcess.remove(name);
             return;
         }
 
-        database.getAuthUserRepository().getUser(name, (user, success) -> {
-            if (!success) {
-                player.sendMessage(CachedComponents.IMP.queryError);
-                endProcess(name);
-                return;
-            }
+        getUserAsync(name)
+                .thenCompose(user -> {
+                    if (!hash.verifyPassword(password, user.getPassword())) {
+                        player.sendMessage(CachedComponents.IMP.player.checkPassword.wrongPassword);
+                        return CompletableFuture.completedFuture(null);
+                    }
 
-            if (!hash.verifyPassword(password, user.getPassword())) {
-                player.sendMessage(CachedComponents.IMP.player.checkPassword.wrongPassword);
-                endProcess(name);
-                return;
-            }
-
-            unregisterPlayer(name, success1 -> {
-                if (!success1) {
-                    player.sendMessage(CachedComponents.IMP.queryError);
-                    endProcess(name);
-                    return;
-                }
-
-                SessionCache.removePlayer(name);
-
-                player.disconnect(CachedComponents.IMP.player.unregister.success);
-
-                endProcess(name);
-            });
-        });
+                    return deleteUserAsync(name)
+                            .thenAccept(result -> {
+                                SessionCache.removePlayer(name);
+                                player.disconnect(CachedComponents.IMP.player.unregister.success);
+                            });
+                })
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        player.sendMessage(CachedComponents.IMP.queryError);
+                    }
+                    inProcess.remove(name);
+                });
     }
 
     public void unregisterPlayer(String playerName, Consumer<Boolean> callback) {
-        database.getAuthUserRepository().deleteUser(playerName, success -> {
-            if (!success) {
-                callback.accept(false);
-                return;
-            }
-            callback.accept(true);
-        });
+        deleteUserAsync(playerName)
+                .thenAccept(result -> callback.accept(true))
+                .exceptionally(throwable -> {
+                    callback.accept(false);
+                    return null;
+                });
     }
 
     public void loginPlayer(Player player, String password) {
@@ -201,39 +156,283 @@ public class AuthManager {
             return;
         }
 
-        if (checkPasswordEmpty(player, password)) {
+        if (rejectEmptyPassword(player, password)) {
             return;
         }
 
-        if (!beginProcess(name)) {
+        if (!inProcess.add(name)) {
             return;
         }
 
+        getUserAsync(name)
+                .thenCompose(user -> {
+                    if (user == null) {
+                        player.sendMessage(CachedComponents.IMP.player.login.notRegistered);
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    if (!hash.verifyPassword(password, user.getPassword())) {
+                        handleWrongPasswordAttempt(player, name);
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    if (plugin.getTotpManager().requireTotpChallenge(player, user)) {
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    return processSuccessfulLoginAsync(player, name);
+                })
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        player.disconnect(CachedComponents.IMP.queryError);
+                    }
+                    inProcess.remove(name);
+                });
+    }
+
+    public void loginPlayer(Player player, Runnable callback) {
+        loginPlayer(player, callback, false);
+    }
+
+    public void loginPlayer(Player player, Runnable callback, boolean forceLogin) {
+        String name = player.getUsername();
+        authenticatePlayer(player, name, forceLogin)
+                .thenRun(callback);
+    }
+
+    public void changePasswordPlayer(Player player, String oldPassword, String newPassword) {
+        String name = player.getUsername();
+
+        if (rejectEmptyPassword(player, oldPassword) || rejectEmptyPassword(player, newPassword)) {
+            return;
+        }
+
+        if (rejectInvalidPasswordLength(player, oldPassword) || rejectInvalidPasswordLength(player, newPassword)) {
+            return;
+        }
+
+        if (rejectInvalidPasswordPattern(player, newPassword)) {
+            return;
+        }
+
+        if (!inProcess.add(name)) {
+            return;
+        }
+
+        getUserAsync(name)
+                .thenCompose(user -> {
+                    if (!hash.verifyPassword(oldPassword, user.getPassword())) {
+                        player.sendMessage(CachedComponents.IMP.player.checkPassword.wrongPassword);
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    return updatePasswordAsync(name, newPassword)
+                            .thenAccept(result -> {
+                                player.sendMessage(CachedComponents.IMP.player.changePassword.success);
+                            });
+                })
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        player.sendMessage(CachedComponents.IMP.queryError);
+                    }
+                    inProcess.remove(name);
+                });
+    }
+
+    public void changePasswordPlayer(String playerName, String password, Consumer<Boolean> callback) {
+        updatePasswordAsync(playerName, password)
+                .thenAccept(result -> callback.accept(true))
+                .exceptionally(throwable -> {
+                    callback.accept(false);
+                    return null;
+                });
+    }
+
+    public void logoutPlayer(Player player) {
+        taskManager.cancelTasks(player);
+        AuthCache.logout(player.getUsername());
+        SessionCache.removePlayer(player.getUsername());
+    }
+
+    public void resetLoginAttempts(String lowerName) {
+        loginAttempts.remove(lowerName);
+    }
+
+    public void togglePremium(Player player) {
+        String name = player.getUsername();
+
+        if (!inProcess.add(name)) {
+            return;
+        }
+
+        boolean isPremium = PremiumCache.isPremium(name);
+
+        setPremiumAsync(name, !isPremium)
+                .thenAccept(result -> {
+                    if (isPremium) {
+                        PremiumCache.removePremium(name);
+                        player.sendMessage(CachedComponents.IMP.player.premium.disabled);
+                    } else {
+                        PremiumCache.addPremium(name);
+                        player.sendMessage(CachedComponents.IMP.player.premium.enabled);
+                    }
+                })
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        player.sendMessage(CachedComponents.IMP.queryError);
+                    }
+                    inProcess.remove(name);
+                });
+    }
+
+    public void forceAuth(Player player, PlayerChooseInitialServerEvent event, CompletableFuture<Void> future) {
+        String name = player.getUsername();
+
+        getUserAsync(name)
+                .whenComplete((user, throwable) -> {
+                    try {
+                        if (throwable != null) {
+                            player.disconnect(CachedComponents.IMP.queryError);
+                            return;
+                        }
+
+                        if (user != null && !player.getUsername().equals(user.getRealName())) {
+                            player.disconnect(CachedComponents.IMP.player.kick.realname
+                                    .replaceText(builder -> builder
+                                            .match(VelocityUtils.REAL_NAME)
+                                            .replacement(user.getRealName()))
+                                    .replaceText(builder -> builder
+                                            .match(VelocityUtils.NAME)
+                                            .replacement(player.getUsername())));
+                            return;
+                        }
+
+                        String sessionIP = SessionCache.getIP(name);
+                        String remoteIp = player.getRemoteAddress().getAddress().getHostAddress();
+
+                        if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
+                            AuthCache.setAuthenticated(name);
+                            if (event != null) {
+                                connectToBackend(event);
+                            } else {
+                                connectToBackend(player);
+                            }
+                            return;
+                        }
+
+                        if (event == null && future == null) {
+                            connectToAuthServer(player);
+                        } else if (event != null) {
+                            Optional<RegisteredServer> authOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
+                            authOpt.ifPresent(event::setInitialServer);
+                        }
+
+                        Component reminderMessage = (user != null)
+                                ? CachedComponents.IMP.player.reminder.login
+                                : CachedComponents.IMP.player.reminder.register;
+
+                        taskManager.startAuthTimeoutTask(player);
+                        taskManager.startAuthReminderTask(player, reminderMessage);
+                    } finally {
+                        if (event != null && future != null) {
+                            future.complete(null);
+                        }
+                    }
+                });
+    }
+
+    public void showLoginDialog(Player player) {
+    }
+
+    public void showLoginDialog(Player player, Object noticeComponent) {
+    }
+
+    private CompletableFuture<AuthUser> getUserAsync(String name) {
+        CompletableFuture<AuthUser> future = new CompletableFuture<>();
         database.getAuthUserRepository().getUser(name, (user, success) -> {
-            if (!success) {
-                player.disconnect(CachedComponents.IMP.queryError);
-                endProcess(name);
-                return;
+            if (success) {
+                future.complete(user);
+            } else {
+                future.completeExceptionally(new RuntimeException("Database query error"));
             }
-
-            if (user == null) {
-                player.sendMessage(CachedComponents.IMP.player.login.notRegistered);
-                endProcess(name);
-                return;
-            }
-
-            if (!hash.verifyPassword(password, user.getPassword())) {
-                handleWrongPasswordAttempt(player, name);
-                return;
-            }
-
-            if (plugin.getTotpManager().isTotpLoginRequired(player, user)) {
-                endProcess(name);
-                return;
-            }
-
-            processSuccessfulLogin(player, name);
         });
+        return future;
+    }
+
+    private CompletableFuture<Void> registerUserAsync(String playerName, String password, String ip) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        database.getAuthUserRepository().registerUser(
+                new AuthUser(
+                        playerName.toLowerCase(Locale.ROOT),
+                        playerName,
+                        hash.hashPassword(password),
+                        false,
+                        ip
+                ), success -> {
+                    if (success) {
+                        future.complete(null);
+                    } else {
+                        future.completeExceptionally(new RuntimeException("Database register error"));
+                    }
+                }
+        );
+        return future;
+    }
+
+    private CompletableFuture<Void> deleteUserAsync(String playerName) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        database.getAuthUserRepository().deleteUser(playerName, success -> {
+            if (success) {
+                future.complete(null);
+            } else {
+                future.completeExceptionally(new RuntimeException("Database delete error"));
+            }
+        });
+        return future;
+    }
+
+    private CompletableFuture<Void> updatePasswordAsync(String playerName, String password) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        String hashedPassword = hash.hashPassword(password);
+        database.getAuthUserRepository().updatePassword(playerName, hashedPassword, success -> {
+            if (success) {
+                future.complete(null);
+            } else {
+                future.completeExceptionally(new RuntimeException("Database update password error"));
+            }
+        });
+        return future;
+    }
+
+    private CompletableFuture<Void> setPremiumAsync(String playerName, boolean enabled) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        database.getAuthUserRepository().setPremium(playerName, enabled, success -> {
+            if (success) {
+                future.complete(null);
+            } else {
+                future.completeExceptionally(new RuntimeException("Database set premium error"));
+            }
+        });
+        return future;
+    }
+
+    private CompletableFuture<Void> completeRegistrationAsync(Player player, String name, String password) {
+        String ip = player.getRemoteAddress().getAddress().getHostAddress();
+
+        return registerUserAsync(name, password, ip)
+                .thenRun(() -> {
+                    player.sendMessage(CachedComponents.IMP.player.register.success);
+                    AuthCache.setAuthenticated(name);
+                    SessionCache.addPlayer(name, ip);
+                    taskManager.cancelTasks(player);
+
+                    PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
+                    plugin.getServer().getEventManager().fire(playerRegisterEvent).thenAccept(firedEvent -> {
+                        if (firedEvent.isMoveToBackendServer()) {
+                            connectToBackend(player);
+                        }
+                    });
+                });
     }
 
     private void handleWrongPasswordAttempt(Player player, String name) {
@@ -246,7 +445,6 @@ public class AuthManager {
                 BanCache.addPlayer(player.getRemoteAddress().getAddress().getHostAddress());
             }
             loginAttempts.remove(lowerName);
-            endProcess(name);
             return;
         }
 
@@ -256,42 +454,37 @@ public class AuthManager {
                         .replacement(String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts)))
         );
 
-        if (supportDialog(player)) {
+        if (supportsDialog(player)) {
             showLoginDialog(player,
                     CachedComponents.IMP.player.dialog.notifications.wrongPassword.replaceText(builder -> builder
                             .match(VelocityUtils.ATTEMPTS)
                             .replacement(String.valueOf(MainConfig.IMP.auth.loginAttempts - attempts)))
             );
         }
-        endProcess(name);
     }
 
-    private void processSuccessfulLogin(Player player, String name) {
+    private CompletableFuture<Void> processSuccessfulLoginAsync(Player player, String name) {
         String lowerName = name.toLowerCase(Locale.ROOT);
-        loginPlayer(player, () -> {
-            player.sendMessage(CachedComponents.IMP.player.login.success);
 
-            if (MainConfig.IMP.title.enabledOnAuth) {
-                Title componentTitle = Title.title(
-                        CachedComponents.IMP.player.title.onAuthTitle,
-                        CachedComponents.IMP.player.title.onAuthSubTitle,
-                        0,
-                        21,
-                        0);
-                player.showTitle(componentTitle);
-            }
+        return authenticatePlayer(player, name, false)
+                .thenRun(() -> {
+                    player.sendMessage(CachedComponents.IMP.player.login.success);
 
-            loginAttempts.remove(lowerName);
-            endProcess(name);
-        });
+                    if (MainConfig.IMP.title.enabledOnAuth) {
+                        Title componentTitle = Title.title(
+                                CachedComponents.IMP.player.title.onAuthTitle,
+                                CachedComponents.IMP.player.title.onAuthSubTitle,
+                                0,
+                                21,
+                                0);
+                        player.showTitle(componentTitle);
+                    }
+
+                    loginAttempts.remove(lowerName);
+                });
     }
 
-    public void loginPlayer(Player player, Runnable callback) {
-        loginPlayer(player, callback, false);
-    }
-
-    public void loginPlayer(Player player, Runnable callback, boolean forceLogin) {
-        String name = player.getUsername();
+    private CompletableFuture<Void> authenticatePlayer(Player player, String name, boolean forceLogin) {
         String ip = player.getRemoteAddress().getAddress().getHostAddress();
 
         AuthCache.setAuthenticated(name);
@@ -301,179 +494,12 @@ public class AuthManager {
         taskManager.cancelTasks(player);
 
         PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player, forceLogin);
-        plugin.getServer().getEventManager().fire(playerAuthEvent).thenAccept(firedEvent -> {
-            if (firedEvent.isMoveToBackendServer()) {
-                connectToBackend(player);
-            }
-        });
-
-        callback.run();
-    }
-
-    public void changePasswordPlayer(Player player, String oldPassword, String newPassword) {
-        String name = player.getUsername();
-
-        if (checkPasswordEmpty(player, oldPassword) || checkPasswordEmpty(player, newPassword)) {
-            return;
-        }
-
-        if (checkPasswordLength(player, oldPassword) || checkPasswordLength(player, newPassword)) {
-            return;
-        }
-
-        if (checkPasswordPattern(player, newPassword)) {
-            return;
-        }
-
-        if (!beginProcess(name)) {
-            return;
-        }
-
-        database.getAuthUserRepository().getUser(name, (user, success) -> {
-            if (!success) {
-                player.sendMessage(CachedComponents.IMP.queryError);
-                endProcess(name);
-                return;
-            }
-
-            if (!hash.verifyPassword(oldPassword, user.getPassword())) {
-                player.sendMessage(CachedComponents.IMP.player.checkPassword.wrongPassword);
-                endProcess(name);
-                return;
-            }
-
-            changePasswordPlayer(name, newPassword, success1 -> {
-                if (!success1) {
-                    player.sendMessage(CachedComponents.IMP.queryError);
-                    endProcess(name);
-                    return;
-                }
-
-                player.sendMessage(CachedComponents.IMP.player.changePassword.success);
-                endProcess(name);
-            });
-        });
-    }
-
-    public void changePasswordPlayer(String playerName, String password, Consumer<Boolean> callback) {
-
-        String hashedPassword = hash.hashPassword(password);
-
-        database.getAuthUserRepository().updatePassword(playerName, hashedPassword, success -> {
-            if (!success) {
-                callback.accept(false);
-                return;
-            }
-            callback.accept(true);
-        });
-    }
-
-    public void logoutPlayer(Player player) {
-        taskManager.cancelTasks(player);
-        AuthCache.logout(player.getUsername());
-        SessionCache.removePlayer(player.getUsername());
-    }
-
-    public void clearLoginAttempts(String lowerName) {
-        loginAttempts.remove(lowerName);
-    }
-
-    public void togglePremium(Player player) {
-        String name = player.getUsername();
-
-        if (!beginProcess(name)) {
-            return;
-        }
-
-        boolean isPremium = PremiumCache.isPremium(name);
-
-        database.getAuthUserRepository().setPremium(name, !isPremium, success -> {
-            if (!success) {
-                player.sendMessage(CachedComponents.IMP.queryError);
-                endProcess(name);
-                return;
-            }
-
-            if (isPremium) {
-                PremiumCache.removePremium(name);
-                player.sendMessage(CachedComponents.IMP.player.premium.disabled);
-                endProcess(name);
-                return;
-            }
-
-            PremiumCache.addPremium(name);
-            player.sendMessage(CachedComponents.IMP.player.premium.enabled);
-            endProcess(name);
-        });
-    }
-
-    /**
-     * Force-authenticates the player.
-     */
-    public void forceAuth(Player player, PlayerChooseInitialServerEvent event, CompletableFuture<Void> future) {
-        String name = player.getUsername();
-        database.getAuthUserRepository().getUser(name, (user, success) -> {
-            try {
-                if (!success) {
-                    player.disconnect(CachedComponents.IMP.queryError);
-                    return;
-                }
-
-                if (user != null && !player.getUsername().equals(user.getRealName())) {
-                    player.disconnect(CachedComponents.IMP.player.kick.realname
-                            .replaceText(builder -> builder
-                                    .match(VelocityUtils.REAL_NAME)
-                                    .replacement(user.getRealName()))
-                            .replaceText(builder -> builder
-                                    .match(VelocityUtils.NAME)
-                                    .replacement(player.getUsername())));
-                    return;
-                }
-
-                String sessionIP = SessionCache.getIP(name);
-                String remoteIp = player.getRemoteAddress().getAddress().getHostAddress();
-
-                if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
-                    AuthCache.setAuthenticated(name);
-                    if (event != null) {
-                        connectToBackend(event);
-                    } else {
+        return plugin.getServer().getEventManager().fire(playerAuthEvent)
+                .thenAccept(firedEvent -> {
+                    if (firedEvent.isMoveToBackendServer()) {
                         connectToBackend(player);
                     }
-                    return;
-                }
-
-                if (event == null && future == null) {
-                    connectToAuthServer(player);
-                } else if (event != null) {
-                    Optional<RegisteredServer> authOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
-                    authOpt.ifPresent(event::setInitialServer);
-                }
-
-                Component reminderMessage = (user != null)
-                        ? CachedComponents.IMP.player.reminder.login
-                        : CachedComponents.IMP.player.reminder.register;
-
-                taskManager.startAuthTimeoutTask(player);
-                taskManager.startAuthReminderTask(player, reminderMessage);
-            } finally {
-                if (event != null && future != null) {
-                    future.complete(null);
-                }
-            }
-        });
-    }
-
-    public void showLoginDialog(Player player) {
-        // Dialog support on Velocity is not implemented yet.
-    }
-
-    public void showLoginDialog(Player player, java.util.function.Supplier<?> notice) {
-        // Dialog support on Velocity is not implemented yet.
-    }
-
-    public void showLoginDialog(Player player, Object noticeComponent) {
-        // Dialog support on Velocity is not implemented yet.
+                });
     }
 
     private void connectToAuthServer(Player player) {
@@ -517,22 +543,14 @@ public class AuthManager {
         return Optional.ofNullable(MainConfig.IMP.servers.forcedHosts.get(virtualHost.getHostString().toLowerCase()));
     }
 
-    private boolean supportDialog(Player player) {
+    private boolean supportsDialog(Player player) {
         return false;
     }
 
-    private boolean beginProcess(String playerName) {
-        return inProcess.add(playerName);
-    }
-
-    private void endProcess(String playerName) {
-        inProcess.remove(playerName);
-    }
-
-    private boolean checkPasswordEmpty(Player player, String password) {
+    private boolean rejectEmptyPassword(Player player, String password) {
         if (password.isEmpty()) {
             player.sendMessage(CachedComponents.IMP.player.checkPassword.passwordEmpty);
-            if (supportDialog(player)) {
+            if (supportsDialog(player)) {
                 showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.passwordEmpty);
             }
             return true;
@@ -540,7 +558,7 @@ public class AuthManager {
         return false;
     }
 
-    private boolean checkPasswordLength(Player player, String password) {
+    private boolean rejectInvalidPasswordLength(Player player, String password) {
         if (password.length() < MainConfig.IMP.auth.minPasswordLength ||
                 password.length() > MainConfig.IMP.auth.maxPasswordLength) {
             player.sendMessage(
@@ -552,7 +570,7 @@ public class AuthManager {
                                     .match(VelocityUtils.MAX)
                                     .replacement(String.valueOf(MainConfig.IMP.auth.maxPasswordLength)))
             );
-            if (supportDialog(player)) {
+            if (supportsDialog(player)) {
                 showLoginDialog(player,
                         CachedComponents.IMP.player.dialog.notifications.invalidLength
                                 .replaceText(builder -> builder
@@ -568,10 +586,10 @@ public class AuthManager {
         return false;
     }
 
-    private boolean checkPasswordPattern(Player player, String password) {
+    private boolean rejectInvalidPasswordPattern(Player player, String password) {
         if (!passwordPattern.matcher(password).matches()) {
             player.sendMessage(CachedComponents.IMP.player.checkPassword.invalidPattern);
-            if (supportDialog(player)) {
+            if (supportsDialog(player)) {
                 showLoginDialog(player, CachedComponents.IMP.player.dialog.notifications.invalidPattern);
             }
             return true;

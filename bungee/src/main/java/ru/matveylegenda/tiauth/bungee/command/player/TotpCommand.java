@@ -51,7 +51,7 @@ public class TotpCommand extends Command {
 
         if (args.length == 1 && !args[0].equalsIgnoreCase("enable") && !args[0].equalsIgnoreCase("disable")) {
             if (totpManager.isTotpPending(name)) {
-                totpManager.verifyTotpLogin(player, args[0]);
+                totpManager.processTotpChallenge(player, args[0]);
                 return;
             }
         }
