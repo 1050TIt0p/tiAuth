@@ -463,7 +463,7 @@ public class AuthManager {
     }
 
     private void connectToAuthServer(Player player) {
-        java.util.Optional<RegisteredServer> serverOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
+        Optional<RegisteredServer> serverOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
         if (serverOpt.isEmpty()) {
             return;
         }
@@ -472,23 +472,26 @@ public class AuthManager {
     }
 
     private void connectToBackend(PlayerChooseInitialServerEvent event) {
-        String targetName = event.getPlayer().getVirtualHost()
-                .flatMap(this::getForcedHost)
-                .orElse(MainConfig.IMP.servers.backend);
-        plugin.getServer().getServer(targetName).ifPresent(event::setInitialServer);
+        getBackend(event.getPlayer()).ifPresent(event::setInitialServer);
     }
 
     private void connectToBackend(Player player) {
-        String targetName = player.getVirtualHost()
+        getBackend(player).ifPresent(server -> connect(player, server));
+    }
+
+    private Optional<RegisteredServer> getBackend(Player player) {
+        return getForcedBackend(player)
+                .or(this::getDefaultBackend);
+    }
+
+    private Optional<RegisteredServer> getForcedBackend(Player player) {
+        return player.getVirtualHost()
                 .flatMap(this::getForcedHost)
-                .orElse(MainConfig.IMP.servers.backend);
+                .flatMap(plugin.getServer()::getServer);
+    }
 
-        Optional<RegisteredServer> serverOpt = plugin.getServer().getServer(targetName);
-        if (serverOpt.isEmpty()) {
-            return;
-        }
-
-        connect(player, serverOpt.get());
+    private Optional<RegisteredServer> getDefaultBackend() {
+        return plugin.getServer().getServer(MainConfig.IMP.servers.backend);
     }
 
     private void connect(Player player, RegisteredServer target) {

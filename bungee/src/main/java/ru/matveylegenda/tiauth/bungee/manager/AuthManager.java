@@ -547,19 +547,26 @@ public class AuthManager {
     }
 
     private void connectToBackend(PostLoginEvent event) {
-        String targetName = Optional.ofNullable(event.getPlayer().getPendingConnection().getVirtualHost())
-                .flatMap(this::getForcedHost)
-                .orElse(MainConfig.IMP.servers.backend);
-        ServerInfo backendServer = plugin.getProxy().getServerInfo(targetName);
-        event.setTarget(backendServer);
+        getBackend(event.getPlayer()).ifPresent(event::setTarget);
     }
 
     private void connectToBackend(ProxiedPlayer player) {
-        String targetName = Optional.ofNullable(player.getPendingConnection().getVirtualHost())
+        getBackend(player).ifPresent(server -> connect(player, server));
+    }
+
+    private Optional<ServerInfo> getBackend(ProxiedPlayer player) {
+        return getForcedBackend(player)
+                .or(this::getDefaultBackend);
+    }
+
+    private Optional<ServerInfo> getForcedBackend(ProxiedPlayer player) {
+        return Optional.ofNullable(player.getPendingConnection().getVirtualHost())
                 .flatMap(this::getForcedHost)
-                .orElse(MainConfig.IMP.servers.backend);
-        ServerInfo targetServer = plugin.getProxy().getServerInfo(targetName);
-        connect(player, targetServer);
+                .map(plugin.getProxy()::getServerInfo);
+    }
+
+    private Optional<ServerInfo> getDefaultBackend() {
+        return Optional.ofNullable(plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend));
     }
 
     private void connect(ProxiedPlayer player, ServerInfo target) {
