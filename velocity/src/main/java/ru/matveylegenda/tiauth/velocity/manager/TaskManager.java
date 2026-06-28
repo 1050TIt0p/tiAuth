@@ -13,6 +13,7 @@ import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TaskManager {
@@ -36,7 +37,7 @@ public class TaskManager {
                 return;
             }
             player.disconnect(CachedComponents.IMP.player.kick.timeout);
-        }).delay(MainConfig.IMP.auth.timeoutSeconds, java.util.concurrent.TimeUnit.SECONDS).schedule();
+        }).delay(MainConfig.IMP.auth.timeoutSeconds, TimeUnit.SECONDS).schedule();
 
         authTimeoutTasks.put(player.getUniqueId(), task);
     }
@@ -49,7 +50,7 @@ public class TaskManager {
                 return;
             }
             player.disconnect(CachedComponents.IMP.player.kick.totpTimeout);
-        }).delay(MainConfig.IMP.auth.totp.timeoutSeconds, java.util.concurrent.TimeUnit.SECONDS).schedule();
+        }).delay(MainConfig.IMP.auth.totp.timeoutSeconds, TimeUnit.SECONDS).schedule();
 
         totpTimeoutTasks.put(player.getUniqueId(), task);
     }
@@ -62,7 +63,8 @@ public class TaskManager {
                 return;
             }
             player.sendMessage(reminder);
-        }).repeat(MainConfig.IMP.auth.reminderInterval, java.util.concurrent.TimeUnit.SECONDS).schedule();
+        }).delay(0, TimeUnit.SECONDS)
+                .repeat(MainConfig.IMP.auth.reminderInterval, TimeUnit.SECONDS).schedule();
 
         authReminderTasks.put(player.getUniqueId(), task);
     }
@@ -106,7 +108,7 @@ public class TaskManager {
             }
 
             counter.decrementAndGet();
-        }).repeat(1, java.util.concurrent.TimeUnit.SECONDS).schedule();
+        }).repeat(1, TimeUnit.SECONDS).schedule();
 
         displayTimerTasks.put(pid, task);
     }
