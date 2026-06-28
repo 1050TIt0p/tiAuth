@@ -254,10 +254,6 @@ public class AuthManager {
         return pendingVerifications.contains(playerName.toLowerCase(Locale.ROOT));
     }
 
-    public void setPendingVerification(String playerName) {
-        pendingVerifications.add(playerName.toLowerCase(Locale.ROOT));
-    }
-
     public void clearPendingVerification(String playerName) {
         pendingVerifications.remove(playerName.toLowerCase(Locale.ROOT));
     }
