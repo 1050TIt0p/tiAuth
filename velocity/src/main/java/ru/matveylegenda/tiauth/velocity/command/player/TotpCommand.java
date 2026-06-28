@@ -93,74 +93,69 @@ public class TotpCommand implements SimpleCommand {
             }
         }
 
-        plugin.getDatabase().getAuthUserRepository().getUser(name, (user, success) -> {
-            if (!success) {
-                VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
-                return;
-            }
+        plugin.getDatabase().getAuthUserRepository().getUser(name)
+                .thenCompose(user -> {
+                    if (user == null) {
+                        VelocityUtils.sendMessage(player, CachedComponents.IMP.player.login.notRegistered);
+                        return null;
+                    }
 
-            if (user == null) {
-                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.login.notRegistered);
-                return;
-            }
+                    if (user.getTotpToken() != null && !user.getTotpToken().isEmpty()) {
+                        VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.alreadyEnabled);
+                        return null;
+                    }
 
-            if (user.getTotpToken() != null && !user.getTotpToken().isEmpty()) {
-                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.alreadyEnabled);
-                return;
-            }
+                    if (MainConfig.IMP.auth.totp.needPassword) {
+                        String password = args[1];
+                        if (!authManager.getHash().verifyPassword(password, user.getPassword())) {
+                            VelocityUtils.sendMessage(player, CachedComponents.IMP.player.checkPassword.wrongPassword);
+                            return null;
+                        }
+                    }
 
-            if (MainConfig.IMP.auth.totp.needPassword) {
-                String password = args[1];
-                if (!authManager.getHash().verifyPassword(password, user.getPassword())) {
-                    VelocityUtils.sendMessage(player, CachedComponents.IMP.player.checkPassword.wrongPassword);
-                    return;
-                }
-            }
+                    String secret = secretGenerator.generate();
+                    totpManager.setTotpEnableSecret(name, secret);
 
-            String secret = secretGenerator.generate();
-            totpManager.setTotpEnableSecret(name, secret);
+                    QrData qrData = new QrData.Builder()
+                            .label(name)
+                            .secret(secret)
+                            .issuer(MainConfig.IMP.auth.totp.issuer)
+                            .build();
+                    String qrUrl = MainConfig.IMP.auth.totp.qrGeneratorUrl.replace("{data}",
+                            URLEncoder.encode(qrData.getUri(), StandardCharsets.UTF_8));
 
-            QrData qrData = new QrData.Builder()
-                    .label(name)
-                    .secret(secret)
-                    .issuer(MainConfig.IMP.auth.totp.issuer)
-                    .build();
-            String qrUrl = MainConfig.IMP.auth.totp.qrGeneratorUrl.replace("{data}",
-                    URLEncoder.encode(qrData.getUri(), StandardCharsets.UTF_8));
+                    player.sendMessage(CachedComponents.IMP.player.totp.qr.clickEvent(ClickEvent.openUrl(qrUrl)));
 
-            player.sendMessage(CachedComponents.IMP.player.totp.qr.clickEvent(ClickEvent.openUrl(qrUrl)));
-
-            player.sendMessage(
-                    CachedComponents.IMP.player.totp.token
-                            .replaceText(builder -> builder.match(Pattern.compile("\\{0}")).replacement(secret))
-                            .clickEvent(ClickEvent.copyToClipboard(secret))
-            );
-
-            String[] codes = codesGenerator.generateCodes(MainConfig.IMP.auth.totp.recoveryCodesAmount);
-            String[] hashedCodes = new String[codes.length];
-
-            for (int i = 0; i < codes.length; i++) {
-                hashedCodes[i] = TotpManager.RECOVERY_HASH.hashPassword(codes[i]);
-            }
-
-            database.getRecoveryCodeRepository().addCodes(hashedCodes, player.getUsername(), success1 -> {
-                if (!success1) {
-                    VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError
+                    player.sendMessage(
+                            CachedComponents.IMP.player.totp.token
+                                    .replaceText(builder -> builder.match(Pattern.compile("\\{0}")).replacement(secret))
+                                    .clickEvent(ClickEvent.copyToClipboard(secret))
                     );
-                    return;
-                }
 
-                String codesStr = String.join(", ", codes);
+                    String[] codes = codesGenerator.generateCodes(MainConfig.IMP.auth.totp.recoveryCodesAmount);
+                    String[] hashedCodes = new String[codes.length];
 
-                player.sendMessage(
-                        CachedComponents.IMP.player.totp.recovery
-                                .replaceText(builder -> builder.match(Pattern.compile("\\{0}")).replacement(codesStr))
-                                .clickEvent(ClickEvent.copyToClipboard(codesStr))
-                );
+                    for (int i = 0; i < codes.length; i++) {
+                        hashedCodes[i] = TotpManager.RECOVERY_HASH.hashPassword(codes[i]);
+                    }
 
-                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.verified);
-            });
-        });
+                    return database.getRecoveryCodeRepository().addCodes(hashedCodes, player.getUsername())
+                            .thenAccept(result -> {
+                                String codesStr = String.join(", ", codes);
+
+                                player.sendMessage(
+                                        CachedComponents.IMP.player.totp.recovery
+                                                .replaceText(builder -> builder.match(Pattern.compile("\\{0}")).replacement(codesStr))
+                                                .clickEvent(ClickEvent.copyToClipboard(codesStr))
+                                );
+
+                                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.verified);
+                            });
+                })
+                .exceptionally(throwable -> {
+                    VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
+                    return null;
+                });
     }
 
     private void handleVerify(Player player, String[] args) {
@@ -187,14 +182,15 @@ public class TotpCommand implements SimpleCommand {
         }
 
         if (TotpManager.TOTP_CODE_VERIFIER.isValidCode(secret, args[1])) {
-            plugin.getDatabase().getAuthUserRepository().updateTotpToken(name, secretEncrypted, updateSuccess -> {
-                if (!updateSuccess) {
-                    VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
-                    return;
-                }
-                totpManager.removeTotpEnableSecret(name);
-                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.successful);
-            });
+            plugin.getDatabase().getAuthUserRepository().updateTotpToken(name, secretEncrypted)
+                    .thenAccept(result -> {
+                        totpManager.removeTotpEnableSecret(name);
+                        VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.successful);
+                    })
+                    .exceptionally(throwable -> {
+                        VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
+                        return null;
+                    });
         } else {
             VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.wrong);
         }
@@ -206,72 +202,54 @@ public class TotpCommand implements SimpleCommand {
             return;
         }
 
-        plugin.getDatabase().getAuthUserRepository().getUser(player.getUsername(), (user, success) -> {
-            if (!success) {
-                VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
-                return;
-            }
-
-            if (user == null) {
-                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.login.notRegistered);
-                return;
-            }
-
-            if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
-                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.alreadyDisabled);
-                return;
-            }
-
-            String totpToken;
-
-            try {
-                totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
-            } catch (Exception e) {
-                plugin.getLogger().error("Error during secret decryption", e);
-                return;
-            }
-
-            if (TotpManager.RECOVERY_CODE_PATTERN.matcher(args[1]).matches()) {
-                String hashedCode = TotpManager.RECOVERY_HASH.hashPassword(args[1]);
-
-                database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
-                    if (!success1) {
-                        VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
-                        return;
+        plugin.getDatabase().getAuthUserRepository().getUser(player.getUsername())
+                .thenCompose(user -> {
+                    if (user == null) {
+                        VelocityUtils.sendMessage(player, CachedComponents.IMP.player.login.notRegistered);
+                        return null;
                     }
 
-                    if (recoveryCode != null && recoveryCode.getUsername().equals(player.getUsername().toLowerCase(Locale.ROOT))) {
-                        database.getRecoveryCodeRepository().removeCodesByUsername(player.getUsername(), success2 -> {
-                            if (!success2) {
-                                VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
-                                return;
-                            }
+                    if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
+                        VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.alreadyDisabled);
+                        return null;
+                    }
 
-                            plugin.getDatabase().getAuthUserRepository().updateTotpToken(player.getUsername(), "", success3 -> {
-                                if (!success3) {
-                                    VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
-                                    return;
-                                }
-                                VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.disabled);
-                            });
-                        });
+                    String totpToken;
+
+                    try {
+                        totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
+                    } catch (Exception e) {
+                        plugin.getLogger().error("Error during secret decryption", e);
+                        return null;
+                    }
+
+                    if (TotpManager.RECOVERY_CODE_PATTERN.matcher(args[1]).matches()) {
+                        String hashedCode = TotpManager.RECOVERY_HASH.hashPassword(args[1]);
+
+                        return database.getRecoveryCodeRepository().getRecoveryCode(hashedCode)
+                                .thenCompose(recoveryCode -> {
+                                    if (recoveryCode != null && recoveryCode.getUsername().equals(player.getUsername().toLowerCase(Locale.ROOT))) {
+                                        return database.getRecoveryCodeRepository().removeCodesByUsername(player.getUsername())
+                                                .thenCompose(v -> plugin.getDatabase().getAuthUserRepository().updateTotpToken(player.getUsername(), ""))
+                                                .thenAccept(v -> VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.disabled));
+                                    } else {
+                                        VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.wrong);
+                                        return null;
+                                    }
+                                });
                     } else {
-                        VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.wrong);
-                    }
-                });
-            } else {
-                if (TotpManager.TOTP_CODE_VERIFIER.isValidCode(totpToken, args[1])) {
-                    database.getAuthUserRepository().updateTotpToken(player.getUsername(), "", updateSuccess -> {
-                        if (!updateSuccess) {
-                            VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
-                            return;
+                        if (TotpManager.TOTP_CODE_VERIFIER.isValidCode(totpToken, args[1])) {
+                            return database.getAuthUserRepository().updateTotpToken(player.getUsername(), "")
+                                    .thenAccept(v -> VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.disabled));
+                        } else {
+                            VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.wrong);
+                            return null;
                         }
-                        VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.disabled);
-                    });
-                } else {
-                    VelocityUtils.sendMessage(player, CachedComponents.IMP.player.totp.wrong);
-                }
-            }
-        });
+                    }
+                })
+                .exceptionally(throwable -> {
+                    VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
+                    return null;
+                });
     }
 }

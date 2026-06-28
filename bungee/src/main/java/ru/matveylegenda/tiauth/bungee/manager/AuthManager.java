@@ -41,7 +41,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class AuthManager {
@@ -87,7 +86,7 @@ public class AuthManager {
             return;
         }
 
-        getUserAsync(name)
+        database.getAuthUserRepository().getUser(name)
                 .thenCompose(user -> {
                     if (user != null) {
                         BungeeUtils.sendMessage(player, CachedMessages.IMP.player.register.alreadyRegistered);
@@ -104,13 +103,10 @@ public class AuthManager {
                 });
     }
 
-    public void registerPlayer(String playerName, String password, String ip, Consumer<Boolean> callback) {
-        registerUserAsync(playerName, password, ip)
-                .thenAccept(result -> callback.accept(true))
-                .exceptionally(throwable -> {
-                    callback.accept(false);
-                    return null;
-                });
+    public CompletableFuture<Boolean> registerPlayer(String playerName, String password, String ip) {
+        return registerUserAsync(playerName, password, ip)
+                .thenApply(result -> true)
+                .exceptionally(throwable -> false);
     }
 
     public void unregisterPlayer(ProxiedPlayer player, String password) {
@@ -125,14 +121,14 @@ public class AuthManager {
             return;
         }
 
-        getUserAsync(name)
+        database.getAuthUserRepository().getUser(name)
                 .thenCompose(user -> {
                     if (!hash.verifyPassword(password, user.getPassword())) {
                         BungeeUtils.sendMessage(player, CachedMessages.IMP.player.checkPassword.wrongPassword);
                         return CompletableFuture.completedFuture(null);
                     }
 
-                    return deleteUserAsync(name)
+                    return database.getAuthUserRepository().deleteUser(name)
                             .thenAccept(result -> {
                                 SessionCache.removePlayer(name);
                                 player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.unregister.success));
@@ -146,13 +142,10 @@ public class AuthManager {
                 });
     }
 
-    public void unregisterPlayer(String playerName, Consumer<Boolean> callback) {
-        deleteUserAsync(playerName)
-                .thenAccept(result -> callback.accept(true))
-                .exceptionally(throwable -> {
-                    callback.accept(false);
-                    return null;
-                });
+    public CompletableFuture<Boolean> unregisterPlayer(String playerName) {
+        return database.getAuthUserRepository().deleteUser(playerName)
+                .thenApply(result -> true)
+                .exceptionally(throwable -> false);
     }
 
     public void loginPlayer(ProxiedPlayer player, String password) {
@@ -176,7 +169,7 @@ public class AuthManager {
             return;
         }
 
-        getUserAsync(name)
+        database.getAuthUserRepository().getUser(name)
                 .thenCompose(user -> {
                     if (user == null) {
                         BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.notRegistered);
@@ -202,14 +195,10 @@ public class AuthManager {
                 });
     }
 
-    public void loginPlayer(ProxiedPlayer player, Runnable callback) {
-        loginPlayer(player, callback, false);
-    }
-
-    public void loginPlayer(ProxiedPlayer player, Runnable callback, boolean forceLogin) {
+    public CompletableFuture<Void> loginPlayer(ProxiedPlayer player, boolean forceLogin) {
         String name = player.getName();
         authenticatePlayer(player, name, forceLogin);
-        callback.run();
+        return CompletableFuture.completedFuture(null);
     }
 
     public void changePasswordPlayer(ProxiedPlayer player, String oldPassword, String newPassword) {
@@ -231,7 +220,7 @@ public class AuthManager {
             return;
         }
 
-        getUserAsync(name)
+        database.getAuthUserRepository().getUser(name)
                 .thenCompose(user -> {
                     if (!hash.verifyPassword(oldPassword, user.getPassword())) {
                         BungeeUtils.sendMessage(player, CachedMessages.IMP.player.checkPassword.wrongPassword);
@@ -251,13 +240,10 @@ public class AuthManager {
                 });
     }
 
-    public void changePasswordPlayer(String playerName, String password, Consumer<Boolean> callback) {
-        updatePasswordAsync(playerName, password)
-                .thenAccept(result -> callback.accept(true))
-                .exceptionally(throwable -> {
-                    callback.accept(false);
-                    return null;
-                });
+    public CompletableFuture<Boolean> changePasswordPlayer(String playerName, String password) {
+        return updatePasswordAsync(playerName, password)
+                .thenApply(result -> true)
+                .exceptionally(throwable -> false);
     }
 
     public void logoutPlayer(ProxiedPlayer player) {
@@ -279,7 +265,7 @@ public class AuthManager {
 
         boolean isPremium = PremiumCache.isPremium(name);
 
-        setPremiumAsync(name, !isPremium)
+        database.getAuthUserRepository().setPremium(name, !isPremium)
                 .thenAccept(result -> {
                     if (isPremium) {
                         PremiumCache.removePremium(name);
@@ -300,7 +286,7 @@ public class AuthManager {
     public void forceAuth(ProxiedPlayer player, PostLoginEvent event) {
         String name = player.getName();
 
-        getUserAsync(name)
+        database.getAuthUserRepository().getUser(name)
                 .whenComplete((user, throwable) -> {
                     try {
                         if (throwable != null) {
@@ -363,7 +349,7 @@ public class AuthManager {
             return;
         }
 
-        getUserAsync(player.getName())
+        database.getAuthUserRepository().getUser(player.getName())
                 .thenAccept(user -> {
                     Dialog dialog;
                     if (user != null) {
@@ -416,73 +402,21 @@ public class AuthManager {
                 });
     }
 
-    private CompletableFuture<AuthUser> getUserAsync(String name) {
-        CompletableFuture<AuthUser> future = new CompletableFuture<>();
-        database.getAuthUserRepository().getUser(name, (user, success) -> {
-            if (success) {
-                future.complete(user);
-            } else {
-                future.completeExceptionally(new RuntimeException("Database query error"));
-            }
-        });
-        return future;
-    }
-
     private CompletableFuture<Void> registerUserAsync(String playerName, String password, String ip) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        database.getAuthUserRepository().registerUser(
+        return database.getAuthUserRepository().registerUser(
                 new AuthUser(
                         playerName.toLowerCase(Locale.ROOT),
                         playerName,
                         hash.hashPassword(password),
                         false,
                         ip
-                ), success -> {
-                    if (success) {
-                        future.complete(null);
-                    } else {
-                        future.completeExceptionally(new RuntimeException("Database register error"));
-                    }
-                }
+                )
         );
-        return future;
-    }
-
-    private CompletableFuture<Void> deleteUserAsync(String playerName) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        database.getAuthUserRepository().deleteUser(playerName, success -> {
-            if (success) {
-                future.complete(null);
-            } else {
-                future.completeExceptionally(new RuntimeException("Database delete error"));
-            }
-        });
-        return future;
     }
 
     private CompletableFuture<Void> updatePasswordAsync(String playerName, String password) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
         String hashedPassword = hash.hashPassword(password);
-        database.getAuthUserRepository().updatePassword(playerName, hashedPassword, success -> {
-            if (success) {
-                future.complete(null);
-            } else {
-                future.completeExceptionally(new RuntimeException("Database update password error"));
-            }
-        });
-        return future;
-    }
-
-    private CompletableFuture<Void> setPremiumAsync(String playerName, boolean enabled) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        database.getAuthUserRepository().setPremium(playerName, enabled, success -> {
-            if (success) {
-                future.complete(null);
-            } else {
-                future.completeExceptionally(new RuntimeException("Database set premium error"));
-            }
-        });
-        return future;
+        return database.getAuthUserRepository().updatePassword(playerName, hashedPassword);
     }
 
     private CompletableFuture<Void> completeRegistrationAsync(ProxiedPlayer player, String name, String password) {
@@ -531,6 +465,7 @@ public class AuthManager {
             );
         }
     }
+
     private CompletableFuture<Void> processSuccessfulLoginAsync(ProxiedPlayer player, String name) {
         String lowerName = name.toLowerCase(Locale.ROOT);
 

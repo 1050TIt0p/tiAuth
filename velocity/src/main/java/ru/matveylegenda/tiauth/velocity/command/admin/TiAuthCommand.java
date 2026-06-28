@@ -74,25 +74,26 @@ public class TiAuthCommand implements SimpleCommand {
                 }
 
                 String playerName = args[1];
-                authManager.unregisterPlayer(playerName, success -> {
-                    if (!success) {
-                        VelocityUtils.sendMessage(sender, CachedComponents.IMP.queryError);
-                        return;
-                    }
+                authManager.unregisterPlayer(playerName)
+                        .thenAccept(success -> {
+                            if (!success) {
+                                VelocityUtils.sendMessage(sender, CachedComponents.IMP.queryError);
+                                return;
+                            }
 
-                    proxy.getPlayer(playerName).ifPresent(player -> {
-                        SessionCache.removePlayer(playerName);
-                        player.disconnect(CachedComponents.IMP.player.unregister.success);
-                    });
+                            proxy.getPlayer(playerName).ifPresent(player -> {
+                                SessionCache.removePlayer(playerName);
+                                player.disconnect(CachedComponents.IMP.player.unregister.success);
+                            });
 
-                    VelocityUtils.sendMessage(
-                            sender,
-                            CachedComponents.IMP.admin.unregister.success
-                                    .replaceText(builder -> builder
-                                            .match(VelocityUtils.PLAYER)
-                                            .replacement(playerName))
-                    );
-                });
+                            VelocityUtils.sendMessage(
+                                    sender,
+                                    CachedComponents.IMP.admin.unregister.success
+                                            .replaceText(builder -> builder
+                                                    .match(VelocityUtils.PLAYER)
+                                                    .replacement(playerName))
+                            );
+                        });
             }
 
             case "changepassword", "changepass" -> {
@@ -108,20 +109,21 @@ public class TiAuthCommand implements SimpleCommand {
 
                 String playerName = args[1];
                 String password = args[2];
-                authManager.changePasswordPlayer(playerName, password, success -> {
-                    if (!success) {
-                        VelocityUtils.sendMessage(sender, CachedComponents.IMP.queryError);
-                        return;
-                    }
+                authManager.changePasswordPlayer(playerName, password)
+                        .thenAccept(success -> {
+                            if (!success) {
+                                VelocityUtils.sendMessage(sender, CachedComponents.IMP.queryError);
+                                return;
+                            }
 
-                    VelocityUtils.sendMessage(
-                            sender,
-                            CachedComponents.IMP.admin.changePassword.success
-                                    .replaceText(builder -> builder
-                                            .match(VelocityUtils.PLAYER)
-                                            .replacement(playerName))
-                    );
-                });
+                            VelocityUtils.sendMessage(
+                                    sender,
+                                    CachedComponents.IMP.admin.changePassword.success
+                                            .replaceText(builder -> builder
+                                                    .match(VelocityUtils.PLAYER)
+                                                    .replacement(playerName))
+                            );
+                        });
             }
 
             case "forcelogin" -> {
@@ -152,13 +154,14 @@ public class TiAuthCommand implements SimpleCommand {
                     return;
                 }
 
-                authManager.loginPlayer(player, () -> VelocityUtils.sendMessage(
-                        sender,
-                        CachedComponents.IMP.admin.forceLogin.success
-                                .replaceText(builder -> builder
-                                        .match(VelocityUtils.PLAYER)
-                                        .replacement(player.getUsername()))
-                ), true);
+                authManager.loginPlayer(player, true)
+                        .thenRun(() -> VelocityUtils.sendMessage(
+                                sender,
+                                CachedComponents.IMP.admin.forceLogin.success
+                                        .replaceText(builder -> builder
+                                                .match(VelocityUtils.PLAYER)
+                                                .replacement(player.getUsername()))
+                        ));
             }
 
             case "forceregister" -> {
@@ -175,38 +178,35 @@ public class TiAuthCommand implements SimpleCommand {
                 String playerName = args[1];
                 String password = args[2];
 
-                database.getAuthUserRepository().getUser(playerName.toLowerCase(Locale.ROOT), (user, success) -> {
-                    if (!success) {
-                        VelocityUtils.sendMessage(sender, CachedComponents.IMP.queryError);
-                        return;
-                    }
+                database.getAuthUserRepository().getUser(playerName.toLowerCase(Locale.ROOT))
+                        .thenCompose(user -> {
+                            if (user != null) {
+                                VelocityUtils.sendMessage(
+                                        sender,
+                                        CachedComponents.IMP.admin.forceRegister.alreadyRegistered
+                                                .replaceText(builder -> builder
+                                                        .match(VelocityUtils.PLAYER)
+                                                        .replacement(playerName))
+                                );
+                                return null;
+                            }
 
-                    if (user != null) {
-                        VelocityUtils.sendMessage(
-                                sender,
-                                CachedComponents.IMP.admin.forceRegister.alreadyRegistered
-                                        .replaceText(builder -> builder
-                                                .match(VelocityUtils.PLAYER)
-                                                .replacement(playerName))
-                        );
-                        return;
-                    }
+                            return authManager.registerPlayer(playerName, password, null)
+                                    .thenAccept(success -> {
+                                        if (!success) {
+                                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.queryError);
+                                            return;
+                                        }
 
-                    authManager.registerPlayer(playerName, password, null, success1 -> {
-                        if (!success1) {
-                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.queryError);
-                            return;
-                        }
-
-                        VelocityUtils.sendMessage(
-                                sender,
-                                CachedComponents.IMP.admin.forceRegister.success
-                                        .replaceText(builder -> builder
-                                                .match(VelocityUtils.PLAYER)
-                                                .replacement(playerName))
-                        );
-                    });
-                });
+                                        VelocityUtils.sendMessage(
+                                                sender,
+                                                CachedComponents.IMP.admin.forceRegister.success
+                                                        .replaceText(builder -> builder
+                                                                .match(VelocityUtils.PLAYER)
+                                                                .replacement(playerName))
+                                        );
+                                    });
+                        });
             }
 
             case "forcepremium" -> {
@@ -226,53 +226,46 @@ public class TiAuthCommand implements SimpleCommand {
                     return;
                 }
 
-                database.getAuthUserRepository().getUser(args[1], (user, success) -> {
-                    if (!success) {
-                        VelocityUtils.sendMessage(
-                                sender,
-                                CachedComponents.IMP.queryError
-                        );
-                        return;
-                    }
+                database.getAuthUserRepository().getUser(args[1])
+                        .thenCompose(user -> {
+                            if (user == null) {
+                                VelocityUtils.sendMessage(
+                                        sender,
+                                        CachedComponents.IMP.playerNotFound
+                                );
+                                return null;
+                            }
 
-                    if (user == null) {
-                        VelocityUtils.sendMessage(
-                                sender,
-                                CachedComponents.IMP.playerNotFound
-                        );
-                        return;
-                    }
-
-                    database.getAuthUserRepository().setPremium(args[1], !user.isPremium(), success1 -> {
-                        if (!success1) {
+                            return database.getAuthUserRepository().setPremium(args[1], !user.isPremium())
+                                    .thenAccept(result -> {
+                                        if (user.isPremium()) {
+                                            PremiumCache.removePremium(args[1]);
+                                            VelocityUtils.sendMessage(
+                                                    sender,
+                                                    CachedComponents.IMP.admin.forcePremium.disabled
+                                                            .replaceText(builder -> builder
+                                                                    .match(VelocityUtils.PLAYER)
+                                                                    .replacement(args[1]))
+                                            );
+                                        } else {
+                                            PremiumCache.addPremium(args[1]);
+                                            VelocityUtils.sendMessage(
+                                                    sender,
+                                                    CachedComponents.IMP.admin.forcePremium.enabled
+                                                            .replaceText(builder -> builder
+                                                                    .match(VelocityUtils.PLAYER)
+                                                                    .replacement(args[1]))
+                                            );
+                                        }
+                                    });
+                        })
+                        .exceptionally(throwable -> {
                             VelocityUtils.sendMessage(
                                     sender,
                                     CachedComponents.IMP.queryError
                             );
-                            return;
-                        }
-
-                        if (user.isPremium()) {
-                            PremiumCache.removePremium(args[1]);
-                            VelocityUtils.sendMessage(
-                                    sender,
-                                    CachedComponents.IMP.admin.forcePremium.disabled
-                                            .replaceText(builder -> builder
-                                                    .match(VelocityUtils.PLAYER)
-                                                    .replacement(args[1]))
-                            );
-                        } else {
-                            PremiumCache.addPremium(args[1]);
-                            VelocityUtils.sendMessage(
-                                    sender,
-                                    CachedComponents.IMP.admin.forcePremium.enabled
-                                            .replaceText(builder -> builder
-                                                    .match(VelocityUtils.PLAYER)
-                                                    .replacement(args[1]))
-                            );
-                        }
-                    });
-                });
+                            return null;
+                        });
             }
 
             case "migrate" -> {
@@ -348,14 +341,12 @@ public class TiAuthCommand implements SimpleCommand {
                     }
                 }
 
-                databaseMigrator.migrate(success -> {
-                    if (!success) {
-                        VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.error);
-                        return;
-                    }
-
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.success);
-                });
+                databaseMigrator.migrate()
+                        .thenAccept(result -> VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.success))
+                        .exceptionally(throwable -> {
+                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.error);
+                            return null;
+                        });
             }
 
             default -> VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.usage);

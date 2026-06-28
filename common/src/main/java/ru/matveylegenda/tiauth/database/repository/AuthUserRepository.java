@@ -10,9 +10,8 @@ import ru.matveylegenda.tiauth.database.model.AuthUser;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public class AuthUserRepository {
@@ -33,27 +32,25 @@ public class AuthUserRepository {
                     "ALTER TABLE auth_users ADD COLUMN totpToken VARCHAR(255) DEFAULT ''"
             );
         } catch (SQLException ignored) {
-            // column already exists
         }
     }
 
-    public void registerUser(AuthUser user, Consumer<Boolean> callback) {
+    public CompletableFuture<Void> registerUser(AuthUser user) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 authUserDao.create(user);
-                if (callback != null) {
-                    callback.accept(true);
-                }
+                future.complete(null);
             } catch (SQLException e) {
-                if (callback != null) {
-                    callback.accept(false);
-                }
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 
-    public void registerUsers(List<AuthUser> users, Consumer<Boolean> callback) {
+    public CompletableFuture<Void> registerUsers(List<AuthUser> users) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 authUserDao.callBatchTasks(() -> {
@@ -65,68 +62,65 @@ public class AuthUserRepository {
                     }
                     return null;
                 });
-                callback.accept(true);
+                future.complete(null);
             } catch (Exception e) {
-                callback.accept(false);
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 
-    public void deleteUser(String username, Consumer<Boolean> callback) {
+    public CompletableFuture<Void> deleteUser(String username) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
                     authUserDao.delete(user);
                 }
-
-                if (callback != null) {
-                    callback.accept(true);
-                }
+                future.complete(null);
             } catch (SQLException e) {
-                if (callback != null) {
-                    callback.accept(false);
-                }
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database delete query", e);
             }
         });
+        return future;
     }
 
-
-    public void getUser(String username, BiConsumer<AuthUser, Boolean> callback) {
+    public CompletableFuture<AuthUser> getUser(String username) {
+        CompletableFuture<AuthUser> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
-                callback.accept(user, true);
+                future.complete(user);
             } catch (SQLException e) {
-                callback.accept(null, false);
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 
-    public void getUserCountByIp(String ip, Consumer<Integer> callback) {
+    public CompletableFuture<Integer> getUserCountByIp(String ip) {
+        CompletableFuture<Integer> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 int count = (int) authUserDao.queryBuilder()
                         .where()
                         .eq("lastIp", ip)
                         .countOf();
-
-                if (callback != null) {
-                    callback.accept(count);
-                }
+                future.complete(count);
             } catch (SQLException e) {
-                if (callback != null) {
-                    callback.accept(0);
-                }
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during IP count query", e);
             }
         });
+        return future;
     }
 
-    public void updatePassword(String username, String newPassword, Consumer<Boolean> callback) {
+    public CompletableFuture<Void> updatePassword(String username, String newPassword) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
@@ -134,17 +128,13 @@ public class AuthUserRepository {
                     user.setPassword(newPassword);
                     authUserDao.update(user);
                 }
-
-                if (callback != null) {
-                    callback.accept(true);
-                }
+                future.complete(null);
             } catch (SQLException e) {
-                if (callback != null) {
-                    callback.accept(false);
-                }
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 
     public void updateLastLogin(String username) {
@@ -175,7 +165,8 @@ public class AuthUserRepository {
         });
     }
 
-    public void updateTotpToken(String username, String totpToken, Consumer<Boolean> callback) {
+    public CompletableFuture<Void> updateTotpToken(String username, String totpToken) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
@@ -183,20 +174,17 @@ public class AuthUserRepository {
                     user.setTotpToken(totpToken);
                     authUserDao.update(user);
                 }
-
-                if (callback != null) {
-                    callback.accept(true);
-                }
+                future.complete(null);
             } catch (SQLException e) {
-                if (callback != null) {
-                    callback.accept(false);
-                }
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 
-    public void setPremium(String username, boolean enabled, Consumer<Boolean> callback) {
+    public CompletableFuture<Void> setPremium(String username, boolean enabled) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
@@ -204,16 +192,12 @@ public class AuthUserRepository {
                     user.setPremium(enabled);
                     authUserDao.update(user);
                 }
-
-                if (callback != null) {
-                    callback.accept(true);
-                }
+                future.complete(null);
             } catch (SQLException e) {
-                if (callback != null) {
-                    callback.accept(false);
-                }
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 }

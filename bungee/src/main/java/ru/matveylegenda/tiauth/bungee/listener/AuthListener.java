@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
@@ -98,37 +99,35 @@ public class AuthListener implements Listener {
         }
 
         event.registerIntent(plugin);
-        database.getAuthUserRepository().getUser(connection.getName(), (user, success) -> {
-            if (!success) {
-                event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
-                event.setCancelled(true);
+        database.getAuthUserRepository().getUser(connection.getName())
+                .thenCompose(user -> {
+                    if (user == null) {
+                        connection.setOnlineMode(false);
 
-                event.completeIntent(plugin);
-                return;
-            }
-
-            if (user == null) {
-                connection.setOnlineMode(false);
-
-                if (!MainConfig.IMP.excludedIps.contains(ip)) {
-                    database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
-                        if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
-                            event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.ipLimitRegisteredReached));
-                            event.setCancelled(true);
+                        if (!MainConfig.IMP.excludedIps.contains(ip)) {
+                            return database.getAuthUserRepository().getUserCountByIp(ip)
+                                    .thenAccept(ipCount -> {
+                                        if (ipCount >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
+                                            event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.ipLimitRegisteredReached));
+                                            event.setCancelled(true);
+                                        }
+                                    });
                         }
-                        event.completeIntent(plugin);
-                    });
-                    return;
-                }
-            } else if (user.isPremium()) {
-                connection.setOnlineMode(true);
-                PremiumCache.addPremium(connection.getName());
-            } else {
-                connection.setOnlineMode(false);
-            }
+                    } else if (user.isPremium()) {
+                        connection.setOnlineMode(true);
+                        PremiumCache.addPremium(connection.getName());
+                    } else {
+                        connection.setOnlineMode(false);
+                    }
 
-            event.completeIntent(plugin);
-        });
+                    return CompletableFuture.completedFuture(null);
+                })
+                .exceptionally(throwable -> {
+                    event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
+                    event.setCancelled(true);
+                    return null;
+                })
+                .whenComplete((result, throwable) -> event.completeIntent(plugin));
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

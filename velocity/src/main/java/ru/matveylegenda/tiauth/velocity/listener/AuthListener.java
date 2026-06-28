@@ -85,41 +85,37 @@ public class AuthListener {
             }
         }
 
-        CompletableFuture<Void> future = new CompletableFuture<>();
-
-        database.getAuthUserRepository().getUser(username, (user, success) -> {
-            if (!success) {
-                event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.queryError));
-                future.complete(null);
-                return;
-            }
-
-            if (user == null) {
-                if (!MainConfig.IMP.excludedIps.contains(ip)) {
-                    database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
-                        if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
-                            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitRegisteredReached));
+        CompletableFuture<Void> future = database.getAuthUserRepository().getUser(username)
+                .thenCompose(user -> {
+                    if (user == null) {
+                        if (!MainConfig.IMP.excludedIps.contains(ip)) {
+                            return database.getAuthUserRepository().getUserCountByIp(ip)
+                                    .thenAccept(ipCount -> {
+                                        if (ipCount >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
+                                            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitRegisteredReached));
+                                        } else {
+                                            event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
+                                        }
+                                    });
+                        } else {
+                            event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
+                            return CompletableFuture.completedFuture(null);
+                        }
+                    } else {
+                        if (user.isPremium()) {
+                            event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
+                            PremiumCache.addPremium(username);
                         } else {
                             event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
                         }
 
-                        future.complete(null);
-                    });
-                } else {
-                    event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
-                    future.complete(null);
-                }
-            } else {
-                if (user.isPremium()) {
-                    event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
-                    PremiumCache.addPremium(username);
-                } else {
-                    event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
-                }
-
-                future.complete(null);
-            }
-        });
+                        return CompletableFuture.completedFuture(null);
+                    }
+                })
+                .exceptionally(throwable -> {
+                    event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.queryError));
+                    return null;
+                });
 
         return EventTask.resumeWhenComplete(future);
     }

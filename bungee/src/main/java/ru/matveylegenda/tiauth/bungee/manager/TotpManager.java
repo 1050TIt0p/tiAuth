@@ -83,7 +83,7 @@ public class TotpManager {
             return;
         }
 
-        getUserAsync(name)
+        database.getAuthUserRepository().getUser(name)
                 .thenCompose(user -> {
                     if (user == null) {
                         totpPendingPlayers.remove(lowerName);
@@ -93,10 +93,8 @@ public class TotpManager {
 
                     if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
                         totpPendingPlayers.remove(lowerName);
-                        authManager.loginPlayer(player, () ->
-                                BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success)
-                        );
-                        return CompletableFuture.completedFuture(null);
+                        return authManager.loginPlayer(player, false)
+                                .thenRun(() -> BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success));
                     }
 
                     String totpToken;
@@ -138,53 +136,16 @@ public class TotpManager {
         return false;
     }
 
-    private CompletableFuture<AuthUser> getUserAsync(String name) {
-        CompletableFuture<AuthUser> future = new CompletableFuture<>();
-        database.getAuthUserRepository().getUser(name, (user, success) -> {
-            if (success) {
-                future.complete(user);
-            } else {
-                future.completeExceptionally(new RuntimeException("Database query error"));
-            }
-        });
-        return future;
-    }
-
-    private CompletableFuture<RecoveryCode> getRecoveryCodeAsync(String code) {
-        CompletableFuture<RecoveryCode> future = new CompletableFuture<>();
-        database.getRecoveryCodeRepository().getRecoveryCode(code, (recoveryCode, success) -> {
-            if (success) {
-                future.complete(recoveryCode);
-            } else {
-                future.completeExceptionally(new RuntimeException("Database query error"));
-            }
-        });
-        return future;
-    }
-
-    private CompletableFuture<Void> removeRecoveryCodeAsync(String code) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        database.getRecoveryCodeRepository().removeCode(code, success -> {
-            if (success) {
-                future.complete(null);
-            } else {
-                future.completeExceptionally(new RuntimeException("Database remove error"));
-            }
-        });
-        return future;
-    }
-
     private CompletableFuture<Void> completeTotpLoginAsync(ProxiedPlayer player, String name) {
         String lowerName = name.toLowerCase(Locale.ROOT);
         totpPendingPlayers.remove(lowerName);
         totpAttempts.remove(lowerName);
 
-        authManager.loginPlayer(player, () -> {
-            BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
-            authManager.resetLoginAttempts(lowerName);
-        });
-
-        return CompletableFuture.completedFuture(null);
+        return authManager.loginPlayer(player, false)
+                .thenRun(() -> {
+                    BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+                    authManager.resetLoginAttempts(lowerName);
+                });
     }
 
     private void handleWrongTotpAttempt(ProxiedPlayer player, String name) {
@@ -206,10 +167,10 @@ public class TotpManager {
         String lowerName = name.toLowerCase(Locale.ROOT);
         String hashedCode = RECOVERY_HASH.hashPassword(code);
 
-        return getRecoveryCodeAsync(hashedCode)
+        return database.getRecoveryCodeRepository().getRecoveryCode(hashedCode)
                 .thenCompose(recoveryCode -> {
                     if (recoveryCode != null && recoveryCode.getUsername().equalsIgnoreCase(lowerName)) {
-                        return removeRecoveryCodeAsync(hashedCode)
+                        return database.getRecoveryCodeRepository().removeCode(hashedCode)
                                 .thenCompose(result -> completeTotpLoginAsync(player, name));
                     } else {
                         handleWrongTotpAttempt(player, name);
