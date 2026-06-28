@@ -399,10 +399,10 @@ public class AuthManager {
     private CompletableFuture<Void> processSuccessfulLoginAsync(Player player, String name) {
         String lowerName = name.toLowerCase(Locale.ROOT);
 
+        player.sendMessage(CachedComponents.IMP.player.login.success);
+
         return authenticatePlayer(player, name, false)
                 .thenRun(() -> {
-                    player.sendMessage(CachedComponents.IMP.player.login.success);
-
                     if (MainConfig.IMP.title.enabledOnAuth) {
                         Title componentTitle = Title.title(
                                 CachedComponents.IMP.player.title.onAuthTitle,

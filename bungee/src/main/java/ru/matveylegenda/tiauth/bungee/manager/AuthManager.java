@@ -469,9 +469,9 @@ public class AuthManager {
     private CompletableFuture<Void> processSuccessfulLoginAsync(ProxiedPlayer player, String name) {
         String lowerName = name.toLowerCase(Locale.ROOT);
 
-        authenticatePlayer(player, name, false);
-
         BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
+
+        authenticatePlayer(player, name, false);
 
         if (MainConfig.IMP.title.enabledOnAuth) {
             Title title = ProxyServer.getInstance().createTitle();
