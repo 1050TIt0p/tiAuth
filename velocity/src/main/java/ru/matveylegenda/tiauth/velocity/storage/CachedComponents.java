@@ -158,6 +158,9 @@ public class CachedComponents {
             public Component invalidNickPattern;
             public Component ipLimitOnlineReached;
             public Component ipLimitRegisteredReached;
+            public Component totpTimeout;
+            public Component totpTooManyAttempts;
+            public Component totpBan;
         }
 
         public static class Reminder {
@@ -314,6 +317,9 @@ public class CachedComponents {
         player.kick.invalidNickPattern = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefixRaw)));
         player.kick.ipLimitOnlineReached = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefixRaw)));
         player.kick.ipLimitRegisteredReached = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefixRaw)));
+        player.kick.totpTimeout = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.totpTimeout, prefixRaw)));
+        player.kick.totpTooManyAttempts = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.totpTooManyAttempts, prefixRaw)));
+        player.kick.totpBan = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.totpBan, prefixRaw)));
 
         player.reminder = new Player.Reminder();
         player.reminder.login = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.reminder.login, prefixRaw)));

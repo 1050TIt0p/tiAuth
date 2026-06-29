@@ -77,20 +77,22 @@ public final class TiAuth extends Plugin {
         new Metrics(this, 26921);
         new TiAuthAPI(this);
 
-        Utils.checkUpdates()
-                .thenAccept(version -> {
-                    if (version.equals(getDescription().getVersion())) {
-                        logger.info("You are using the latest version");
-                        return;
-                    }
+        if (MainConfig.IMP.checkUpdates) {
+            Utils.checkUpdates()
+                    .thenAccept(version -> {
+                        if (version.equals(getDescription().getVersion())) {
+                            logger.info("You are using the latest version");
+                            return;
+                        }
 
-                    logger.info("A new version is available: " + version);
-                    logger.info("Download: https://github.com/1050TIt0p/tiAuth/releases");
-                })
-                .exceptionally(e -> {
-                    logger.log(Level.WARNING, "Update check failed", e);
-                    return null;
-                });
+                        logger.info("A new version is available: " + version);
+                        logger.info("Download: https://github.com/1050TIt0p/tiAuth/releases");
+                    })
+                    .exceptionally(e -> {
+                        logger.log(Level.WARNING, "Update check failed", e);
+                        return null;
+                    });
+        }
     }
 
     private boolean isSupportedVersion() {

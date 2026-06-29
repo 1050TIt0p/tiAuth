@@ -85,27 +85,28 @@ public class TiAuthCommand extends Command {
                 }
 
                 String playerName = args[1];
-                authManager.unregisterPlayer(playerName, success -> {
-                    if (!success) {
-                        BungeeUtils.sendMessage(
-                                sender,
-                                CachedMessages.IMP.queryError
-                        );
-                        return;
-                    }
+                authManager.unregisterPlayer(playerName)
+                        .thenAccept(success -> {
+                            if (!success) {
+                                BungeeUtils.sendMessage(
+                                        sender,
+                                        CachedMessages.IMP.queryError
+                                );
+                                return;
+                            }
 
-                    ProxiedPlayer player = plugin.getProxy().getPlayer(playerName);
-                    if (player != null) {
-                        SessionCache.removePlayer(playerName);
-                        player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.unregister.success));
-                    }
+                            ProxiedPlayer player = plugin.getProxy().getPlayer(playerName);
+                            if (player != null) {
+                                SessionCache.removePlayer(playerName);
+                                player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.unregister.success));
+                            }
 
-                    BungeeUtils.sendMessage(
-                            sender,
-                            CachedMessages.IMP.admin.unregister.success
-                                    .replace("{player}", playerName)
-                    );
-                });
+                            BungeeUtils.sendMessage(
+                                    sender,
+                                    CachedMessages.IMP.admin.unregister.success
+                                            .replace("{player}", playerName)
+                            );
+                        });
             }
 
             case "changepassword", "changepass" -> {
@@ -127,21 +128,22 @@ public class TiAuthCommand extends Command {
 
                 String playerName = args[1];
                 String password = args[2];
-                authManager.changePasswordPlayer(playerName, password, success -> {
-                    if (!success) {
-                        BungeeUtils.sendMessage(
-                                sender,
-                                CachedMessages.IMP.queryError
-                        );
-                        return;
-                    }
+                authManager.changePasswordPlayer(playerName, password)
+                        .thenAccept(success -> {
+                            if (!success) {
+                                BungeeUtils.sendMessage(
+                                        sender,
+                                        CachedMessages.IMP.queryError
+                                );
+                                return;
+                            }
 
-                    BungeeUtils.sendMessage(
-                            sender,
-                            CachedMessages.IMP.admin.changePassword.success
-                                    .replace("{player}", playerName)
-                    );
-                });
+                            BungeeUtils.sendMessage(
+                                    sender,
+                                    CachedMessages.IMP.admin.changePassword.success
+                                            .replace("{player}", playerName)
+                            );
+                        });
             }
 
             case "forcelogin" -> {
@@ -179,15 +181,15 @@ public class TiAuthCommand extends Command {
                     return;
                 }
 
-                authManager.loginPlayer(player, () -> BungeeUtils.sendMessage(
-                        sender,
-                        CachedMessages.IMP.admin.forceLogin.success
-                                .replace("{player}", player.getName())
-                ), true);
+                authManager.loginPlayer(player, true)
+                        .thenRun(() -> BungeeUtils.sendMessage(
+                                sender,
+                                CachedMessages.IMP.admin.forceLogin.success
+                                        .replace("{player}", player.getName())
+                        ));
             }
 
             case "forceregister" -> {
-                // /auth forceregister <игрок> <пароль>
                 if (!sender.hasPermission("tiauth.admin.commands.forceregister")) {
                     BungeeUtils.sendMessage(
                             sender,
@@ -207,40 +209,34 @@ public class TiAuthCommand extends Command {
                 String playerName = args[1];
                 String password = args[2];
 
-                database.getAuthUserRepository().getUser(playerName.toLowerCase(Locale.ROOT), (user, success) -> {
-                    if (!success) {
-                        BungeeUtils.sendMessage(
-                                sender,
-                                CachedMessages.IMP.queryError
-                        );
-                        return;
-                    }
+                database.getAuthUserRepository().getUser(playerName.toLowerCase(Locale.ROOT))
+                        .thenCompose(user -> {
+                            if (user != null) {
+                                BungeeUtils.sendMessage(
+                                        sender,
+                                        CachedMessages.IMP.admin.forceRegister.alreadyRegistered
+                                                .replace("{player}", playerName)
+                                );
+                                return null;
+                            }
 
-                    if (user != null) {
-                        BungeeUtils.sendMessage(
-                                sender,
-                                CachedMessages.IMP.admin.forceRegister.alreadyRegistered
-                                        .replace("{player}", playerName)
-                        );
-                        return;
-                    }
+                            return authManager.registerPlayer(playerName, password, null)
+                                    .thenAccept(success -> {
+                                        if (!success) {
+                                            BungeeUtils.sendMessage(
+                                                    sender,
+                                                    CachedMessages.IMP.queryError
+                                            );
+                                            return;
+                                        }
 
-                    authManager.registerPlayer(playerName, password, null, success1 -> {
-                        if (!success1) {
-                            BungeeUtils.sendMessage(
-                                    sender,
-                                    CachedMessages.IMP.queryError
-                            );
-                            return;
-                        }
-
-                        BungeeUtils.sendMessage(
-                                sender,
-                                CachedMessages.IMP.admin.forceRegister.success
-                                        .replace("{player}", playerName)
-                        );
-                    });
-                });
+                                        BungeeUtils.sendMessage(
+                                                sender,
+                                                CachedMessages.IMP.admin.forceRegister.success
+                                                        .replace("{player}", playerName)
+                                        );
+                                    });
+                        });
             }
 
             case "forcepremium" -> {
@@ -260,49 +256,42 @@ public class TiAuthCommand extends Command {
                     return;
                 }
 
-                database.getAuthUserRepository().getUser(args[1], (user, success) -> {
-                    if (!success) {
-                        BungeeUtils.sendMessage(
-                                sender,
-                                CachedMessages.IMP.queryError
-                        );
-                        return;
-                    }
+                database.getAuthUserRepository().getUser(args[1])
+                        .thenCompose(user -> {
+                            if (user == null) {
+                                BungeeUtils.sendMessage(
+                                        sender,
+                                        CachedMessages.IMP.playerNotFound
+                                );
+                                return null;
+                            }
 
-                    if (user == null) {
-                        BungeeUtils.sendMessage(
-                                sender,
-                                CachedMessages.IMP.playerNotFound
-                        );
-                        return;
-                    }
-
-                    database.getAuthUserRepository().setPremium(args[1], !user.isPremium(), success1 -> {
-                        if (!success1) {
+                            return database.getAuthUserRepository().setPremium(args[1], !user.isPremium())
+                                    .thenAccept(result -> {
+                                        if (user.isPremium()) {
+                                            PremiumCache.removePremium(args[1]);
+                                            BungeeUtils.sendMessage(
+                                                    sender,
+                                                    CachedMessages.IMP.admin.forcePremium.disabled
+                                                            .replace("{player}", args[1])
+                                            );
+                                        } else {
+                                            PremiumCache.addPremium(args[1]);
+                                            BungeeUtils.sendMessage(
+                                                    sender,
+                                                    CachedMessages.IMP.admin.forcePremium.enabled
+                                                            .replace("{player}", args[1])
+                                            );
+                                        }
+                                    });
+                        })
+                        .exceptionally(throwable -> {
                             BungeeUtils.sendMessage(
                                     sender,
                                     CachedMessages.IMP.queryError
                             );
-                            return;
-                        }
-
-                        if (user.isPremium()) {
-                            PremiumCache.removePremium(args[1]);
-                            BungeeUtils.sendMessage(
-                                    sender,
-                                    CachedMessages.IMP.admin.forcePremium.disabled
-                                            .replace("{player}", args[1])
-                            );
-                        } else {
-                            PremiumCache.addPremium(args[1]);
-                            BungeeUtils.sendMessage(
-                                    sender,
-                                    CachedMessages.IMP.admin.forcePremium.enabled
-                                            .replace("{player}", args[1])
-                            );
-                        }
-                    });
-                });
+                            return null;
+                        });
             }
 
             case "migrate" -> {
@@ -399,20 +388,18 @@ public class TiAuthCommand extends Command {
                     }
                 }
 
-                databaseMigrator.migrate(success -> {
-                    if (!success) {
-                        BungeeUtils.sendMessage(
+                databaseMigrator.migrate()
+                        .thenAccept(result -> BungeeUtils.sendMessage(
                                 sender,
-                                CachedMessages.IMP.admin.migrate.error
-                        );
-                        return;
-                    }
-
-                    BungeeUtils.sendMessage(
-                            sender,
-                            CachedMessages.IMP.admin.migrate.success
-                    );
-                });
+                                CachedMessages.IMP.admin.migrate.success
+                        ))
+                        .exceptionally(throwable -> {
+                            BungeeUtils.sendMessage(
+                                    sender,
+                                    CachedMessages.IMP.admin.migrate.error
+                            );
+                            return null;
+                        });
             }
         }
     }

@@ -22,6 +22,7 @@ public class TaskManager {
     private final Map<String, ScheduledTask> authTimeoutTasks = new ConcurrentHashMap<>();
     private final Map<String, ScheduledTask> authReminderTasks = new ConcurrentHashMap<>();
     private final Map<String, ScheduledTask> displayTimerTasks = new ConcurrentHashMap<>();
+    private final Map<String, ScheduledTask> totpTimeoutTasks = new ConcurrentHashMap<>();
     private final Map<String, UUID> bossBars = new ConcurrentHashMap<>();
     private final TiAuth plugin;
 
@@ -46,6 +47,23 @@ public class TaskManager {
         authTimeoutTasks.put(player.getName(), task);
     }
 
+    public void startTotpTimeoutTask(ProxiedPlayer player) {
+        ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
+            if (!player.isConnected()) {
+                ScheduledTask task1 = totpTimeoutTasks.remove(player.getName());
+                if (task1 != null) {
+                    task1.cancel();
+                }
+                return;
+            }
+
+            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.totpTimeout));
+
+        }, MainConfig.IMP.auth.totp.timeoutSeconds, TimeUnit.SECONDS);
+
+        totpTimeoutTasks.put(player.getName(), task);
+    }
+
     public void startAuthReminderTask(ProxiedPlayer player, String reminderMessage) {
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
             if (!player.isConnected()) {
@@ -66,7 +84,11 @@ public class TaskManager {
     }
 
     public void startDisplayTimerTask(ProxiedPlayer player) {
-        AtomicInteger counter = new AtomicInteger(MainConfig.IMP.auth.timeoutSeconds);
+        startDisplayTimerTask(player, MainConfig.IMP.auth.timeoutSeconds);
+    }
+
+    public void startDisplayTimerTask(ProxiedPlayer player, int timeoutSeconds) {
+        AtomicInteger counter = new AtomicInteger(timeoutSeconds);
 
         UUID barId = MainConfig.IMP.bossBar.enabled ? UUID.randomUUID() : null;
         if (MainConfig.IMP.bossBar.enabled) createBossBar(player, counter.get(), barId);
@@ -83,7 +105,7 @@ public class TaskManager {
 
             if (MainConfig.IMP.title.enabled) sendTitle(player, counter.get());
             if (MainConfig.IMP.actionBar.enabled) sendActionBar(player, counter.get());
-            if (MainConfig.IMP.bossBar.enabled) updateBossBar(player, counter.get(), barId);
+            if (MainConfig.IMP.bossBar.enabled) updateBossBar(player, counter.get(), barId, timeoutSeconds);
 
             counter.getAndDecrement();
         }, 0, 1, TimeUnit.SECONDS);
@@ -108,9 +130,9 @@ public class TaskManager {
         player.unsafe().sendPacket(bossBar);
     }
 
-    private void updateBossBar(ProxiedPlayer player, int counter, UUID barId) {
+    private void updateBossBar(ProxiedPlayer player, int counter, UUID barId, int timeoutSeconds) {
         BossBar updateHealth = new BossBar(barId, 2);
-        updateHealth.setHealth((float) counter / MainConfig.IMP.auth.timeoutSeconds);
+        updateHealth.setHealth((float) counter / timeoutSeconds);
         player.unsafe().sendPacket(updateHealth);
 
         BossBar updateTitle = new BossBar(barId, 3);
@@ -131,9 +153,9 @@ public class TaskManager {
                 CachedMessages.IMP.player.title.subTitle
                         .replace("{time}", String.valueOf(counter))
         ));
-        title.fadeIn(0);
-        title.stay(21);
-        title.fadeOut(0);
+            title.fadeIn(0);
+            title.stay(21);
+            title.fadeOut(6);
 
         player.sendTitle(title);
     }
@@ -169,6 +191,11 @@ public class TaskManager {
         }
 
         task = displayTimerTasks.remove(playerName);
+        if (task != null) {
+            task.cancel();
+        }
+
+        task = totpTimeoutTasks.remove(playerName);
         if (task != null) {
             task.cancel();
         }

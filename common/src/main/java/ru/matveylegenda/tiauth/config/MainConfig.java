@@ -287,6 +287,12 @@ public class MainConfig extends YamlSerializable {
                     @CommentValue("На сколько секунд банить игрока при исчерпании попыток TOTP")
             })
             public int banTime = 60;
+
+            @NewLine
+            @Comment({
+                    @CommentValue("Сколько секунд дается игроку на ввод TOTP кода после успешного ввода пароля")
+            })
+            public int timeoutSeconds = 60;
         }
     }
 
@@ -337,6 +343,12 @@ public class MainConfig extends YamlSerializable {
     public int maxRegisteredAccountsPerIp = 10;
 
     public List<String> excludedIps = List.of("127.0.0.1");
+
+    @NewLine
+    @Comment({
+            @CommentValue("Проверять ли обновления при запуске")
+    })
+    public boolean checkUpdates = true;
 
     public Libraries libraries = new Libraries();
 

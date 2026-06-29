@@ -10,9 +10,8 @@ import ru.matveylegenda.tiauth.database.model.RecoveryCode;
 
 import java.sql.SQLException;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public class RecoveryCodeRepository {
@@ -26,7 +25,8 @@ public class RecoveryCodeRepository {
         this.executor = executor;
     }
 
-    public void addCodes(String[] codes, String username, Consumer<Boolean> callback) {
+    public CompletableFuture<Void> addCodes(String[] codes, String username) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 recoveryCodeDao.callBatchTasks(() -> {
@@ -36,54 +36,59 @@ public class RecoveryCodeRepository {
                     }
                     return null;
                 });
-                callback.accept(true);
+                future.complete(null);
             } catch (Exception e) {
-                callback.accept(false);
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 
-    public void removeCode(String code, Consumer<Boolean> callback) {
+    public CompletableFuture<Void> removeCode(String code) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 RecoveryCode recoveryCode = recoveryCodeDao.queryForId(code);
                 if (recoveryCode != null) {
                     recoveryCodeDao.delete(recoveryCode);
                 }
-
-                callback.accept(true);
+                future.complete(null);
             } catch (Exception e) {
-                callback.accept(false);
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 
-    public void removeCodesByUsername(String username, Consumer<Boolean> callback) {
+    public CompletableFuture<Void> removeCodesByUsername(String username) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 DeleteBuilder<RecoveryCode, String> deleteBuilder = recoveryCodeDao.deleteBuilder();
                 deleteBuilder.where().eq("username", username.toLowerCase(Locale.ROOT));
                 deleteBuilder.delete();
-
-                callback.accept(true);
+                future.complete(null);
             } catch (SQLException e) {
-                callback.accept(false);
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 
-    public void getRecoveryCode(String code, BiConsumer<RecoveryCode, Boolean> callback) {
+    public CompletableFuture<RecoveryCode> getRecoveryCode(String code) {
+        CompletableFuture<RecoveryCode> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
                 RecoveryCode recoveryCode = recoveryCodeDao.queryForId(code);
-                callback.accept(recoveryCode, true);
+                future.complete(recoveryCode);
             } catch (SQLException e) {
-                callback.accept(null, false);
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 }

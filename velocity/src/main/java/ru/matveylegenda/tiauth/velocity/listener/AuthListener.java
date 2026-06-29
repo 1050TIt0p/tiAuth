@@ -21,6 +21,7 @@ import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
+import ru.matveylegenda.tiauth.velocity.manager.TotpManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
@@ -32,6 +33,7 @@ public class AuthListener {
     private final Database database;
     private final AuthManager authManager;
     private final TaskManager taskManager;
+    private final TotpManager totpManager;
     private final Pattern nickPattern;
     private final ProxyServer proxyServer;
 
@@ -39,6 +41,7 @@ public class AuthListener {
         this.database = plugin.getDatabase();
         this.authManager = plugin.getAuthManager();
         this.taskManager = plugin.getTaskManager();
+        this.totpManager = plugin.getTotpManager();
         this.nickPattern = Pattern.compile(MainConfig.IMP.nickPattern);
         this.proxyServer = plugin.getServer();
     }
@@ -61,6 +64,14 @@ public class AuthListener {
             return null;
         }
 
+        if (BanCache.isTotpBanned(ip)) {
+            Component kickMessage = CachedComponents.IMP.player.kick.totpBan.replaceText(builder -> builder
+                    .match(VelocityUtils.TIME)
+                    .replacement(String.valueOf(BanCache.getTotpRemainingSeconds(ip))));
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(kickMessage));
+            return null;
+        }
+
         if (PremiumCache.isPremium(username)) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
             return null;
@@ -74,41 +85,37 @@ public class AuthListener {
             }
         }
 
-        CompletableFuture<Void> future = new CompletableFuture<>();
-
-        database.getAuthUserRepository().getUser(username, (user, success) -> {
-            if (!success) {
-                event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.queryError));
-                future.complete(null);
-                return;
-            }
-
-            if (user == null) {
-                if (!MainConfig.IMP.excludedIps.contains(ip)) {
-                    database.getAuthUserRepository().getUserCountByIp(ip, count1 -> {
-                        if (count1 >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
-                            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitRegisteredReached));
+        CompletableFuture<Void> future = database.getAuthUserRepository().getUser(username)
+                .thenCompose(user -> {
+                    if (user == null) {
+                        if (!MainConfig.IMP.excludedIps.contains(ip)) {
+                            return database.getAuthUserRepository().getUserCountByIp(ip)
+                                    .thenAccept(ipCount -> {
+                                        if (ipCount >= MainConfig.IMP.maxRegisteredAccountsPerIp) {
+                                            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitRegisteredReached));
+                                        } else {
+                                            event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
+                                        }
+                                    });
+                        } else {
+                            event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
+                            return CompletableFuture.completedFuture(null);
+                        }
+                    } else {
+                        if (user.isPremium()) {
+                            event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
+                            PremiumCache.addPremium(username);
                         } else {
                             event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
                         }
 
-                        future.complete(null);
-                    });
-                } else {
-                    event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
-                    future.complete(null);
-                }
-            } else {
-                if (user.isPremium()) {
-                    event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
-                    PremiumCache.addPremium(username);
-                } else {
-                    event.setResult(PreLoginEvent.PreLoginComponentResult.allowed());
-                }
-
-                future.complete(null);
-            }
-        });
+                        return CompletableFuture.completedFuture(null);
+                    }
+                })
+                .exceptionally(throwable -> {
+                    event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.queryError));
+                    return null;
+                });
 
         return EventTask.resumeWhenComplete(future);
     }
@@ -162,6 +169,7 @@ public class AuthListener {
             AuthCache.logout(username);
         }
 
+        totpManager.clearTotpState(username);
         taskManager.cancelTasks(player);
     }
 

@@ -15,11 +15,11 @@ import ru.matveylegenda.tiauth.hash.HashType;
 import ru.matveylegenda.tiauth.util.EncryptionUtils;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
-import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
@@ -33,7 +33,6 @@ public class TotpManager {
     private final Database database;
 
     private final Set<String> inProcess = ConcurrentHashMap.newKeySet();
-    private final Set<String> totpPendingPlayers = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> totpAttempts = new ConcurrentHashMap<>();
     private final Map<String, String> totpEnableSecrets = new ConcurrentHashMap<>();
 
@@ -44,8 +43,7 @@ public class TotpManager {
     }
 
     public boolean isTotpPending(String playerName) {
-        String lowerName = playerName.toLowerCase(Locale.ROOT);
-        return totpPendingPlayers.contains(lowerName);
+        return authManager.isTotpPending(playerName);
     }
 
     public void setTotpEnableSecret(String playerName, String secret) {
@@ -60,132 +58,117 @@ public class TotpManager {
         totpEnableSecrets.remove(playerName.toLowerCase(Locale.ROOT));
     }
 
-    public void verifyTotpLogin(Player player, String code) {
-        String name = player.getUsername();
-        String lowerName = name.toLowerCase();
-
-        if (!totpPendingPlayers.contains(lowerName)) {
-            return;
-        }
-
-        if (!beginProcess(name)) {
-            return;
-        }
-
-        database.getAuthUserRepository().getUser(name, (user, success) -> {
-            if (!success) {
-                player.disconnect(CachedComponents.IMP.queryError);
-                endProcess(name);
-                return;
-            }
-
-            if (user == null) {
-                totpPendingPlayers.remove(lowerName);
-                player.sendMessage(CachedComponents.IMP.player.login.notRegistered);
-                endProcess(name);
-                return;
-            }
-
-            if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
-                totpPendingPlayers.remove(lowerName);
-                authManager.loginPlayer(player, () -> {
-                    player.sendMessage(CachedComponents.IMP.player.login.success);
-                    endProcess(name);
-                });
-                return;
-            }
-
-            String totpToken;
-            try {
-                totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
-            } catch (Exception e) {
-                plugin.getLogger().error("Error during secret decryption", e);
-                endProcess(name);
-                return;
-            }
-
-            if (RECOVERY_CODE_PATTERN.matcher(code).matches()) {
-                verifyRecoveryCodeLogin(player, name, code);
-            } else if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
-                completeTotpLogin(player, name);
-            } else {
-                handleWrongTotpAttempt(player, name);
-            }
-        });
+    public void clearTotpState(String playerName) {
+        String lowerName = playerName.toLowerCase(Locale.ROOT);
+        authManager.clearTotpPending(playerName);
+        authManager.clearPendingVerification(playerName);
+        totpAttempts.remove(lowerName);
+        inProcess.remove(playerName);
     }
 
-    public boolean isTotpLoginRequired(Player player, AuthUser user) {
+    public void processTotpChallenge(Player player, String code) {
+        String name = player.getUsername();
+
+        if (!authManager.isTotpPending(name)) {
+            return;
+        }
+
+        if (!inProcess.add(name)) {
+            return;
+        }
+
+        database.getAuthUserRepository().getUser(name)
+                .thenCompose(user -> {
+                    if (user == null) {
+                        authManager.clearTotpPending(name);
+                        player.sendMessage(CachedComponents.IMP.player.login.notRegistered);
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    if (user.getTotpToken() == null || user.getTotpToken().isEmpty()) {
+                        authManager.clearTotpPending(name);
+                        return authManager.loginPlayer(player, false)
+                                .thenRun(() -> player.sendMessage(CachedComponents.IMP.player.login.success));
+                    }
+
+                    String totpToken;
+                    try {
+                        totpToken = EncryptionUtils.decrypt(user.getTotpToken(), plugin.getSecretKey());
+                    } catch (Exception e) {
+                        plugin.getLogger().error("Error during secret decryption", e);
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    if (RECOVERY_CODE_PATTERN.matcher(code).matches()) {
+                        return processRecoveryCodeAsync(player, name, code);
+                    } else if (TOTP_CODE_VERIFIER.isValidCode(totpToken, code)) {
+                        return completeTotpLoginAsync(player, name);
+                    } else {
+                        handleWrongTotpAttempt(player, name);
+                        return CompletableFuture.completedFuture(null);
+                    }
+                })
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        player.disconnect(CachedComponents.IMP.queryError);
+                    }
+                    inProcess.remove(name);
+                });
+    }
+
+    public boolean requireTotpChallenge(Player player, AuthUser user) {
         String totpToken = user.getTotpToken();
         if (MainConfig.IMP.auth.totp.enabled && totpToken != null && !totpToken.isEmpty()) {
-            String lowerName = player.getUsername().toLowerCase(Locale.ROOT);
-            totpPendingPlayers.add(lowerName);
+            authManager.setTotpPending(player.getUsername());
             plugin.getTaskManager().cancelTasks(player);
+            plugin.getTaskManager().startTotpTimeoutTask(player);
+            plugin.getTaskManager().startDisplayTimerTask(player, MainConfig.IMP.auth.totp.timeoutSeconds);
             player.sendMessage(CachedComponents.IMP.player.totp.prompt);
             return true;
         }
         return false;
     }
 
-    private void completeTotpLogin(Player player, String name) {
+    private CompletableFuture<Void> completeTotpLoginAsync(Player player, String name) {
         String lowerName = name.toLowerCase(Locale.ROOT);
-        totpPendingPlayers.remove(lowerName);
+        authManager.clearTotpPending(name);
         totpAttempts.remove(lowerName);
 
-        authManager.loginPlayer(player, () -> {
-            player.sendMessage(CachedComponents.IMP.player.login.success);
-            authManager.clearLoginAttempts(lowerName);
-            endProcess(name);
-        });
+        return authManager.loginPlayer(player, false)
+                .thenRun(() -> {
+                    player.sendMessage(CachedComponents.IMP.player.login.success);
+                    authManager.resetLoginAttempts(lowerName);
+                });
     }
 
     private void handleWrongTotpAttempt(Player player, String name) {
         String lowerName = name.toLowerCase(Locale.ROOT);
         int attempts = totpAttempts.merge(lowerName, 1, Integer::sum);
         if (attempts >= MainConfig.IMP.auth.totp.maxAttempts) {
-            totpPendingPlayers.remove(lowerName);
+            authManager.clearTotpPending(name);
             totpAttempts.remove(lowerName);
-            player.disconnect(CachedComponents.IMP.player.kick.tooManyAttempts);
+            player.disconnect(CachedComponents.IMP.player.kick.totpTooManyAttempts);
             if (MainConfig.IMP.auth.totp.banPlayer) {
-                BanCache.addPlayer(player.getRemoteAddress().getAddress().getHostAddress());
+                BanCache.addTotpBan(player.getRemoteAddress().getAddress().getHostAddress());
             }
-            endProcess(name);
             return;
         }
         player.sendMessage(CachedComponents.IMP.player.totp.wrong);
-        endProcess(name);
     }
 
-    private void verifyRecoveryCodeLogin(Player player, String name, String code) {
+    private CompletableFuture<Void> processRecoveryCodeAsync(Player player, String name, String code) {
         String lowerName = name.toLowerCase(Locale.ROOT);
         String hashedCode = RECOVERY_HASH.hashPassword(code);
 
-        database.getRecoveryCodeRepository().getRecoveryCode(hashedCode, (recoveryCode, success1) -> {
-            if (!success1) {
-                VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
-                endProcess(name);
-                return;
-            }
-
-            if (recoveryCode != null && recoveryCode.getUsername().equalsIgnoreCase(lowerName)) {
-                database.getRecoveryCodeRepository().removeCode(hashedCode, success2 -> {
-                    if (!success2) {
-                        VelocityUtils.sendMessage(player, CachedComponents.IMP.queryError);
-                        endProcess(name);
-                        return;
+        return database.getRecoveryCodeRepository().getRecoveryCode(hashedCode)
+                .thenCompose(recoveryCode -> {
+                    if (recoveryCode != null && recoveryCode.getUsername().equalsIgnoreCase(lowerName)) {
+                        return database.getRecoveryCodeRepository().removeCode(hashedCode)
+                                .thenCompose(result -> completeTotpLoginAsync(player, name));
+                    } else {
+                        handleWrongTotpAttempt(player, name);
+                        return CompletableFuture.completedFuture(null);
                     }
-                    completeTotpLogin(player, name);
                 });
-            } else {
-                handleWrongTotpAttempt(player, name);
-            }
-        });
-    }
-
-    private boolean beginProcess(String playerName) {
-        return inProcess.add(playerName);
-    }
-
-    private void endProcess(String playerName) {
-        inProcess.remove(playerName);
     }
 }

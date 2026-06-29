@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 
 @Setter
@@ -38,7 +38,8 @@ public class DatabaseMigrator {
         });
     }
 
-    public void migrate(Consumer<Boolean> callback) {
+    public CompletableFuture<Void> migrate() {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         migrationExecutor.execute(() -> {
             List<AuthUser> authUsers = new ArrayList<>();
 
@@ -147,12 +148,20 @@ public class DatabaseMigrator {
                     }
                 }
 
-                database.getAuthUserRepository().registerUsers(authUsers, callback);
+                database.getAuthUserRepository().registerUsers(authUsers)
+                        .whenComplete((result, throwable) -> {
+                            if (throwable != null) {
+                                future.completeExceptionally(throwable);
+                            } else {
+                                future.complete(null);
+                            }
+                        });
             } catch (SQLException e) {
-                callback.accept(false);
+                future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
         });
+        return future;
     }
 
     private Connection getConnection(DatabaseType sourceDatabase) throws SQLException {
