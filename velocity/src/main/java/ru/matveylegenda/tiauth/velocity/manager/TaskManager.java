@@ -121,7 +121,7 @@ public class TaskManager {
                         .replacement(String.valueOf(counter))),
                 0,
                 21,
-                0);
+                6);
         player.showTitle(componentTitle);
     }
 

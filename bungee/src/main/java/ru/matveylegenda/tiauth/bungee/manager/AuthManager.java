@@ -510,7 +510,7 @@ public class AuthManager {
             title.subTitle(TextComponent.fromLegacy(CachedMessages.IMP.player.title.onAuthSubTitle));
             title.fadeIn(0);
             title.stay(21);
-            title.fadeOut(0);
+            title.fadeOut(6);
             player.sendTitle(title);
         }
 

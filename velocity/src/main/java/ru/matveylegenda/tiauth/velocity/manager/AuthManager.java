@@ -440,7 +440,7 @@ public class AuthManager {
                                 CachedComponents.IMP.player.title.onAuthSubTitle,
                                 0,
                                 21,
-                                0);
+                                6);
                         player.showTitle(componentTitle);
                     }
 
@@ -459,10 +459,11 @@ public class AuthManager {
 
         PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player, forceLogin);
         return plugin.getServer().getEventManager().fire(playerAuthEvent)
-                .thenAccept(firedEvent -> {
+                .thenCompose(firedEvent -> {
                     if (firedEvent.isMoveToBackendServer()) {
-                        connectToBackend(player);
+                        return connectToBackend(player);
                     }
+                    return CompletableFuture.completedFuture(null);
                 });
     }
 
@@ -479,8 +480,12 @@ public class AuthManager {
         getBackend(event.getPlayer()).ifPresent(event::setInitialServer);
     }
 
-    private void connectToBackend(Player player) {
-        getBackend(player).ifPresent(server -> connect(player, server));
+    private CompletableFuture<Void> connectToBackend(Player player) {
+        Optional<RegisteredServer> backend = getBackend(player);
+        if (backend.isEmpty()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return connect(player, backend.get());
     }
 
     private Optional<RegisteredServer> getBackend(Player player) {
@@ -498,12 +503,14 @@ public class AuthManager {
         return plugin.getServer().getServer(MainConfig.IMP.servers.backend);
     }
 
-    private void connect(Player player, RegisteredServer target) {
-        player.getCurrentServer().ifPresentOrElse(current -> {
+    private CompletableFuture<Void> connect(Player player, RegisteredServer target) {
+        return player.getCurrentServer().map(current -> {
             if (!current.getServer().equals(target)) {
-                player.createConnectionRequest(target).connect();
+                return player.createConnectionRequest(target).connect();
             }
-        }, () -> player.createConnectionRequest(target).connect());
+            return CompletableFuture.completedFuture(true);
+        }).orElseGet(() -> player.createConnectionRequest(target).connect())
+                .thenRun(() -> {});
     }
 
     private Optional<String> getForcedHost(InetSocketAddress virtualHost) {
