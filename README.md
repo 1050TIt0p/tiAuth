@@ -23,7 +23,7 @@ Authorization plugin for BungeeCord and Velocity
 #### For players:
 - `/register <password> <password>` - Register an account
 - `/login <password>` - Log in
-- `/logout` - Destory session
+- `/logout` - Destroy session
 - `/changepassword <old password> <new password>` - Change password
 - `/premium` - Enable premium mode
 - `/unregister` <password> - Delete account
