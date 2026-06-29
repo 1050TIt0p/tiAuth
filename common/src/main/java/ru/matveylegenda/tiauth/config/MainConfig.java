@@ -344,6 +344,12 @@ public class MainConfig extends YamlSerializable {
 
     public List<String> excludedIps = List.of("127.0.0.1");
 
+    @NewLine
+    @Comment({
+            @CommentValue("Проверять ли обновления при запуске")
+    })
+    public boolean checkUpdates = true;
+
     public Libraries libraries = new Libraries();
 
     @NewLine
