@@ -22,7 +22,6 @@ subprojects {
     pluginManager.apply("java")
 
     dependencies {
-        implementation("com.j256.ormlite:ormlite-jdbc:6.1")
         implementation("com.zaxxer:HikariCP:7.1.0")
         implementation("at.favre.lib:bcrypt:0.10.2")
         implementation("de.mkammerer:argon2-jvm:2.12")
@@ -72,7 +71,6 @@ tasks.shadowJar {
     archiveClassifier.set("")
 
     relocate("org.bstats", "ru.matveylegenda.tiauth.thirdparty.org.bstats")
-    relocate("com.j256.ormlite", "ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite")
     relocate("com.zaxxer.hikari", "ru.matveylegenda.tiauth.thirdparty.com.zaxxer.hikari")
     relocate("at.favre.lib", "ru.matveylegenda.tiauth.thirdparty.at.favre.lib")
     relocate("de.mkammerer.argon2", "ru.matveylegenda.tiauth.thirdparty.de.mkammerer.argon2")

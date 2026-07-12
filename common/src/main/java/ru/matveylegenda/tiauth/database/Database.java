@@ -1,8 +1,5 @@
 package ru.matveylegenda.tiauth.database;
 
-import com.j256.ormlite.jdbc.DataSourceConnectionSource;
-import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.support.ConnectionSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
@@ -21,26 +18,16 @@ public class Database {
 
     public static final Logger LOGGER = Logger.getLogger("tiAuth-Database");
 
-    private final ConnectionSource connectionSource;
     private final HikariDataSource dataSource;
     private final AuthUserRepository authUserRepository;
     private final RecoveryCodeRepository recoveryCodeRepository;
     private final ExecutorService executor;
 
-    private Database(ConnectionSource connectionSource) throws SQLException {
-        this.connectionSource = connectionSource;
-        this.dataSource = null;
-        executor = Executors.newSingleThreadExecutor();
-        this.authUserRepository = new AuthUserRepository(connectionSource, executor);
-        this.recoveryCodeRepository = new RecoveryCodeRepository(connectionSource, executor);
-    }
-
-    private Database(ConnectionSource connectionSource, HikariDataSource dataSource) throws SQLException {
-        this.connectionSource = connectionSource;
+    private Database(HikariDataSource dataSource) throws SQLException {
         this.dataSource = dataSource;
         executor = Executors.newFixedThreadPool(dataSource.getMaximumPoolSize());
-        this.authUserRepository = new AuthUserRepository(connectionSource, executor);
-        this.recoveryCodeRepository = new RecoveryCodeRepository(connectionSource, executor);
+        this.authUserRepository = new AuthUserRepository(dataSource, executor);
+        this.recoveryCodeRepository = new RecoveryCodeRepository(dataSource, executor);
     }
 
     public static Database forSQLite(File file) throws SQLException {
@@ -50,8 +37,13 @@ public class Database {
             Database.LOGGER.log(Level.WARNING, "SQLite JDBC driver not found", e);
         }
 
-        ConnectionSource connectionSource = new JdbcConnectionSource("jdbc:sqlite:" + file.getAbsolutePath());
-        return new Database(connectionSource);
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:sqlite:" + file.getAbsolutePath());
+        config.setDriverClassName("org.sqlite.JDBC");
+        config.setMaximumPoolSize(1);
+
+        HikariDataSource dataSource = new HikariDataSource(config);
+        return new Database(dataSource);
     }
 
     public static Database forH2(File file,
@@ -67,9 +59,7 @@ public class Database {
         config.setDriverClassName("org.h2.Driver");
 
         HikariDataSource dataSource = new HikariDataSource(config);
-        ConnectionSource connectionSource = new DataSourceConnectionSource(dataSource, dataSource.getJdbcUrl());
-
-        return new Database(connectionSource, dataSource);
+        return new Database(dataSource);
     }
 
     public static Database forMySQL(String host, int port, String database, String user, String password,
@@ -87,9 +77,7 @@ public class Database {
         config.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
         HikariDataSource dataSource = new HikariDataSource(config);
-        ConnectionSource connectionSource = new DataSourceConnectionSource(dataSource, dataSource.getJdbcUrl());
-
-        return new Database(connectionSource, dataSource);
+        return new Database(dataSource);
     }
 
     public static Database forPostgreSQL(String host, int port, String database, String user, String password,
@@ -108,17 +96,14 @@ public class Database {
         config.setDriverClassName("org.postgresql.Driver");
 
         HikariDataSource dataSource = new HikariDataSource(config);
-        ConnectionSource connectionSource = new DataSourceConnectionSource(dataSource, dataSource.getJdbcUrl());
-
-        return new Database(connectionSource, dataSource);
+        return new Database(dataSource);
     }
 
-    public void close() throws Exception {
+    public void close() {
         if (dataSource != null) {
             dataSource.close();
         }
 
         executor.shutdown();
-        connectionSource.close();
     }
 }

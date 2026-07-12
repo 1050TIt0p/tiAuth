@@ -116,7 +116,7 @@ public final class TiAuth {
     }
 
     private boolean isSupportedVersion() {
-        return Integer.parseInt(server.getVersion().getVersion().split("-")[0].split("\\.")[1]) >= 4;
+        return Integer.parseInt(server.getVersion().getVersion().split("-")[0].split("\\.")[0]) >= 3;
     }
 
     @Subscribe
