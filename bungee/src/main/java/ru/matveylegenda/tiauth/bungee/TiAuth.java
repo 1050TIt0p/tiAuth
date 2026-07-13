@@ -95,10 +95,6 @@ public final class TiAuth extends Plugin {
         }
     }
 
-    private boolean isSupportedVersion() {
-        return Integer.parseInt(ProxyServer.getInstance().getVersion().split("-")[0].split("\\.")[1]) >= 21;
-    }
-
     @Override
     public void onDisable() {
         if (database != null) {

@@ -71,13 +71,6 @@ public final class TiAuth {
 
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
-        if (!isSupportedVersion()) {
-            logger.warn("*** ВНИМАНИЕ ***");
-            logger.warn("tiAuth поддерживает Velocity версии 3.4.0 и выше!");
-            logger.warn("Вы пытаетесь запустить плагин на версии {}", server.getVersion().getVersion());
-            logger.warn("Обновите прокси, если хотите использовать tiAuth.");
-            return;
-        }
         MainConfig.IMP.reload();
         MessagesConfig.IMP.reload();
         initializeSecretKey(dataFolder.toFile());
@@ -113,10 +106,6 @@ public final class TiAuth {
                         return null;
                     });
         }
-    }
-
-    private boolean isSupportedVersion() {
-        return Integer.parseInt(server.getVersion().getVersion().split("-")[0].split("\\.")[1]) >= 4;
     }
 
     @Subscribe
