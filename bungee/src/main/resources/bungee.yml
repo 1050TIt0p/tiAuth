@@ -1,5 +1,4 @@
 name: tiAuth
 version: 1.4.2
 main: ru.matveylegenda.tiauth.bungee.TiAuth
-author: 1050TI_top
-authors: ["1050TI_top", "lokspel"]
+author: 1050TI_top, lokspel
