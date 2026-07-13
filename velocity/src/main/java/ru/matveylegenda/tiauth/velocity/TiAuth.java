@@ -41,7 +41,7 @@ import java.nio.file.Path;
         id = "tiauth",
         name = "tiAuth",
         version = "1.4.2",
-        authors = {"1050TI_top", "OverwriteMC"}
+        authors = {"1050TI_top", "OverwriteMC", "lokspel"}
 )
 public final class TiAuth {
 
@@ -272,9 +272,6 @@ public final class TiAuth {
     }
 
     private String getPluginVersion() {
-        return server.getPluginManager()
-                .getPlugin("tiauth")
-                .flatMap(container -> container.getDescription().getVersion())
-                .orElse("unknown");
+        return getClass().getAnnotation(Plugin.class).version();
     }
 }
