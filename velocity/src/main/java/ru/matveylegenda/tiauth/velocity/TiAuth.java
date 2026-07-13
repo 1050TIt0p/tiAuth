@@ -6,6 +6,7 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.ScheduledTask;
@@ -62,10 +63,10 @@ public final class TiAuth {
     private ScheduledTask limboTask;
 
     @Inject
-    public TiAuth(ProxyServer server, Logger logger, Metrics.Factory metricsFactory) {
+    public TiAuth(ProxyServer server, Logger logger, @DataDirectory Path dataFolder, Metrics.Factory metricsFactory) {
         this.server = server;
         this.logger = logger;
-        this.dataFolder = Path.of("plugins/tiAuth/");
+        this.dataFolder = dataFolder;
         this.metricsFactory = metricsFactory;
     }
 
@@ -272,9 +273,6 @@ public final class TiAuth {
     }
 
     private String getPluginVersion() {
-        return server.getPluginManager()
-                .getPlugin("tiauth")
-                .flatMap(container -> container.getDescription().getVersion())
-                .orElse("unknown");
+        return getClass().getAnnotation(Plugin.class).version();
     }
 }
