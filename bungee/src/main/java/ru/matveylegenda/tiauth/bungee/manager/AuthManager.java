@@ -269,7 +269,11 @@ public class AuthManager {
 
                         String sessionIP = SessionCache.getIP(name);
 
-                        if (PremiumCache.isPremium(name) ||
+                        boolean premiumBypass = MainConfig.IMP.premium.enabled
+                                && MainConfig.IMP.premium.bypassAuthentication
+                                && PremiumCache.isPremium(name)
+                                && (!MainConfig.IMP.premium.forceOnlineMode || player.getPendingConnection().isOnlineMode());
+                        if (premiumBypass ||
                                 (sessionIP != null && sessionIP.equals(BungeeUtils.getIp(player)))) {
                             AuthCache.setAuthenticated(name);
 

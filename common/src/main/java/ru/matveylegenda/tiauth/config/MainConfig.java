@@ -32,6 +32,7 @@ public class MainConfig extends YamlSerializable {
         this.servers = new Servers();
         this.database = new Database();
         this.auth = new Auth();
+        this.premium = new Premium();
         this.bossBar = new BossBar();
         this.title = new Title();
         this.actionBar = new ActionBar();
@@ -294,6 +295,26 @@ public class MainConfig extends YamlSerializable {
             })
             public int timeoutSeconds = 60;
         }
+    }
+
+    public Premium premium;
+
+    @NewLine
+    public static class Premium {
+        @Comment({
+                @CommentValue("Enable support for accounts marked as premium with /premium or /tiauth forcepremium")
+        })
+        public boolean enabled = true;
+
+        @Comment({
+                @CommentValue("Allow verified premium accounts to skip /login")
+        })
+        public boolean bypassAuthentication = true;
+
+        @Comment({
+                @CommentValue("Force premium accounts through Velocity online-mode verification before allowing bypass")
+        })
+        public boolean forceOnlineMode = true;
     }
 
     public BossBar bossBar;

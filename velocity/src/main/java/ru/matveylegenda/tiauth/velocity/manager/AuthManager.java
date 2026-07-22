@@ -261,10 +261,25 @@ public class AuthManager {
                         String sessionIP = SessionCache.getIP(name);
                         String remoteIp = VelocityUtils.getIp(player);
 
-                        if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
+                        if (plugin.consumeKoroEdgeAuthenticationHandoff(player)) {
+                            AuthCache.setAuthenticated(name);
+                            SessionCache.addPlayer(name, remoteIp);
+                            if (event != null) {
+                                getBackend(player).ifPresent(event::setInitialServer);
+                            } else {
+                                connectToBackend(player);
+                            }
+                            return;
+                        }
+
+                        boolean premiumBypass = MainConfig.IMP.premium.enabled
+                                && MainConfig.IMP.premium.bypassAuthentication
+                                && PremiumCache.isPremium(name)
+                                && (!MainConfig.IMP.premium.forceOnlineMode || player.isOnlineMode());
+                        if (premiumBypass || (sessionIP != null && sessionIP.equals(remoteIp))) {
                             AuthCache.setAuthenticated(name);
                             if (event != null) {
-                                plugin.getServer().getServer(MainConfig.IMP.servers.backend).ifPresent(event::setInitialServer);
+                                getBackend(player).ifPresent(event::setInitialServer);
                             } else {
                                 connectToBackend(player);
                             }

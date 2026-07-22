@@ -14,6 +14,7 @@ import net.byteflux.libby.Library;
 import net.byteflux.libby.VelocityLibraryManager;
 import org.bstats.velocity.Metrics;
 import org.slf4j.Logger;
+import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
@@ -40,7 +41,7 @@ import java.nio.file.Path;
 @Plugin(
         id = "tiauth",
         name = "tiAuth",
-        version = "1.4.2",
+        version = "1.4.3",
         authors = {"1050TI_top", "OverwriteMC"}
 )
 public final class TiAuth {
@@ -276,5 +277,27 @@ public final class TiAuth {
                 .getPlugin("tiauth")
                 .flatMap(container -> container.getDescription().getVersion())
                 .orElse("unknown");
+    }
+
+    public boolean isPlayerAuthenticated(String username) {
+        return AuthCache.isAuthenticated(username);
+    }
+
+    public boolean consumeKoroEdgeAuthenticationHandoff(com.velocitypowered.api.proxy.Player player) {
+        return server.getPluginManager().getPlugin("koroedge")
+                .flatMap(container -> container.getInstance())
+                .map(instance -> {
+                    try {
+                        Object result = instance.getClass()
+                                .getMethod("consumeAuthenticationHandoff", String.class, String.class)
+                                .invoke(instance, player.getUsername(),
+                                        player.getRemoteAddress().getAddress().getHostAddress());
+                        return Boolean.TRUE.equals(result);
+                    } catch (ReflectiveOperationException exception) {
+                        logger.debug("KoroEdge is installed but does not expose tiAuth handoff support", exception);
+                        return false;
+                    }
+                })
+                .orElse(false);
     }
 }

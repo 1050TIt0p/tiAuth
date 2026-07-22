@@ -84,7 +84,7 @@ public class AuthListener implements Listener {
             return;
         }
 
-        if (PremiumCache.isPremium(connection.getName())) {
+        if (MainConfig.IMP.premium.enabled && MainConfig.IMP.premium.forceOnlineMode && PremiumCache.isPremium(connection.getName())) {
             connection.setOnlineMode(true);
             return;
         }
@@ -114,7 +114,7 @@ public class AuthListener implements Listener {
                                         }
                                     });
                         }
-                    } else if (user.isPremium()) {
+                    } else if (MainConfig.IMP.premium.enabled && MainConfig.IMP.premium.forceOnlineMode && user.isPremium()) {
                         connection.setOnlineMode(true);
                         PremiumCache.addPremium(connection.getName());
                     } else {

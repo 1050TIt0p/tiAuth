@@ -72,7 +72,7 @@ public class AuthListener {
             return null;
         }
 
-        if (PremiumCache.isPremium(username)) {
+        if (MainConfig.IMP.premium.enabled && MainConfig.IMP.premium.forceOnlineMode && PremiumCache.isPremium(username)) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
             return null;
         }
@@ -102,7 +102,7 @@ public class AuthListener {
                             return CompletableFuture.completedFuture(null);
                         }
                     } else {
-                        if (user.isPremium()) {
+                        if (MainConfig.IMP.premium.enabled && MainConfig.IMP.premium.forceOnlineMode && user.isPremium()) {
                             event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
                             PremiumCache.addPremium(username);
                         } else {
