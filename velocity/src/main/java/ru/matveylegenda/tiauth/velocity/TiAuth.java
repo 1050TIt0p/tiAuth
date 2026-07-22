@@ -41,7 +41,7 @@ import java.nio.file.Path;
 @Plugin(
         id = "tiauth",
         name = "tiAuth",
-        version = "1.4.3",
+        version = "1.4.4",
         authors = {"1050TI_top", "OverwriteMC"}
 )
 public final class TiAuth {
@@ -281,6 +281,10 @@ public final class TiAuth {
 
     public boolean isPlayerAuthenticated(String username) {
         return AuthCache.isAuthenticated(username);
+    }
+
+    public boolean isAuthenticationServer(String serverName) {
+        return serverName != null && serverName.equalsIgnoreCase(MainConfig.IMP.servers.auth);
     }
 
     public boolean consumeKoroEdgeAuthenticationHandoff(com.velocitypowered.api.proxy.Player player) {
