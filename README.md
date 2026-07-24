@@ -40,7 +40,7 @@ Authorization plugin for BungeeCord and Velocity
 - `/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]` - Migrate database from other plugins/database type
   - Permission: `tiauth.admin.commands.migrate`
 
-## Upgrading a 1.3.5 configuration to 1.4.4
+## Upgrading a 1.3.5 configuration to 1.4.5
 
 Back up `plugins/tiAuth`, replace the jar, and start the proxy once. The serializer keeps existing values and writes missing 1.4.x options with defaults. Existing MySQL accounts and password hashes remain compatible.
 
@@ -52,7 +52,8 @@ servers:
   virtual-server-port: 65535
   virtual-server-auto-update: true
   auth: "auth"
-  backend: "lifesteal_backup"
+  # Compatibility fallback. KoroEdge 1.2.7+ normally selects the backend.
+  backend: "lobby2"
   forced-hosts: {}
 
 auth:
@@ -86,6 +87,15 @@ Do not disable `premium.force-online-mode` on an offline-mode proxy. Without Moj
 
 ## KoroEdge integration (Velocity)
 
-Install KoroEdge 1.2.1 and tiAuth 1.4.4 on every proxy. KoroEdge uses its existing Redis connection to carry a one-time, username-and-IP-bound authentication handoff during a remote backend transfer. KoroEdge now defers normal GeoIP routing while tiAuth is waiting for `/login` or `/register`, so players are never transferred away while typing a password. When tiAuth requests the post-login backend, KoroEdge applies its custom route or the normal GeoIP route and destination tiAuth consumes the authentication handoff without asking again.
+Install KoroEdge 1.2.7 and tiAuth 1.4.5 on every proxy. After authentication, tiAuth asks KoroEdge for the first healthy backend in `backendSelection.hierarchy`. The configured `servers.backend` is used only when KoroEdge is missing, backend selection is disabled, or KoroEdge cannot return an available hierarchy candidate. Explicit `servers.forced-hosts` mappings still take priority.
+
+```yaml
+# KoroEdge config.yml
+backendSelection:
+  enabled: true
+  hierarchy: ["lobby", "lobby2", "smp", "smp_backup"]
+```
+
+KoroEdge uses its existing Redis connection to carry a one-time, username-and-IP-bound authentication handoff during a remote backend transfer. It defers normal GeoIP routing while tiAuth is waiting for `/login` or `/register`, so players are never transferred away while typing a password. Once KoroEdge selects the post-login backend, it applies that backend's custom route or normal GeoIP route and destination tiAuth consumes the authentication handoff without asking again.
 
 No database or Redis password is duplicated in tiAuth. If either plugin is missing or outdated on a node, tiAuth fails closed and performs its normal authentication flow.

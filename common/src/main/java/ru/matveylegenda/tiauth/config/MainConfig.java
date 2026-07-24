@@ -78,7 +78,8 @@ public class MainConfig extends YamlSerializable {
         public String auth = "auth";
 
         @Comment({
-                @CommentValue("Бэкенд сервер на который будет перемещать игроков после регистрации/авторизации")
+                @CommentValue("Бэкенд сервер на который будет перемещать игроков после регистрации/авторизации"),
+                @CommentValue("Compatibility fallback when KoroEdge cannot select a backend")
         })
         public String backend = "hub";
 

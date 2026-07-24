@@ -41,7 +41,7 @@ import java.nio.file.Path;
 @Plugin(
         id = "tiauth",
         name = "tiAuth",
-        version = "1.4.4",
+        version = "1.4.5",
         authors = {"1050TI_top", "OverwriteMC"}
 )
 public final class TiAuth {
@@ -303,5 +303,31 @@ public final class TiAuth {
                     }
                 })
                 .orElse(false);
+    }
+
+    public String resolveKoroEdgePostAuthenticationBackend(
+            com.velocitypowered.api.proxy.Player player,
+            String fallbackBackend
+    ) {
+        return server.getPluginManager().getPlugin("koroedge")
+                .flatMap(container -> container.getInstance())
+                .map(instance -> {
+                    try {
+                        Object result = instance.getClass()
+                                .getMethod("selectPostAuthenticationBackend",
+                                        com.velocitypowered.api.proxy.Player.class, String.class)
+                                .invoke(instance, player, fallbackBackend);
+                        if (result instanceof String backend && !backend.isBlank()) {
+                            logger.info("KoroEdge selected post-authentication backend {} for {}",
+                                    backend, player.getUsername());
+                            return backend;
+                        }
+                    } catch (ReflectiveOperationException exception) {
+                        logger.debug("KoroEdge is installed but does not expose backend selection support",
+                                exception);
+                    }
+                    return fallbackBackend;
+                })
+                .orElse(fallbackBackend);
     }
 }
