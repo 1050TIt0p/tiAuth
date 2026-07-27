@@ -264,9 +264,10 @@ public class AuthManager {
                         if (plugin.consumeKoroEdgeAuthenticationHandoff(player)) {
                             AuthCache.setAuthenticated(name);
                             SessionCache.addPlayer(name, remoteIp);
-                            if (event != null) {
-                                getBackend(player).ifPresent(event::setInitialServer);
-                            } else {
+                            // KoroEdge owns the pending /server destination for
+                            // a delivered cross-proxy handoff. Do not overwrite
+                            // it with tiAuth's normal post-login selection.
+                            if (event == null) {
                                 connectToBackend(player);
                             }
                             return;

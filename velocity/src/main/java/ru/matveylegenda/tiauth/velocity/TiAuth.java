@@ -41,7 +41,7 @@ import java.nio.file.Path;
 @Plugin(
         id = "tiauth",
         name = "tiAuth",
-        version = "1.4.5",
+        version = "1.4.6",
         authors = {"1050TI_top", "OverwriteMC"}
 )
 public final class TiAuth {
@@ -292,10 +292,18 @@ public final class TiAuth {
                 .flatMap(container -> container.getInstance())
                 .map(instance -> {
                     try {
-                        Object result = instance.getClass()
-                                .getMethod("consumeAuthenticationHandoff", String.class, String.class)
-                                .invoke(instance, player.getUsername(),
-                                        player.getRemoteAddress().getAddress().getHostAddress());
+                        Object result;
+                        try {
+                            result = instance.getClass()
+                                    .getMethod("consumeAuthenticationHandoff",
+                                            com.velocitypowered.api.proxy.Player.class)
+                                    .invoke(instance, player);
+                        } catch (NoSuchMethodException unavailablePlayerApi) {
+                            result = instance.getClass()
+                                    .getMethod("consumeAuthenticationHandoff", String.class, String.class)
+                                    .invoke(instance, player.getUsername(),
+                                            player.getRemoteAddress().getAddress().getHostAddress());
+                        }
                         return Boolean.TRUE.equals(result);
                     } catch (ReflectiveOperationException exception) {
                         logger.debug("KoroEdge is installed but does not expose tiAuth handoff support", exception);
