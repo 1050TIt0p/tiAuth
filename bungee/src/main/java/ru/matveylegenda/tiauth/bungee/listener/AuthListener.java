@@ -155,6 +155,7 @@ public class AuthListener implements Listener {
         ProxiedPlayer player = event.getPlayer();
         event.registerIntent(plugin);
 
+        AuthCache.registerConnection(player.getName(), player);
         authManager.forceAuth(player, event);
     }
 
@@ -189,11 +190,10 @@ public class AuthListener implements Listener {
     public void onPlayerDisconnect(PlayerDisconnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
 
-        if (AuthCache.isAuthenticated(player.getName())) {
-            AuthCache.logout(player.getName());
+        if (AuthCache.unregisterConnection(player.getName(), player)) {
+            plugin.getTotpManager().clearTotpState(player.getName());
         }
 
-        plugin.getTotpManager().clearTotpState(player.getName());
         taskManager.cancelTasks(player);
     }
 
