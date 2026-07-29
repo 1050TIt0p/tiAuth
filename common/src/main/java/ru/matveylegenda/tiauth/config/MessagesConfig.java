@@ -189,6 +189,8 @@ public class MessagesConfig extends YamlSerializable {
             public String tooManyAttempts;
             public String ban;
             public String invalidNickPattern;
+            public String premiumTaken;
+            public String nicknameTaken;
             public String ipLimitOnlineReached;
             public String ipLimitRegisteredReached;
             public String totpTimeout;
@@ -317,6 +319,8 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.tooManyAttempts = "{prefix} &fВы превысили количество попыток для ввода пароля";
                 player.kick.ban = "{prefix} &fВаш аккаунт заблокирован на &#8833EC{time} &fсекунд за превышение попыток ввода пароля";
                 player.kick.invalidNickPattern = "{prefix} &fВаш ник содержит запрещенные символы";
+                player.kick.premiumTaken = "{prefix} &fЭтот ник привязан к лицензии Minecraft. Войдите через лицензионный аккаунт";
+                player.kick.nicknameTaken = "{prefix} &fЭтот ник уже занят другим игроком";
                 player.kick.ipLimitOnlineReached = "{prefix} &fС этого IP-адреса играет максимальное количество аккаунтов";
                 player.kick.ipLimitRegisteredReached = "{prefix} &fС этого IP-адреса зарегистрировано слишком много аккаунтов";
                 player.kick.totpTimeout = "{prefix} &fВы не успели ввести 2FA код";
@@ -411,6 +415,8 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.tooManyAttempts = "{prefix} &fYou exceeded the number of password attempts";
                 player.kick.ban = "{prefix} &fYour account has been locked for &#8833EC{time} &fseconds due to exceeding password attempts";
                 player.kick.invalidNickPattern = "{prefix} &fYour nickname contains invalid characters";
+                player.kick.premiumTaken = "{prefix} &fThis nickname is linked to a licensed Minecraft account. Sign in with the licensed account";
+                player.kick.nicknameTaken = "{prefix} &fThis nickname is already taken by another player";
                 player.kick.ipLimitOnlineReached = "{prefix} &fToo many accounts are currently playing from this IP address";
                 player.kick.ipLimitRegisteredReached = "{prefix} &fToo many accounts registered from this IP address";
                 player.kick.totpTimeout = "{prefix} &fYou did not enter the 2FA code in time";

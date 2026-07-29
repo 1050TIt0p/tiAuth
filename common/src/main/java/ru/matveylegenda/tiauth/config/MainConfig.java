@@ -179,6 +179,19 @@ public class MainConfig extends YamlSerializable {
         public int sessionLifetimeMinutes = 60;
 
         @Comment({
+                @CommentValue("Автоматически пропускать лицензионных игроков без пароля"),
+                @CommentValue("Работает только на клиентах 1.20.2+")
+        })
+        public boolean skipPremiumPlayers = true;
+
+        @Comment({
+                @CommentValue("URL для проверки лицензионных аккаунтов."),
+                @CommentValue("Имя игрока автоматически добавляется в конец URL."),
+                @CommentValue("API должно вернуть JSON с полем 'id', содержащим UUID без дефисов.")
+        })
+        public String premiumApiUrl = "https://api.minecraftservices.com/minecraft/profile/lookup/name/";
+
+        @Comment({
                 @CommentValue("Минимальная длина пароля")
         })
         public int minPasswordLength = 6;

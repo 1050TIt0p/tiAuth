@@ -8,7 +8,6 @@ import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
 import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
 import ru.matveylegenda.tiauth.bungee.util.BungeeUtils;
 import ru.matveylegenda.tiauth.cache.AuthCache;
-import ru.matveylegenda.tiauth.cache.PremiumCache;
 
 public class LogoutCommand extends Command {
     private final AuthManager authManager;
@@ -33,7 +32,7 @@ public class LogoutCommand extends Command {
             return;
         }
 
-        if (PremiumCache.isPremium(player.getName())) {
+        if (player.getPendingConnection().isOnlineMode()) {
             BungeeUtils.sendMessage(
                     sender,
                     CachedMessages.IMP.player.logout.logoutByPremium

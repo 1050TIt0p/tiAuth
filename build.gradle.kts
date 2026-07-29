@@ -27,6 +27,7 @@ subprojects {
         implementation("at.favre.lib:bcrypt:0.10.2")
         implementation("de.mkammerer:argon2-jvm:2.12")
         implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
+        implementation("com.google.code.gson:gson:2.13.2")
         implementation("net.elytrium:serializer:1.1.1")
         implementation("dev.samstevens.totp:totp:1.7.1")
 
@@ -77,6 +78,7 @@ tasks.shadowJar {
     relocate("at.favre.lib", "ru.matveylegenda.tiauth.thirdparty.at.favre.lib")
     relocate("de.mkammerer.argon2", "ru.matveylegenda.tiauth.thirdparty.de.mkammerer.argon2")
     relocate("com.github.benmanes.caffeine", "ru.matveylegenda.tiauth.thirdparty.com.github.benmanes.caffeine")
+    relocate("com.google.gson", "ru.matveylegenda.tiauth.thirdparty.com.google.gson")
     relocate("com.google.errorprone", "ru.matveylegenda.tiauth.thirdparty.com.google.errorprone")
     relocate("org.jspecify", "ru.matveylegenda.tiauth.thirdparty.org.jspecify")
     relocate("net.elytrium.serializer", "ru.matveylegenda.tiauth.thirdparty.net.elytrium.serializer")

@@ -152,6 +152,8 @@ public class CachedMessages {
             public String tooManyAttempts;
             public String ban;
             public String invalidNickPattern;
+            public String premiumTaken;
+            public String nicknameTaken;
             public String ipLimitOnlineReached;
             public String ipLimitRegisteredReached;
             public String totpTimeout;
@@ -309,6 +311,8 @@ public class CachedMessages {
         player.kick.tooManyAttempts = COLORIZER.colorize(getPrefixed(config.player.kick.tooManyAttempts, prefix));
         player.kick.ban = COLORIZER.colorize(getPrefixed(config.player.kick.ban, prefix));
         player.kick.invalidNickPattern = COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefix));
+        player.kick.premiumTaken = COLORIZER.colorize(getPrefixed(config.player.kick.premiumTaken, prefix));
+        player.kick.nicknameTaken = COLORIZER.colorize(getPrefixed(config.player.kick.nicknameTaken, prefix));
         player.kick.ipLimitOnlineReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefix));
         player.kick.ipLimitRegisteredReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefix));
         player.kick.totpTimeout = COLORIZER.colorize(getPrefixed(config.player.kick.totpTimeout, prefix));
