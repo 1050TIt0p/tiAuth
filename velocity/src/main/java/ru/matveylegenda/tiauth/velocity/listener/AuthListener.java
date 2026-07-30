@@ -117,30 +117,30 @@ public class AuthListener {
             String ip,
             PreLoginEvent event
     ) {
-        return database.getPremiumIdentityRepository().getUuid(username)
-                .thenCompose(boundUuid -> {
-                    if (boundUuid != null && (!premium || !boundUuid.equals(loginUuid))) {
-                        event.setResult(PreLoginEvent.PreLoginComponentResult.denied(
-                                CachedComponents.IMP.player.kick.premiumTaken
-                        ));
-                        return CompletableFuture.completedFuture(null);
+        return database.getAuthUserRepository().getUser(username)
+                .thenCompose(user -> {
+                    if (user != null && user.isAutomaticPremium()) {
+                        if (loginUuid == null || !loginUuid.toString().equalsIgnoreCase(user.getPremiumUuid())) {
+                            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(
+                                    CachedComponents.IMP.player.kick.premiumTaken
+                            ));
+                            return CompletableFuture.completedFuture(null);
+                        }
                     }
 
                     if (premium) {
-                        return database.getAuthUserRepository().getUser(username)
-                                .thenAccept(user -> {
-                                    if (user != null && !user.isPremium()) {
-                                        if (proxyServer.getPlayer(username).isPresent()) {
-                                            return;
-                                        }
-                                        event.setResult(PreLoginEvent.PreLoginComponentResult.denied(
-                                                CachedComponents.IMP.player.kick.nicknameTaken
-                                        ));
-                                        return;
-                                    }
+                        if (user != null && !user.isPremium()) {
+                            if (proxyServer.getPlayer(username).isPresent()) {
+                                return CompletableFuture.completedFuture(null);
+                            }
+                            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(
+                                    CachedComponents.IMP.player.kick.nicknameTaken
+                            ));
+                            return CompletableFuture.completedFuture(null);
+                        }
 
-                                    event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
-                                });
+                        event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
+                        return CompletableFuture.completedFuture(null);
                     }
 
                     event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
@@ -245,7 +245,11 @@ public class AuthListener {
 
         return premiumVerifier.findUuid(player.getUsername())
                 .thenCompose(profileUuid -> profileUuid
-                        .map(uuid -> database.getPremiumIdentityRepository().bind(player.getUsername(), uuid))
+                        .map(uuid -> database.getAuthUserRepository().registerPremiumUser(
+                                player.getUsername(),
+                                uuid,
+                                VelocityUtils.getIp(player)
+                        ))
                         .orElseGet(() -> CompletableFuture.failedFuture(
                                 new IllegalStateException("Premium profile disappeared after online-mode login")
                         )));

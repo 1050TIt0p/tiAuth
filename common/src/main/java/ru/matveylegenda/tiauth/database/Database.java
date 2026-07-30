@@ -7,7 +7,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
 import ru.matveylegenda.tiauth.database.repository.AuthUserRepository;
-import ru.matveylegenda.tiauth.database.repository.PremiumIdentityRepository;
+
 import ru.matveylegenda.tiauth.database.repository.RecoveryCodeRepository;
 
 import java.io.File;
@@ -25,7 +25,6 @@ public class Database {
     private final ConnectionSource connectionSource;
     private final HikariDataSource dataSource;
     private final AuthUserRepository authUserRepository;
-    private final PremiumIdentityRepository premiumIdentityRepository;
     private final RecoveryCodeRepository recoveryCodeRepository;
     private final ExecutorService executor;
 
@@ -34,7 +33,6 @@ public class Database {
         this.dataSource = null;
         executor = Executors.newSingleThreadExecutor();
         this.authUserRepository = new AuthUserRepository(connectionSource, executor);
-        this.premiumIdentityRepository = new PremiumIdentityRepository(connectionSource, executor);
         this.recoveryCodeRepository = new RecoveryCodeRepository(connectionSource, executor);
     }
 
@@ -43,7 +41,6 @@ public class Database {
         this.dataSource = dataSource;
         executor = Executors.newFixedThreadPool(dataSource.getMaximumPoolSize());
         this.authUserRepository = new AuthUserRepository(connectionSource, executor);
-        this.premiumIdentityRepository = new PremiumIdentityRepository(connectionSource, executor);
         this.recoveryCodeRepository = new RecoveryCodeRepository(connectionSource, executor);
     }
 

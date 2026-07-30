@@ -10,6 +10,7 @@ import ru.matveylegenda.tiauth.database.model.AuthUser;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
@@ -23,6 +24,7 @@ public class AuthUserRepository {
         authUserDao = DaoManager.createDao(connectionSource, AuthUser.class);
         TableUtils.createTableIfNotExists(connectionSource, AuthUser.class);
         migrateTotpColumn();
+        migratePremiumUuidColumn();
         this.executor = executor;
     }
 
@@ -30,6 +32,15 @@ public class AuthUserRepository {
         try {
             authUserDao.executeRawNoArgs(
                     "ALTER TABLE auth_users ADD COLUMN totpToken VARCHAR(255) DEFAULT ''"
+            );
+        } catch (SQLException ignored) {
+        }
+    }
+
+    private void migratePremiumUuidColumn() {
+        try {
+            authUserDao.executeRawNoArgs(
+                    "ALTER TABLE auth_users ADD COLUMN premiumUuid VARCHAR(36)"
             );
         } catch (SQLException ignored) {
         }
@@ -44,6 +55,34 @@ public class AuthUserRepository {
             } catch (SQLException e) {
                 future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
+            }
+        });
+        return future;
+    }
+
+    public CompletableFuture<Void> registerPremiumUser(String username, UUID premiumUuid, String ip) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        executor.submit(() -> {
+            try {
+                String lowerName = username.toLowerCase(Locale.ROOT);
+                AuthUser user = authUserDao.queryForId(lowerName);
+
+                if (user == null) {
+                    user = new AuthUser(lowerName, username, "", true, ip);
+                    user.setPremiumUuid(premiumUuid.toString());
+                    authUserDao.create(user);
+                } else if (user.isAutomaticPremium()) {
+                    if (!premiumUuid.toString().equalsIgnoreCase(user.getPremiumUuid())) {
+                        throw new IllegalStateException("Premium account is already bound to another UUID");
+                    }
+                } else if (!user.isPremium()) {
+                    throw new IllegalStateException("Nickname is already registered with a password");
+                }
+
+                future.complete(null);
+            } catch (SQLException | RuntimeException exception) {
+                future.completeExceptionally(exception);
+                Database.LOGGER.log(Level.WARNING, "Error while registering premium account", exception);
             }
         });
         return future;
@@ -109,6 +148,8 @@ public class AuthUserRepository {
                 int count = (int) authUserDao.queryBuilder()
                         .where()
                         .eq("lastIp", ip)
+                        .and()
+                        .ne("password", "")
                         .countOf();
                 future.complete(count);
             } catch (SQLException e) {
@@ -189,13 +230,20 @@ public class AuthUserRepository {
             try {
                 AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
                 if (user != null) {
+                    if (!enabled && user.isAutomaticPremium() && !user.hasPassword()) {
+                        throw new IllegalStateException("Premium account needs a password before disabling premium mode");
+                    }
+
                     user.setPremium(enabled);
+                    if (!enabled) {
+                        user.setPremiumUuid(null);
+                    }
                     authUserDao.update(user);
                 }
                 future.complete(null);
-            } catch (SQLException e) {
-                future.completeExceptionally(e);
-                Database.LOGGER.log(Level.WARNING, "Error during database query", e);
+            } catch (SQLException | RuntimeException exception) {
+                future.completeExceptionally(exception);
+                Database.LOGGER.log(Level.WARNING, "Error during database query", exception);
             }
         });
         return future;

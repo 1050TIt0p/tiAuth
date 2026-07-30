@@ -86,10 +86,11 @@ public final class PremiumVerifier {
                     throw new IllegalStateException("Profile lookup returned an invalid profile");
                 }
 
-                return Optional.of(UUID.fromString(profile.id.replaceFirst(
-                        "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{12})",
-                        "$1-$2-$3-$4-$5"
-                )));
+                String id = profile.id;
+                return Optional.of(UUID.fromString(
+                        id.substring(0, 8) + "-" + id.substring(8, 12) + "-" + id.substring(12, 16) + "-" +
+                                id.substring(16, 20) + "-" + id.substring(20)
+                ));
             } catch (JsonParseException | IllegalArgumentException exception) {
                 throw new IllegalStateException("Profile lookup returned invalid JSON", exception);
             }

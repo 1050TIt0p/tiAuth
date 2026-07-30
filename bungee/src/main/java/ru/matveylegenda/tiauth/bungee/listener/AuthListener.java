@@ -129,28 +129,26 @@ public class AuthListener implements Listener {
             PreLoginEvent event
     ) {
         UUID loginUuid = getLoginUuid(connection);
-        return database.getPremiumIdentityRepository().getUuid(connection.getName())
-                .thenCompose(boundUuid -> {
-                    if (boundUuid != null && (!premium || !boundUuid.equals(loginUuid))) {
-                        event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.premiumTaken));
-                        event.setCancelled(true);
+        return database.getAuthUserRepository().getUser(connection.getName())
+                .thenCompose(user -> {
+                    if (user != null) {
+                        if (user.isAutomaticPremium()) {
+                            if (loginUuid == null || !loginUuid.toString().equalsIgnoreCase(user.getPremiumUuid())) {
+                                event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.premiumTaken));
+                                event.setCancelled(true);
+                                return CompletableFuture.completedFuture(null);
+                            }
+                        }
+
+                        connection.setOnlineMode(user.isPremium());
+                        if (user.isPremium()) {
+                            PremiumCache.addPremium(connection.getName());
+                        }
                         return CompletableFuture.completedFuture(null);
                     }
 
                     connection.setOnlineMode(premium);
                     if (premium || MainConfig.IMP.excludedIps.contains(ip)) {
-                        if (premium) {
-                            return database.getAuthUserRepository().getUser(connection.getName())
-                                    .thenAccept(user -> {
-                                        if (user != null && !user.isPremium()) {
-                                            if (ProxyServer.getInstance().getPlayer(connection.getName()) != null) {
-                                                return;
-                                            }
-                                            event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.nicknameTaken));
-                                            event.setCancelled(true);
-                                        }
-                                    });
-                        }
                         return CompletableFuture.completedFuture(null);
                     }
 
@@ -236,6 +234,7 @@ public class AuthListener implements Listener {
             return;
         }
 
+        UUID premiumUuid = connection.getUniqueId();
         try {
             UUID offlineId = UUID.nameUUIDFromBytes(
                     ("OfflinePlayer:" + connection.getName()).getBytes(StandardCharsets.UTF_8)
@@ -245,6 +244,26 @@ public class AuthListener implements Listener {
         } catch (IllegalAccessException e) {
             TiAuth.logger.log(Level.WARNING, "Failed to set offline UUID for player " + connection.getName(), e);
         }
+
+        if (!isAutomaticPremiumEnabled(connection) || premiumUuid == null) {
+            return;
+        }
+
+        event.registerIntent(plugin);
+        database.getAuthUserRepository().registerPremiumUser(
+                        connection.getName(),
+                        premiumUuid,
+                        ((InetSocketAddress) connection.getSocketAddress()).getAddress().getHostAddress()
+                )
+                .thenRun(() -> PremiumCache.addPremium(connection.getName()))
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        TiAuth.logger.log(Level.WARNING, "Failed to save premium account for " + connection.getName(), throwable);
+                        event.setReason(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
+                        event.setCancelled(true);
+                    }
+                    event.completeIntent(plugin);
+                });
     }
 
     @EventHandler
@@ -276,7 +295,11 @@ public class AuthListener implements Listener {
 
         return premiumVerifier.findUuid(player.getName())
                 .thenCompose(profileUuid -> profileUuid
-                        .map(uuid -> database.getPremiumIdentityRepository().bind(player.getName(), uuid))
+                        .map(uuid -> database.getAuthUserRepository().registerPremiumUser(
+                                player.getName(),
+                                uuid,
+                                BungeeUtils.getIp(player)
+                        ))
                         .orElseGet(() -> CompletableFuture.failedFuture(
                                 new IllegalStateException("Premium profile disappeared after online-mode login")
                         )));

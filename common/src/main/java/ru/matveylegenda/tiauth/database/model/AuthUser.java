@@ -21,6 +21,9 @@ public class AuthUser {
     @DatabaseField
     private boolean premium;
 
+    @DatabaseField(width = 36)
+    private String premiumUuid;
+
     @DatabaseField
     private String lastIp;
 
@@ -57,5 +60,13 @@ public class AuthUser {
         this.regIp = regIp;
         this.lastLogin = lastLogin;
         this.regDate = regDate;
+    }
+
+    public boolean isAutomaticPremium() {
+        return premiumUuid != null && !premiumUuid.isBlank();
+    }
+
+    public boolean hasPassword() {
+        return password != null && !password.isEmpty();
     }
 }
