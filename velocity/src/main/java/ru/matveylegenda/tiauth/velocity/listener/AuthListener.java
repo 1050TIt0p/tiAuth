@@ -233,6 +233,7 @@ public class AuthListener {
 
             authManager.forceAuth(player, event, future);
         });
+        authManager.forceAuth(player, event, future);
         return EventTask.resumeWhenComplete(future);
     }
 

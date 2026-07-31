@@ -303,6 +303,7 @@ public class AuthListener implements Listener {
                         .orElseGet(() -> CompletableFuture.failedFuture(
                                 new IllegalStateException("Premium profile disappeared after online-mode login")
                         )));
+        authManager.forceAuth(player, event);
     }
 
     @EventHandler

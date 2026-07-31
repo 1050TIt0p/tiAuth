@@ -262,6 +262,7 @@ public class AuthManager {
                         String remoteIp = VelocityUtils.getIp(player);
 
                         if (player.isOnlineMode() || (sessionIP != null && sessionIP.equals(remoteIp))) {
+                        if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
                             AuthCache.setAuthenticated(name, player);
                             if (event != null) {
                                 plugin.getServer().getServer(MainConfig.IMP.servers.backend).ifPresent(event::setInitialServer);
