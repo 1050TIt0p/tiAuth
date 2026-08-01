@@ -9,46 +9,30 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @UtilityClass
 public class AuthCache {
-    private final Map<String, ConnectionState> connections = new ConcurrentHashMap<>();
+    private final Set<String> authenticated = ConcurrentHashMap.newKeySet();
     private final Set<String> pendingVerifications = ConcurrentHashMap.newKeySet();
     private final Set<String> totpPending = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
     private final Map<String, Integer> totpAttempts = new ConcurrentHashMap<>();
     private final Map<String, String> totpEnableSecrets = new ConcurrentHashMap<>();
 
-    public void registerConnection(String name, Object connection) {
-        connections.put(name.toLowerCase(Locale.ROOT), new ConnectionState(connection));
-    }
-
-    public void setAuthenticated(String name, Object connection) {
-        ConnectionState state = connections.get(name.toLowerCase(Locale.ROOT));
-        if (state != null && state.connection == connection) {
-            state.authenticated = true;
-        }
+    public void setAuthenticated(String name) {
+        authenticated.add(name.toLowerCase(Locale.ROOT));
     }
 
     public void logout(String name) {
-        ConnectionState state = connections.get(name.toLowerCase(Locale.ROOT));
-        if (state != null) {
-            state.authenticated = false;
-        }
+        authenticated.remove(name.toLowerCase(Locale.ROOT));
     }
 
     public boolean isAuthenticated(String name) {
-        ConnectionState state = connections.get(name.toLowerCase(Locale.ROOT));
-        return state != null && state.authenticated;
-    }
-
-    public boolean unregisterConnection(String name, Object connection) {
-        String lowerName = name.toLowerCase(Locale.ROOT);
-        ConnectionState state = connections.get(lowerName);
-        return state != null && state.connection == connection && connections.remove(lowerName, state);
+        return authenticated.contains(name.toLowerCase(Locale.ROOT));
     }
 
     public boolean isPendingVerification(String playerName) {
         return pendingVerifications.contains(playerName.toLowerCase(Locale.ROOT));
     }
 
+    @SuppressWarnings("unused")
     public void setPendingVerification(String playerName) {
         pendingVerifications.add(playerName.toLowerCase(Locale.ROOT));
     }
@@ -95,14 +79,5 @@ public class AuthCache {
 
     public void removeTotpEnableSecret(String playerName) {
         totpEnableSecrets.remove(playerName.toLowerCase(Locale.ROOT));
-    }
-
-    private static final class ConnectionState {
-        private final Object connection;
-        private volatile boolean authenticated;
-
-        private ConnectionState(Object connection) {
-            this.connection = connection;
-        }
     }
 }
