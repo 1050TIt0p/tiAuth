@@ -165,6 +165,10 @@ public class AuthListener {
         Player player = event.getPlayer();
         String username = player.getUsername();
 
+        if (AuthCache.isAuthenticated(username)) {
+            AuthCache.logout(username);
+        }
+
         totpManager.clearTotpState(username);
         taskManager.cancelTasks(player);
     }

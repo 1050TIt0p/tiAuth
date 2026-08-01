@@ -189,6 +189,10 @@ public class AuthListener implements Listener {
     public void onPlayerDisconnect(PlayerDisconnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
 
+        if (AuthCache.isAuthenticated(player.getName())) {
+            AuthCache.logout(player.getName());
+        }
+
         plugin.getTotpManager().clearTotpState(player.getName());
         taskManager.cancelTasks(player);
     }
