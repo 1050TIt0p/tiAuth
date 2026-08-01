@@ -131,7 +131,6 @@ public class AuthListener {
         Player player = event.getPlayer();
         CompletableFuture<Void> future = new CompletableFuture<>();
 
-        AuthCache.registerConnection(player.getUsername(), player);
         authManager.forceAuth(player, event, future);
         return EventTask.resumeWhenComplete(future);
     }
@@ -166,10 +165,7 @@ public class AuthListener {
         Player player = event.getPlayer();
         String username = player.getUsername();
 
-        if (AuthCache.unregisterConnection(username, player)) {
-            totpManager.clearTotpState(username);
-        }
-
+        totpManager.clearTotpState(username);
         taskManager.cancelTasks(player);
     }
 

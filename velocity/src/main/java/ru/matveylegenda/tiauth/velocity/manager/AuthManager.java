@@ -238,6 +238,7 @@ public class AuthManager {
 
     public void forceAuth(Player player, PlayerChooseInitialServerEvent event, CompletableFuture<Void> future) {
         String name = player.getUsername();
+        AuthCache.logout(name);
 
         database.getAuthUserRepository().getUser(name)
                 .whenComplete((user, throwable) -> {
@@ -262,7 +263,9 @@ public class AuthManager {
                         String remoteIp = VelocityUtils.getIp(player);
 
                         if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
-                            AuthCache.setAuthenticated(name, player);
+                            if (player.isActive()) {
+                                AuthCache.setAuthenticated(name);
+                            }
                             if (event != null) {
                                 plugin.getServer().getServer(MainConfig.IMP.servers.backend).ifPresent(event::setInitialServer);
                             } else {
@@ -321,7 +324,9 @@ public class AuthManager {
         return registerUserAsync(name, password, ip)
                 .thenRun(() -> {
                     player.sendMessage(CachedComponents.IMP.player.register.success);
-                    AuthCache.setAuthenticated(name, player);
+                    if (player.isActive()) {
+                        AuthCache.setAuthenticated(name);
+                    }
                     SessionCache.addPlayer(name, ip);
                     taskManager.cancelTasks(player);
 
@@ -383,7 +388,9 @@ public class AuthManager {
         String ip = VelocityUtils.getIp(player);
         String lowerName = name.toLowerCase(Locale.ROOT);
 
-        AuthCache.setAuthenticated(name, player);
+        if (player.isActive()) {
+            AuthCache.setAuthenticated(name);
+        }
         database.getAuthUserRepository().updateLastLogin(name);
         database.getAuthUserRepository().updateLastIp(name, ip);
         SessionCache.addPlayer(name, ip);
