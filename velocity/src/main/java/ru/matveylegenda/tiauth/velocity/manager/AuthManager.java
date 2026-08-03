@@ -277,13 +277,6 @@ public class AuthManager {
                             Optional<RegisteredServer> authOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
                             authOpt.ifPresent(event::setInitialServer);
                         }
-
-                        Component reminderMessage = (user != null)
-                                ? CachedComponents.IMP.player.reminder.login
-                                : CachedComponents.IMP.player.reminder.register;
-
-                        taskManager.startAuthTimeoutTask(player);
-                        taskManager.startAuthReminderTask(player, reminderMessage);
                     } finally {
                         if (event != null && future != null) {
                             future.complete(null);

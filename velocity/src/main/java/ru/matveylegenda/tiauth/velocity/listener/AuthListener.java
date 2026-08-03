@@ -155,6 +155,21 @@ public class AuthListener {
                 !AuthCache.isAuthenticated(player.getUsername())) {
             taskManager.startDisplayTimerTask(player);
             authManager.showLoginDialog(player);
+
+            database.getAuthUserRepository().getUser(player.getUsername())
+                    .whenComplete((user, throwable) -> {
+                        if (throwable != null) {
+                            player.disconnect(CachedComponents.IMP.queryError);
+                            return;
+                        }
+
+                        Component reminderMessage = (user != null)
+                                ? CachedComponents.IMP.player.reminder.login
+                                : CachedComponents.IMP.player.reminder.register;
+
+                        taskManager.startAuthTimeoutTask(player);
+                        taskManager.startAuthReminderTask(player, reminderMessage);
+                    });
         } else {
             taskManager.cancelTasks(player);
         }

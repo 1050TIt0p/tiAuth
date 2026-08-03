@@ -286,13 +286,6 @@ public class AuthManager {
                         } else {
                             connectToAuthServer(player);
                         }
-
-                        String reminderMessage = (user != null)
-                                ? CachedMessages.IMP.player.reminder.login
-                                : CachedMessages.IMP.player.reminder.register;
-
-                        taskManager.startAuthTimeoutTask(player);
-                        taskManager.startAuthReminderTask(player, reminderMessage);
                     } finally {
                         if (event != null) {
                             event.completeIntent(plugin);
