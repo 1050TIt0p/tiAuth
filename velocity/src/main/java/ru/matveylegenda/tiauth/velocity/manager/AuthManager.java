@@ -262,7 +262,7 @@ public class AuthManager {
                         String remoteIp = VelocityUtils.getIp(player);
 
                         if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
-                            AuthCache.setAuthenticated(name, player);
+                            AuthCache.setAuthenticated(name);
                             if (event != null) {
                                 plugin.getServer().getServer(MainConfig.IMP.servers.backend).ifPresent(event::setInitialServer);
                             } else {
@@ -321,7 +321,7 @@ public class AuthManager {
         return registerUserAsync(name, password, ip)
                 .thenRun(() -> {
                     player.sendMessage(CachedComponents.IMP.player.register.success);
-                    AuthCache.setAuthenticated(name, player);
+                    AuthCache.setAuthenticated(name);
                     SessionCache.addPlayer(name, ip);
                     taskManager.cancelTasks(player);
 
@@ -383,7 +383,7 @@ public class AuthManager {
         String ip = VelocityUtils.getIp(player);
         String lowerName = name.toLowerCase(Locale.ROOT);
 
-        AuthCache.setAuthenticated(name, player);
+        AuthCache.setAuthenticated(name);
         database.getAuthUserRepository().updateLastLogin(name);
         database.getAuthUserRepository().updateLastIp(name, ip);
         SessionCache.addPlayer(name, ip);
