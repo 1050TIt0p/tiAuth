@@ -137,7 +137,7 @@ public class AuthManager {
             return;
         }
 
-        if (AuthCache.isPendingVerification(name)) {
+        if (AuthCache.isVerifying(name)) {
             player.sendMessage(CachedComponents.IMP.player.login.alreadyLogged);
             return;
         }

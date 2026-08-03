@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @UtilityClass
 public class AuthCache {
     private final Set<String> authenticated = ConcurrentHashMap.newKeySet();
-    private final Set<String> pendingVerifications = ConcurrentHashMap.newKeySet();
+    private final Set<String> verifying = ConcurrentHashMap.newKeySet();
     private final Set<String> totpPending = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
     private final Map<String, Integer> totpAttempts = new ConcurrentHashMap<>();
@@ -28,17 +28,17 @@ public class AuthCache {
         return authenticated.contains(name.toLowerCase(Locale.ROOT));
     }
 
-    public boolean isPendingVerification(String playerName) {
-        return pendingVerifications.contains(playerName.toLowerCase(Locale.ROOT));
+    public boolean isVerifying(String playerName) {
+        return verifying.contains(playerName.toLowerCase(Locale.ROOT));
     }
 
     @SuppressWarnings("unused")
-    public void setPendingVerification(String playerName) {
-        pendingVerifications.add(playerName.toLowerCase(Locale.ROOT));
+    public void beginVerification(String playerName) {
+        verifying.add(playerName.toLowerCase(Locale.ROOT));
     }
 
-    public void clearPendingVerification(String playerName) {
-        pendingVerifications.remove(playerName.toLowerCase(Locale.ROOT));
+    public void endVerification(String playerName) {
+        verifying.remove(playerName.toLowerCase(Locale.ROOT));
     }
 
     public boolean isTotpPending(String playerName) {
