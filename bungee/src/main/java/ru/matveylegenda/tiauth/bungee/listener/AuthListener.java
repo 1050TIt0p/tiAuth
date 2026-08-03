@@ -16,6 +16,7 @@ import ru.matveylegenda.tiauth.bungee.util.BungeeUtils;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.BanCache;
 import ru.matveylegenda.tiauth.cache.PremiumCache;
+import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.database.Database;
 
@@ -180,6 +181,21 @@ public class AuthListener implements Listener {
                 !AuthCache.isAuthenticated(player.getName())) {
             taskManager.startDisplayTimerTask(player);
             authManager.showLoginDialog(player);
+
+            database.getAuthUserRepository().getUser(player.getName())
+                    .whenComplete((user, throwable) -> {
+                        if (throwable != null) {
+                            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
+                            return;
+                        }
+
+                        String reminderMessage = (user != null)
+                                ? CachedMessages.IMP.player.reminder.login
+                                : CachedMessages.IMP.player.reminder.register;
+
+                        taskManager.startAuthTimeoutTask(player);
+                        taskManager.startAuthReminderTask(player, reminderMessage);
+                    });
         } else {
             taskManager.cancelTasks(player);
         }
