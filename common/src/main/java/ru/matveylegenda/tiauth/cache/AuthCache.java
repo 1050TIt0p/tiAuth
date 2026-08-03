@@ -32,6 +32,7 @@ public class AuthCache {
         return pendingVerifications.contains(playerName.toLowerCase(Locale.ROOT));
     }
 
+    @SuppressWarnings("unused")
     public void setPendingVerification(String playerName) {
         pendingVerifications.add(playerName.toLowerCase(Locale.ROOT));
     }
