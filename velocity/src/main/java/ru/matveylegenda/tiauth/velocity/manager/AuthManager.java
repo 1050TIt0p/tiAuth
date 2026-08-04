@@ -261,10 +261,26 @@ public class AuthManager {
                         String sessionIP = SessionCache.getIP(name);
                         String remoteIp = VelocityUtils.getIp(player);
 
-                        if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
+                        if (plugin.consumeKoroEdgeAuthenticationHandoff(player)) {
+                            AuthCache.setAuthenticated(name);
+                            SessionCache.addPlayer(name, remoteIp);
+                            // KoroEdge owns the pending /server destination for
+                            // a delivered cross-proxy handoff. Do not overwrite
+                            // it with tiAuth's normal post-login selection.
+                            if (event == null) {
+                                connectToBackend(player);
+                            }
+                            return;
+                        }
+
+                        boolean premiumBypass = MainConfig.IMP.premium.enabled
+                                && MainConfig.IMP.premium.bypassAuthentication
+                                && PremiumCache.isPremium(name)
+                                && (!MainConfig.IMP.premium.forceOnlineMode || player.isOnlineMode());
+                        if (premiumBypass || (sessionIP != null && sessionIP.equals(remoteIp))) {
                             AuthCache.setAuthenticated(name);
                             if (event != null) {
-                                plugin.getServer().getServer(MainConfig.IMP.servers.backend).ifPresent(event::setInitialServer);
+                                getBackend(player).ifPresent(event::setInitialServer);
                             } else {
                                 connectToBackend(player);
                             }
@@ -410,7 +426,7 @@ public class AuthManager {
 
     private Optional<RegisteredServer> getBackend(Player player) {
         return getForcedBackend(player)
-                .or(this::getDefaultBackend);
+                .or(() -> getDefaultBackend(player));
     }
 
     private Optional<RegisteredServer> getForcedBackend(Player player) {
@@ -419,8 +435,10 @@ public class AuthManager {
                 .flatMap(plugin.getServer()::getServer);
     }
 
-    private Optional<RegisteredServer> getDefaultBackend() {
-        return plugin.getServer().getServer(MainConfig.IMP.servers.backend);
+    private Optional<RegisteredServer> getDefaultBackend(Player player) {
+        String backend = plugin.resolveKoroEdgePostAuthenticationBackend(
+                player, MainConfig.IMP.servers.backend);
+        return plugin.getServer().getServer(backend);
     }
 
     private CompletableFuture<Void> connect(Player player, RegisteredServer target) {

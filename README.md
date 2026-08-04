@@ -7,7 +7,7 @@ Authorization plugin for BungeeCord and Velocity
 - Dialog window support `(1.21.6+)`
   - Interactive window with a password input field
 - Premium mode
-  - Allows licensed players to skip password entry by activating local `online-mode true`
+  - Allows accounts marked premium to skip password entry after online-mode verification
 - Session support
   - Allows players to skip password entry for a certain period after successful authentication
 - Two-factor authentication
@@ -39,3 +39,63 @@ Authorization plugin for BungeeCord and Velocity
   - Permission: `tiauth.admin.commands.forcelogin`
 - `/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]` - Migrate database from other plugins/database type
   - Permission: `tiauth.admin.commands.migrate`
+
+## Upgrading a 1.3.5 configuration to 1.4.6
+
+Back up `plugins/tiAuth`, replace the jar, and start the proxy once. The serializer keeps existing values and writes missing 1.4.x options with defaults. Existing MySQL accounts and password hashes remain compatible.
+
+The important additions for a 1.3.5 configuration are:
+
+```yaml
+servers:
+  use-virtual-server: true
+  virtual-server-port: 65535
+  virtual-server-auto-update: true
+  auth: "auth"
+  # Fresh-login destination and compatibility fallback.
+  backend: "lobby2"
+  forced-hosts: {}
+
+auth:
+  # Existing BCRYPT and SHA256 hashes continue to work. ARGON2 is also available.
+  argon2-iterations: 2
+  argon2-memory: 65536
+  argon2-parallelism: 1
+  repeat-password-when-register: true
+  totp:
+    enabled: true
+    issuer: "Koro Network"
+    qr-generator-url: "https://api.qrserver.com/v1/create-qr-code/?data={data}&size=200x200&ecc=M&margin=30"
+    need-password: true
+    recovery-codes-amount: 16
+    max-attempts: 3
+    ban-player: true
+    ban-time: 60
+    timeout-seconds: 60
+
+premium:
+  enabled: true
+  bypass-authentication: true
+  force-online-mode: true
+
+check-updates: true
+```
+
+PicoLimbo now uses `plugins/tiAuth/picolimbo/config.toml`; the older NanoLimbo settings path is not used by 1.4.x. Keep `virtual-server-port` unused by other local services.
+
+Do not disable `premium.force-online-mode` on an offline-mode proxy. Without Mojang/Microsoft online-mode verification, another client could claim a premium username. Mark your authenticated account premium with `/premium`, or use `/tiauth forcepremium <player>` as an administrator.
+
+## KoroEdge integration (Velocity)
+
+Install KoroEdge 1.2.8 and tiAuth 1.4.6 on every proxy. After authentication, tiAuth asks KoroEdge to validate the requested backend. KoroEdge preserves that destination while it is healthy and uses `backendSelection.hierarchy` only when it is unavailable. Therefore a cross-proxy `/server practice` handoff remains `practice`; tiAuth no longer overwrites it with the fresh-login backend or hierarchy. Explicit `servers.forced-hosts` mappings still take priority.
+
+```yaml
+# KoroEdge config.yml
+backendSelection:
+  enabled: true
+  hierarchy: ["lobby", "lobby2", "smp", "smp_backup"]
+```
+
+KoroEdge uses its existing Redis connection to carry a one-time authentication handoff during a remote backend transfer. Java handoffs remain bound to username and client IP. Bedrock handoffs are bound to username and the stable Floodgate UUID because different Geyser proxies expose different proxy IP addresses. It defers normal GeoIP routing while tiAuth is waiting for `/login` or `/register`, and destination tiAuth consumes the handoff without asking again.
+
+No database or Redis password is duplicated in tiAuth. If either plugin is missing or outdated on a node, tiAuth fails closed and performs its normal authentication flow.
