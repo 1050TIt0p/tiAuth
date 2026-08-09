@@ -155,6 +155,7 @@ public class MessagesConfig extends YamlSerializable {
         @NewLine
         public static class Logout {
             public String logoutByPremium;
+            public String success;
         }
 
         @NewLine
@@ -302,6 +303,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.changePassword.usage = "{prefix} &fИспользование: &#8833EC/changepassword <старый пароль> <новый пароль>";
                 player.changePassword.success = "{prefix} &fВы успешно изменили пароль";
                 player.logout.logoutByPremium = "{prefix} &fВы не можете разлогиниться из-за &#8833ECпремиум режима";
+                player.logout.success = "{prefix} &fВы успешно вышли из аккаунта";
                 player.totp.usage = "{prefix} &fИспользование: &#8833EC/2fa enable [пароль]&f, &#8833EC/2fa verify <код>&f или &#8833EC/2fa disable <код>";
                 player.totp.enableUsage = "{prefix} &fИспользование: &#8833EC/2fa enable [пароль]";
                 player.totp.verifyUsage = "{prefix} &fИспользование: &#8833EC/2fa verify <код>";
@@ -400,6 +402,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.changePassword.usage = "{prefix} &fUsage: &#8833EC/changepassword <old password> <new password>";
                 player.changePassword.success = "{prefix} &fYou have successfully changed your password";
                 player.logout.logoutByPremium = "{prefix} &fYou cannot log out due to &#8833ECpremium mode";
+                player.logout.success = "{prefix} &fYou have successfully logged out";
                 player.totp.usage = "{prefix} &fUsage: &#8833EC/2fa enable [password]&f, &#8833EC/2fa verify <code>&f or &#8833EC/2fa disable <code>";
                 player.totp.enableUsage = "{prefix} &fUsage: &#8833EC/2fa enable [password]";
                 player.totp.verifyUsage = "{prefix} &fUsage: &#8833EC/2fa verify <code>";

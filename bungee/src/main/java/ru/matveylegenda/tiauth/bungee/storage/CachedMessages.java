@@ -121,6 +121,7 @@ public class CachedMessages {
 
         public static class Logout {
             public String logoutByPremium;
+            public String success;
         }
 
         public static class Totp {
@@ -288,6 +289,7 @@ public class CachedMessages {
 
         player.logout = new Player.Logout();
         player.logout.logoutByPremium = COLORIZER.colorize(getPrefixed(config.player.logout.logoutByPremium, prefix));
+        player.logout.success = COLORIZER.colorize(getPrefixed(config.player.logout.success, prefix));
 
         player.premium = new Player.Premium();
         player.premium.enabled = COLORIZER.colorize(getPrefixed(config.player.premium.enabled, prefix));

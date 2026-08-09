@@ -125,6 +125,7 @@ public class CachedComponents {
 
         public static class Logout {
             public Component logoutByPremium;
+            public Component success;
         }
 
         public static class Totp {
@@ -294,6 +295,7 @@ public class CachedComponents {
 
         player.logout = new Player.Logout();
         player.logout.logoutByPremium = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.logout.logoutByPremium, prefixRaw)));
+        player.logout.success = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.logout.success, prefixRaw)));
 
         player.premium = new Player.Premium();
         player.premium.enabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.premium.enabled, prefixRaw)));

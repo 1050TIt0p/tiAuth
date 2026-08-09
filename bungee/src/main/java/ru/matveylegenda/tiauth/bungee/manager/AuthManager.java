@@ -227,6 +227,7 @@ public class AuthManager {
         taskManager.cancelTasks(player);
         AuthCache.logout(player.getName());
         SessionCache.removePlayer(player.getName());
+        player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.logout.success));
     }
 
     public void togglePremium(ProxiedPlayer player) {

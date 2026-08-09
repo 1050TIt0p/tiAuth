@@ -43,6 +43,5 @@ public class LogoutCommand extends Command {
         }
 
         authManager.logoutPlayer(player);
-        authManager.forceAuth(player, null);
     }
 }

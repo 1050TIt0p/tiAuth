@@ -215,6 +215,7 @@ public class AuthManager {
         taskManager.cancelTasks(player);
         AuthCache.logout(player.getUsername());
         SessionCache.removePlayer(player.getUsername());
+        player.disconnect(CachedComponents.IMP.player.logout.success);
     }
 
     public void togglePremium(Player player) {
