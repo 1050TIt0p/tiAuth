@@ -172,6 +172,7 @@ public class AuthManager {
                         }
 
                         if (plugin.getTotpManager().requireTotpChallenge(player, user)) {
+                            clearAuthDialog(player);
                             return CompletableFuture.completedFuture(null);
                         }
 
@@ -310,39 +311,34 @@ public class AuthManager {
                 .thenAccept(user -> {
                     Dialog dialog;
                     if (user != null) {
-                        dialog = new MultiActionDialog(
-                                new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.title))
-                                        .inputs(
-                                                List.of(
-                                                        new TextInput("password", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.passwordField))
-                                                )
-                                        ),
-                                new ActionButton(
-                                        TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.login.confirmButton),
-                                        new CustomClickAction("tiauth_login")
-                                )
+                        dialog = createAuthDialog(
+                                CachedMessages.IMP.player.dialog.login.title,
+                                List.of(createPasswordInput("password", CachedMessages.IMP.player.dialog.login.passwordField)),
+                                CachedMessages.IMP.player.dialog.login.confirmButton,
+                                "tiauth_login"
                         );
                     } else {
                         List<DialogInput> inputList = new ArrayList<>();
 
-                        inputList.add(new TextInput("password", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.passwordField)));
+                        inputList.add(createPasswordInput("password", CachedMessages.IMP.player.dialog.register.passwordField));
                         if (MainConfig.IMP.auth.repeatPasswordWhenRegister) {
-                            inputList.add(new TextInput("repeatPassword", TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.repeatPasswordField)));
+                            inputList.add(createPasswordInput("repeatPassword", CachedMessages.IMP.player.dialog.register.repeatPasswordField));
                         }
-                        dialog = new MultiActionDialog(
-                                new DialogBase(TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.title))
-                                        .inputs(inputList),
-                                new ActionButton(
-                                        TextComponent.fromLegacy(CachedMessages.IMP.player.dialog.register.confirmButton),
-                                        new CustomClickAction("tiauth_register")
-                                )
+                        dialog = createAuthDialog(
+                                CachedMessages.IMP.player.dialog.register.title,
+                                inputList,
+                                CachedMessages.IMP.player.dialog.register.confirmButton,
+                                "tiauth_register"
                         );
                     }
 
                     if (noticeMessage != null) {
                         dialog.getBase().body(
                                 List.of(
-                                        new PlainMessageBody(TextComponent.fromLegacy(noticeMessage))
+                                        new PlainMessageBody(
+                                                TextComponent.fromLegacy(noticeMessage),
+                                                dialogSize(MainConfig.IMP.auth.dialog.notificationWidth)
+                                        )
                                 )
                         );
                     }
@@ -357,6 +353,34 @@ public class AuthManager {
                     player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
                     return null;
                 });
+    }
+
+    private Dialog createAuthDialog(String title, List<DialogInput> inputs, String confirmButton, String actionId) {
+        MainConfig.Auth.Dialog settings = MainConfig.IMP.auth.dialog;
+        DialogBase base = new DialogBase(TextComponent.fromLegacy(title))
+                .inputs(inputs)
+                .canCloseWithEscape(false)
+                .pause(false)
+                .afterAction(DialogBase.AfterAction.NONE);
+
+        ActionButton confirmAction = new ActionButton(
+                TextComponent.fromLegacy(confirmButton),
+                new CustomClickAction(actionId)
+        ).width(dialogSize(settings.confirmButtonWidth));
+
+        return new MultiActionDialog(base, List.of(confirmAction), 1, null);
+    }
+
+    private TextInput createPasswordInput(String key, String label) {
+        MainConfig.Auth.Dialog settings = MainConfig.IMP.auth.dialog;
+        return new TextInput(key, TextComponent.fromLegacy(label))
+                .width(dialogSize(settings.inputWidth))
+                .labelVisible(settings.showInputLabels)
+                .maxLength(MainConfig.IMP.auth.maxPasswordLength);
+    }
+
+    private int dialogSize(int size) {
+        return Math.clamp(size, 1, 1024);
     }
 
     private CompletableFuture<Void> registerUserAsync(String username, String password, String ip) {
@@ -385,6 +409,7 @@ public class AuthManager {
                     AuthCache.setAuthenticated(name);
                     SessionCache.addPlayer(name, ip);
                     taskManager.cancelTasks(player);
+                    clearAuthDialog(player);
                     showAuthTitle(player);
 
                     PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
@@ -433,6 +458,7 @@ public class AuthManager {
         SessionCache.addPlayer(name, ip);
         AuthCache.resetLoginAttempts(lowerName);
         taskManager.cancelTasks(player);
+        clearAuthDialog(player);
         showAuthTitle(player);
 
         PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player, forceLogin);
@@ -443,6 +469,12 @@ public class AuthManager {
         }
 
         return CompletableFuture.completedFuture(null);
+    }
+
+    private void clearAuthDialog(ProxiedPlayer player) {
+        if (MainConfig.IMP.auth.useDialogs && supportsDialog(player)) {
+            player.clearDialog();
+        }
     }
 
     private void showAuthTitle(ProxiedPlayer player) {

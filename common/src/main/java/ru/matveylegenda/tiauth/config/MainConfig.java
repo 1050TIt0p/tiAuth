@@ -231,9 +231,26 @@ public class MainConfig extends YamlSerializable {
 
         @Comment({
                 @CommentValue("Использовать ли диалоговое окно для регистрации/авторизации"),
-                @CommentValue("Работает только на клиентах 1.21.6+")
+                @CommentValue("Работает только на BungeeCord (его форках в том числе) и клиентах 1.21.6+")
         })
         public boolean useDialogs = true;
+
+        @Comment({
+                @CommentValue("Настройки внешнего вида диалогов регистрации/авторизации"),
+                @CommentValue("Ширина задаётся в пикселях и ограничена Minecraft диапазоном 1-1024")
+        })
+        public Dialog dialog = new Dialog();
+
+        public static class Dialog {
+            public int inputWidth = 200;
+            public int confirmButtonWidth = 200;
+            public int notificationWidth = 200;
+
+            @Comment({
+                    @CommentValue("Показывать ли названия полей ввода")
+            })
+            public boolean showInputLabels = true;
+        }
 
         @Comment({
                 @CommentValue("Нужно ли повторять игроку пароль в /register")
