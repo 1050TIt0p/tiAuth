@@ -32,6 +32,7 @@ import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.util.PasswordCheck;
 import ru.matveylegenda.tiauth.util.PlayerLock;
+import ru.matveylegenda.tiauth.util.ServerAvailabilityChecker;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -253,43 +254,41 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(name)
                 .whenComplete((user, throwable) -> {
-                    try {
-                        if (throwable != null) {
-                            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
-                            return;
-                        }
+                    if (throwable != null) {
+                        player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.queryError));
+                        completeIntent(event);
+                        return;
+                    }
 
-                        if (user != null && !player.getName().equals(user.getRealName())) {
-                            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.realname
-                                    .replace("{realname}", user.getRealName())
-                                    .replace("{name}", player.getName()))
-                            );
-                            return;
-                        }
+                    if (user != null && !player.getName().equals(user.getRealName())) {
+                        player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.realname
+                                .replace("{realname}", user.getRealName())
+                                .replace("{name}", player.getName()))
+                        );
+                        completeIntent(event);
+                        return;
+                    }
 
-                        String sessionIP = SessionCache.getIP(name);
+                    String sessionIP = SessionCache.getIP(name);
 
-                        if (PremiumCache.isPremium(name) ||
-                                (sessionIP != null && sessionIP.equals(BungeeUtils.getIp(player)))) {
-                            AuthCache.setAuthenticated(name);
-
-                            if (event != null) {
-                                event.setTarget(plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend));
-                            } else {
-                                connectToBackend(player);
-                            }
-                            return;
-                        }
+                    if (PremiumCache.isPremium(name) ||
+                            (sessionIP != null && sessionIP.equals(BungeeUtils.getIp(player)))) {
+                        AuthCache.setAuthenticated(name);
 
                         if (event != null) {
-                            connectToAuthServer(event);
+                            ServerInfo backend = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
+                            setInitialServer(player, event, backend, CachedMessages.IMP.player.kick.backendServerUnavailable);
                         } else {
-                            connectToAuthServer(player);
+                            connectToBackend(player);
                         }
-                    } finally {
-                        if (event != null) {
-                            event.completeIntent(plugin);
-                        }
+                        return;
+                    }
+
+                    if (event != null) {
+                        ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
+                        setInitialServer(player, event, authServer, CachedMessages.IMP.player.kick.authServerUnavailable);
+                    } else {
+                        connectToAuthServer(player);
                     }
                 });
     }
@@ -460,18 +459,46 @@ public class AuthManager {
         player.sendTitle(title);
     }
 
-    private void connectToAuthServer(PostLoginEvent event) {
-        ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
-        event.setTarget(authServer);
+    private void setInitialServer(ProxiedPlayer player, PostLoginEvent event, ServerInfo target, String unavailableMessage) {
+        if (target == null) {
+            player.disconnect(TextComponent.fromLegacy(unavailableMessage));
+            completeIntent(event);
+            return;
+        }
+
+        ServerAvailabilityChecker.isReachable(target.getSocketAddress()).whenComplete((reachable, throwable) -> {
+            try {
+                if (throwable != null || !reachable) {
+                    player.disconnect(TextComponent.fromLegacy(unavailableMessage));
+                } else {
+                    event.setTarget(target);
+                }
+            } finally {
+                completeIntent(event);
+            }
+        });
+    }
+
+    private void completeIntent(PostLoginEvent event) {
+        if (event != null) {
+            event.completeIntent(plugin);
+        }
     }
 
     private void connectToAuthServer(ProxiedPlayer player) {
         ServerInfo authServer = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.auth);
-        connect(player, authServer);
+        if (authServer == null) {
+            player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.authServerUnavailable));
+            return;
+        }
+        connect(player, authServer, CachedMessages.IMP.player.kick.authServerUnavailable);
     }
 
     private void connectToBackend(ProxiedPlayer player) {
-        getBackend(player).ifPresent(server -> connect(player, server));
+        getBackend(player).ifPresentOrElse(
+                server -> connect(player, server, CachedMessages.IMP.player.kick.backendServerUnavailable),
+                () -> player.disconnect(TextComponent.fromLegacy(CachedMessages.IMP.player.kick.backendServerUnavailable))
+        );
     }
 
     private Optional<ServerInfo> getBackend(ProxiedPlayer player) {
@@ -489,10 +516,14 @@ public class AuthManager {
         return Optional.ofNullable(plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend));
     }
 
-    private void connect(ProxiedPlayer player, ServerInfo target) {
-        ServerInfo currentServer = player.getServer().getInfo();
+    private void connect(ProxiedPlayer player, ServerInfo target, String unavailableMessage) {
+        ServerInfo currentServer = player.getServer() == null ? null : player.getServer().getInfo();
         if (currentServer == null || !currentServer.equals(target)) {
-            player.connect(target);
+            player.connect(target, (success, throwable) -> {
+                if (!Boolean.TRUE.equals(success) && player.isConnected()) {
+                    player.disconnect(TextComponent.fromLegacy(unavailableMessage));
+                }
+            });
         }
     }
 

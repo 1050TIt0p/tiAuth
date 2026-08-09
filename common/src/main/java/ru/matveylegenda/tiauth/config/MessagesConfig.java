@@ -194,6 +194,8 @@ public class MessagesConfig extends YamlSerializable {
             public String totpTimeout;
             public String totpTooManyAttempts;
             public String totpBan;
+            public String authServerUnavailable;
+            public String backendServerUnavailable;
         }
 
         @NewLine
@@ -327,6 +329,8 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.totpTimeout = "{prefix} &fВы не успели ввести 2FA код";
                 player.kick.totpTooManyAttempts = "{prefix} &fВы превысили количество попыток для ввода 2FA кода";
                 player.kick.totpBan = "{prefix} &fВаш аккаунт заблокирован на &#8833EC{time} &fсекунд за превышение попыток ввода 2FA кода";
+                player.kick.authServerUnavailable = "{prefix} &fСервер авторизации не отвечает. Сообщите администратору сервера";
+                player.kick.backendServerUnavailable = "{prefix} &fОсновной сервер не отвечает. Сообщите администратору сервера";
                 player.reminder.login = "{prefix} &fАвторизируйтесь командой &#8833EC/login <пароль>";
                 player.reminder.register = "{prefix} &fЗарегистрируйтесь командой &#8833EC/register <пароль> <пароль>";
                 player.dialog.register.title = "Регистрация";
@@ -423,6 +427,8 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.totpTimeout = "{prefix} &fYou did not enter the 2FA code in time";
                 player.kick.totpTooManyAttempts = "{prefix} &fYou exceeded the number of 2FA attempts";
                 player.kick.totpBan = "{prefix} &fYour account has been locked for &#8833EC{time} &fseconds due to exceeding 2FA attempts";
+                player.kick.authServerUnavailable = "{prefix} &fThe authentication server is not responding. Please contact the server administrator";
+                player.kick.backendServerUnavailable = "{prefix} &fThe backend server is not responding. Please contact the server administrator";
                 player.reminder.login = "{prefix} &fAuthenticate using &#8833EC/login <password>";
                 player.reminder.register = "{prefix} &fRegister using &#8833EC/register <password> <password>";
                 player.dialog.register.title = "Registration";

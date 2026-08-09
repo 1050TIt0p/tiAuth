@@ -157,6 +157,8 @@ public class CachedMessages {
             public String totpTimeout;
             public String totpTooManyAttempts;
             public String totpBan;
+            public String authServerUnavailable;
+            public String backendServerUnavailable;
         }
 
         public static class Reminder {
@@ -319,6 +321,8 @@ public class CachedMessages {
         player.kick.totpTimeout = COLORIZER.colorize(getPrefixed(config.player.kick.totpTimeout, prefix));
         player.kick.totpTooManyAttempts = COLORIZER.colorize(getPrefixed(config.player.kick.totpTooManyAttempts, prefix));
         player.kick.totpBan = COLORIZER.colorize(getPrefixed(config.player.kick.totpBan, prefix));
+        player.kick.authServerUnavailable = COLORIZER.colorize(getPrefixed(config.player.kick.authServerUnavailable, prefix));
+        player.kick.backendServerUnavailable = COLORIZER.colorize(getPrefixed(config.player.kick.backendServerUnavailable, prefix));
 
         player.reminder = new Player.Reminder();
         player.reminder.login = COLORIZER.colorize(getPrefixed(config.player.reminder.login, prefix));

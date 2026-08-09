@@ -161,6 +161,8 @@ public class CachedComponents {
             public Component totpTimeout;
             public Component totpTooManyAttempts;
             public Component totpBan;
+            public Component authServerUnavailable;
+            public Component backendServerUnavailable;
         }
 
         public static class Reminder {
@@ -325,6 +327,8 @@ public class CachedComponents {
         player.kick.totpTimeout = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.totpTimeout, prefixRaw)));
         player.kick.totpTooManyAttempts = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.totpTooManyAttempts, prefixRaw)));
         player.kick.totpBan = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.totpBan, prefixRaw)));
+        player.kick.authServerUnavailable = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.authServerUnavailable, prefixRaw)));
+        player.kick.backendServerUnavailable = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.backendServerUnavailable, prefixRaw)));
 
         player.reminder = new Player.Reminder();
         player.reminder.login = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.reminder.login, prefixRaw)));
