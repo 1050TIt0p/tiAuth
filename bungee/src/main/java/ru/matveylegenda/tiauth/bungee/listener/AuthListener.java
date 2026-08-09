@@ -179,7 +179,6 @@ public class AuthListener implements Listener {
 
         if (event.getServer().getInfo().getName().equals(MainConfig.IMP.servers.auth) &&
                 !AuthCache.isAuthenticated(player.getName())) {
-            taskManager.startDisplayTimerTask(player);
             authManager.showLoginDialog(player);
 
             database.getAuthUserRepository().getUser(player.getName())
@@ -189,10 +188,12 @@ public class AuthListener implements Listener {
                             return;
                         }
 
-                        String reminderMessage = (user != null)
+                        boolean registered = user != null;
+                        String reminderMessage = registered
                                 ? CachedMessages.IMP.player.reminder.login
                                 : CachedMessages.IMP.player.reminder.register;
 
+                        taskManager.startDisplayTimerTask(player, registered);
                         taskManager.startAuthTimeoutTask(player);
                         taskManager.startAuthReminderTask(player, reminderMessage);
                     });

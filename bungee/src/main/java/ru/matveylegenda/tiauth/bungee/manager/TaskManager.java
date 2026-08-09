@@ -83,11 +83,15 @@ public class TaskManager {
         authReminderTasks.put(player.getName(), task);
     }
 
-    public void startDisplayTimerTask(ProxiedPlayer player) {
-        startDisplayTimerTask(player, MainConfig.IMP.auth.timeoutSeconds);
+    public void startDisplayTimerTask(ProxiedPlayer player, boolean registered) {
+        startDisplayTimerTask(player, MainConfig.IMP.auth.timeoutSeconds, registered);
     }
 
     public void startDisplayTimerTask(ProxiedPlayer player, int timeoutSeconds) {
+        startDisplayTimerTask(player, timeoutSeconds, true);
+    }
+
+    private void startDisplayTimerTask(ProxiedPlayer player, int timeoutSeconds, boolean registered) {
         AtomicInteger counter = new AtomicInteger(timeoutSeconds);
 
         UUID barId = MainConfig.IMP.bossBar.enabled ? UUID.randomUUID() : null;
@@ -103,7 +107,7 @@ public class TaskManager {
                 return;
             }
 
-            if (MainConfig.IMP.title.enabled) sendTitle(player, counter.get());
+            if (MainConfig.IMP.title.enabled) sendTitle(player, counter.get(), registered);
             if (MainConfig.IMP.actionBar.enabled) sendActionBar(player, counter.get());
             if (MainConfig.IMP.bossBar.enabled) updateBossBar(player, counter.get(), barId, timeoutSeconds);
 
@@ -143,14 +147,17 @@ public class TaskManager {
         player.unsafe().sendPacket(updateTitle);
     }
 
-    private void sendTitle(ProxiedPlayer player, int counter) {
+    private void sendTitle(ProxiedPlayer player, int counter, boolean registered) {
+        CachedMessages.Player.Title.Stage stage = registered
+                ? CachedMessages.IMP.player.title.login
+                : CachedMessages.IMP.player.title.register;
         Title title = ProxyServer.getInstance().createTitle();
         title.title(TextComponent.fromLegacy(
-                CachedMessages.IMP.player.title.title
+                stage.title
                         .replace("{time}", String.valueOf(counter))
         ));
         title.subTitle(TextComponent.fromLegacy(
-                CachedMessages.IMP.player.title.subTitle
+                stage.subTitle
                         .replace("{time}", String.valueOf(counter))
         ));
             title.fadeIn(0);

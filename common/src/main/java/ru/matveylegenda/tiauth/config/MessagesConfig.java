@@ -236,10 +236,15 @@ public class MessagesConfig extends YamlSerializable {
         }
 
         public static class Title {
-            public String title;
-            public String subTitle;
+            public Stage login = new Stage();
+            public Stage register = new Stage();
             public String onAuthTitle;
             public String onAuthSubTitle;
+
+            public static class Stage {
+                public String title;
+                public String subTitle;
+            }
         }
 
         public static class ActionBar {
@@ -337,8 +342,10 @@ public class MessagesConfig extends YamlSerializable {
                 player.dialog.notifications.mismatch = "&cПароли не совпадают";
                 player.dialog.notifications.passwordEmpty = "&cПароль не может быть пустым";
                 player.bossBar.message = "{prefix} &fОсталось &#8833EC{time} &fсекунд";
-                player.title.title = "{prefix}";
-                player.title.subTitle = "&fОсталось &#8833EC{time} &fсекунд";
+                player.title.login.title = "{prefix}";
+                player.title.login.subTitle = "&fАвторизируйтесь, осталось &#8833EC{time} &fсекунд";
+                player.title.register.title = "{prefix}";
+                player.title.register.subTitle = "&fЗарегистрируйтесь, осталось &#8833EC{time} &fсекунд";
                 player.title.onAuthTitle = "{prefix}";
                 player.title.onAuthSubTitle = "&fВы &#8833ECуспешно &fавторизовались";
                 player.actionBar.message = "{prefix} &fОсталось &#8833EC{time} &fсекунд";
@@ -431,8 +438,10 @@ public class MessagesConfig extends YamlSerializable {
                 player.dialog.notifications.mismatch = "&cPasswords do not match";
                 player.dialog.notifications.passwordEmpty = "&cPassword cannot be empty";
                 player.bossBar.message = "{prefix} &fTime remaining: &#8833EC{time} &fseconds";
-                player.title.title = "{prefix}";
-                player.title.subTitle = "&fTime remaining: &#8833EC{time} &fseconds";
+                player.title.login.title = "{prefix}";
+                player.title.login.subTitle = "&fLog in, &#8833EC{time} &fseconds remaining";
+                player.title.register.title = "{prefix}";
+                player.title.register.subTitle = "&fRegister, &#8833EC{time} &fseconds remaining";
                 player.title.onAuthTitle = "{prefix}";
                 player.title.onAuthSubTitle = "&fYou have &#8833ECsuccessfully &flogged in";
                 player.actionBar.message = "{prefix} &fTime remaining: &#8833EC{time} &fseconds";

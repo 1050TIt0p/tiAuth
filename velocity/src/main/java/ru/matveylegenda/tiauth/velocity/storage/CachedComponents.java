@@ -200,10 +200,15 @@ public class CachedComponents {
         }
 
         public static class Title {
-            public Component title;
-            public Component subTitle;
+            public Stage login;
+            public Stage register;
             public Component onAuthTitle;
             public Component onAuthSubTitle;
+
+            public static class Stage {
+                public Component title;
+                public Component subTitle;
+            }
         }
 
         public static class ActionBar {
@@ -350,8 +355,12 @@ public class CachedComponents {
         player.bossBar.message = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.bossBar.message, prefixRaw)));
 
         player.title = new Player.Title();
-        player.title.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.title, prefixRaw)));
-        player.title.subTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.subTitle, prefixRaw)));
+        player.title.login = new Player.Title.Stage();
+        player.title.login.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.login.title, prefixRaw)));
+        player.title.login.subTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.login.subTitle, prefixRaw)));
+        player.title.register = new Player.Title.Stage();
+        player.title.register.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.register.title, prefixRaw)));
+        player.title.register.subTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.register.subTitle, prefixRaw)));
         player.title.onAuthTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.onAuthTitle, prefixRaw)));
         player.title.onAuthSubTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.onAuthSubTitle, prefixRaw)));
 

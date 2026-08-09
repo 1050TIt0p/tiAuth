@@ -196,10 +196,15 @@ public class CachedMessages {
         }
 
         public static class Title {
-            public String title;
-            public String subTitle;
+            public Stage login;
+            public Stage register;
             public String onAuthTitle;
             public String onAuthSubTitle;
+
+            public static class Stage {
+                public String title;
+                public String subTitle;
+            }
         }
 
         public static class ActionBar {
@@ -343,8 +348,12 @@ public class CachedMessages {
         player.bossBar.message = COLORIZER.colorize(getPrefixed(config.player.bossBar.message, prefix));
 
         player.title = new Player.Title();
-        player.title.title = COLORIZER.colorize(getPrefixed(config.player.title.title, prefix));
-        player.title.subTitle = COLORIZER.colorize(getPrefixed(config.player.title.subTitle, prefix));
+        player.title.login = new Player.Title.Stage();
+        player.title.login.title = COLORIZER.colorize(getPrefixed(config.player.title.login.title, prefix));
+        player.title.login.subTitle = COLORIZER.colorize(getPrefixed(config.player.title.login.subTitle, prefix));
+        player.title.register = new Player.Title.Stage();
+        player.title.register.title = COLORIZER.colorize(getPrefixed(config.player.title.register.title, prefix));
+        player.title.register.subTitle = COLORIZER.colorize(getPrefixed(config.player.title.register.subTitle, prefix));
         player.title.onAuthTitle = COLORIZER.colorize(getPrefixed(config.player.title.onAuthTitle, prefix));
         player.title.onAuthSubTitle = COLORIZER.colorize(getPrefixed(config.player.title.onAuthSubTitle, prefix));
 

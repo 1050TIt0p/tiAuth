@@ -67,11 +67,15 @@ public class TaskManager {
         authReminderTasks.put(player.getUniqueId(), task);
     }
 
-    public void startDisplayTimerTask(Player player) {
-        startDisplayTimerTask(player, MainConfig.IMP.auth.timeoutSeconds);
+    public void startDisplayTimerTask(Player player, boolean registered) {
+        startDisplayTimerTask(player, MainConfig.IMP.auth.timeoutSeconds, registered);
     }
 
     public void startDisplayTimerTask(Player player, int timeoutSeconds) {
+        startDisplayTimerTask(player, timeoutSeconds, true);
+    }
+
+    private void startDisplayTimerTask(Player player, int timeoutSeconds, boolean registered) {
         AtomicInteger counter = new AtomicInteger(timeoutSeconds);
         UUID pid = player.getUniqueId();
 
@@ -96,7 +100,7 @@ public class TaskManager {
             }
 
             if (MainConfig.IMP.title.enabled) {
-                sendTitle(player, c);
+                sendTitle(player, c, registered);
             }
             if (MainConfig.IMP.actionBar.enabled) {
                 sendActionBar(player, c);
@@ -111,12 +115,15 @@ public class TaskManager {
         displayTimerTasks.put(pid, task);
     }
 
-    private void sendTitle(Player player, int counter) {
+    private void sendTitle(Player player, int counter, boolean registered) {
+        CachedComponents.Player.Title.Stage stage = registered
+                ? CachedComponents.IMP.player.title.login
+                : CachedComponents.IMP.player.title.register;
         Title componentTitle = Title.title(
-                CachedComponents.IMP.player.title.title.replaceText(builder -> builder
+                stage.title.replaceText(builder -> builder
                         .match(VelocityUtils.TIME)
                         .replacement(String.valueOf(counter))),
-                CachedComponents.IMP.player.title.subTitle.replaceText(builder -> builder
+                stage.subTitle.replaceText(builder -> builder
                         .match(VelocityUtils.TIME)
                         .replacement(String.valueOf(counter))),
                 0,

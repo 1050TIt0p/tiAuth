@@ -153,7 +153,6 @@ public class AuthListener {
 
         if (connectedServer.equals(MainConfig.IMP.servers.auth) &&
                 !AuthCache.isAuthenticated(player.getUsername())) {
-            taskManager.startDisplayTimerTask(player);
             authManager.showLoginDialog(player);
 
             database.getAuthUserRepository().getUser(player.getUsername())
@@ -163,10 +162,12 @@ public class AuthListener {
                             return;
                         }
 
-                        Component reminderMessage = (user != null)
+                        boolean registered = user != null;
+                        Component reminderMessage = registered
                                 ? CachedComponents.IMP.player.reminder.login
                                 : CachedComponents.IMP.player.reminder.register;
 
+                        taskManager.startDisplayTimerTask(player, registered);
                         taskManager.startAuthTimeoutTask(player);
                         taskManager.startAuthReminderTask(player, reminderMessage);
                     });
