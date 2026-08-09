@@ -317,6 +317,7 @@ public class AuthManager {
                     AuthCache.setAuthenticated(name);
                     SessionCache.addPlayer(name, ip);
                     taskManager.cancelTasks(player);
+                    showAuthTitle(player);
 
                     PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
                     plugin.getServer().getEventManager().fire(playerRegisterEvent).thenAccept(firedEvent -> {
@@ -352,24 +353,8 @@ public class AuthManager {
     }
 
     private CompletableFuture<Void> processSuccessfulLoginAsync(Player player, String name) {
-        String lowerName = name.toLowerCase(Locale.ROOT);
-
         player.sendMessage(CachedComponents.IMP.player.login.success);
-
-        return authenticatePlayer(player, name, false)
-                .thenRun(() -> {
-                    if (MainConfig.IMP.title.enabledOnAuth) {
-                        Title componentTitle = Title.title(
-                                CachedComponents.IMP.player.title.onAuthTitle,
-                                CachedComponents.IMP.player.title.onAuthSubTitle,
-                                0,
-                                21,
-                                6);
-                        player.showTitle(componentTitle);
-                    }
-
-                    AuthCache.resetLoginAttempts(lowerName);
-                });
+        return authenticatePlayer(player, name, false);
     }
 
     private CompletableFuture<Void> authenticatePlayer(Player player, String name, boolean forceLogin) {
@@ -382,6 +367,7 @@ public class AuthManager {
         SessionCache.addPlayer(name, ip);
         AuthCache.resetLoginAttempts(lowerName);
         taskManager.cancelTasks(player);
+        showAuthTitle(player);
 
         PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player, forceLogin);
         return plugin.getServer().getEventManager().fire(playerAuthEvent)
@@ -391,6 +377,20 @@ public class AuthManager {
                     }
                     return CompletableFuture.completedFuture(null);
                 });
+    }
+
+    private void showAuthTitle(Player player) {
+        if (!MainConfig.IMP.title.enabledOnAuth) {
+            return;
+        }
+
+        Title componentTitle = Title.title(
+                CachedComponents.IMP.player.title.onAuthTitle,
+                CachedComponents.IMP.player.title.onAuthSubTitle,
+                0,
+                21,
+                6);
+        player.showTitle(componentTitle);
     }
 
     private void connectToAuthServer(Player player) {

@@ -386,6 +386,7 @@ public class AuthManager {
                     AuthCache.setAuthenticated(name);
                     SessionCache.addPlayer(name, ip);
                     taskManager.cancelTasks(player);
+                    showAuthTitle(player);
 
                     PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
                     plugin.getProxy().getPluginManager().callEvent(playerRegisterEvent);
@@ -419,24 +420,8 @@ public class AuthManager {
     }
 
     private CompletableFuture<Void> processSuccessfulLoginAsync(ProxiedPlayer player, String name) {
-        String lowerName = name.toLowerCase(Locale.ROOT);
-
         BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.success);
-
-        return authenticatePlayer(player, name, false)
-                .thenRun(() -> {
-                    if (MainConfig.IMP.title.enabledOnAuth) {
-                        Title title = ProxyServer.getInstance().createTitle();
-                        title.title(TextComponent.fromLegacy(CachedMessages.IMP.player.title.onAuthTitle));
-                        title.subTitle(TextComponent.fromLegacy(CachedMessages.IMP.player.title.onAuthSubTitle));
-                        title.fadeIn(0);
-                        title.stay(21);
-                        title.fadeOut(6);
-                        player.sendTitle(title);
-                    }
-
-                    AuthCache.resetLoginAttempts(lowerName);
-                });
+        return authenticatePlayer(player, name, false);
     }
 
     private CompletableFuture<Void> authenticatePlayer(ProxiedPlayer player, String name, boolean forceLogin) {
@@ -449,6 +434,7 @@ public class AuthManager {
         SessionCache.addPlayer(name, ip);
         AuthCache.resetLoginAttempts(lowerName);
         taskManager.cancelTasks(player);
+        showAuthTitle(player);
 
         PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player, forceLogin);
         plugin.getProxy().getPluginManager().callEvent(playerAuthEvent);
@@ -458,6 +444,20 @@ public class AuthManager {
         }
 
         return CompletableFuture.completedFuture(null);
+    }
+
+    private void showAuthTitle(ProxiedPlayer player) {
+        if (!MainConfig.IMP.title.enabledOnAuth) {
+            return;
+        }
+
+        Title title = ProxyServer.getInstance().createTitle();
+        title.title(TextComponent.fromLegacy(CachedMessages.IMP.player.title.onAuthTitle));
+        title.subTitle(TextComponent.fromLegacy(CachedMessages.IMP.player.title.onAuthSubTitle));
+        title.fadeIn(0);
+        title.stay(21);
+        title.fadeOut(6);
+        player.sendTitle(title);
     }
 
     private void connectToAuthServer(PostLoginEvent event) {
