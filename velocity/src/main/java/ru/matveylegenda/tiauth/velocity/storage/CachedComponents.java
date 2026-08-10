@@ -125,6 +125,7 @@ public class CachedComponents {
 
         public static class Logout {
             public Component logoutByPremium;
+            public Component success;
         }
 
         public static class Totp {
@@ -161,6 +162,8 @@ public class CachedComponents {
             public Component totpTimeout;
             public Component totpTooManyAttempts;
             public Component totpBan;
+            public Component authServerUnavailable;
+            public Component backendServerUnavailable;
         }
 
         public static class Reminder {
@@ -200,10 +203,15 @@ public class CachedComponents {
         }
 
         public static class Title {
-            public Component title;
-            public Component subTitle;
+            public Stage login;
+            public Stage register;
             public Component onAuthTitle;
             public Component onAuthSubTitle;
+
+            public static class Stage {
+                public Component title;
+                public Component subTitle;
+            }
         }
 
         public static class ActionBar {
@@ -287,6 +295,7 @@ public class CachedComponents {
 
         player.logout = new Player.Logout();
         player.logout.logoutByPremium = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.logout.logoutByPremium, prefixRaw)));
+        player.logout.success = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.logout.success, prefixRaw)));
 
         player.premium = new Player.Premium();
         player.premium.enabled = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.premium.enabled, prefixRaw)));
@@ -320,6 +329,8 @@ public class CachedComponents {
         player.kick.totpTimeout = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.totpTimeout, prefixRaw)));
         player.kick.totpTooManyAttempts = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.totpTooManyAttempts, prefixRaw)));
         player.kick.totpBan = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.totpBan, prefixRaw)));
+        player.kick.authServerUnavailable = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.authServerUnavailable, prefixRaw)));
+        player.kick.backendServerUnavailable = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.kick.backendServerUnavailable, prefixRaw)));
 
         player.reminder = new Player.Reminder();
         player.reminder.login = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.reminder.login, prefixRaw)));
@@ -350,8 +361,12 @@ public class CachedComponents {
         player.bossBar.message = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.bossBar.message, prefixRaw)));
 
         player.title = new Player.Title();
-        player.title.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.title, prefixRaw)));
-        player.title.subTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.subTitle, prefixRaw)));
+        player.title.login = new Player.Title.Stage();
+        player.title.login.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.login.title, prefixRaw)));
+        player.title.login.subTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.login.subTitle, prefixRaw)));
+        player.title.register = new Player.Title.Stage();
+        player.title.register.title = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.register.title, prefixRaw)));
+        player.title.register.subTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.register.subTitle, prefixRaw)));
         player.title.onAuthTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.onAuthTitle, prefixRaw)));
         player.title.onAuthSubTitle = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.player.title.onAuthSubTitle, prefixRaw)));
 

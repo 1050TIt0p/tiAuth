@@ -155,6 +155,7 @@ public class MessagesConfig extends YamlSerializable {
         @NewLine
         public static class Logout {
             public String logoutByPremium;
+            public String success;
         }
 
         @NewLine
@@ -194,6 +195,8 @@ public class MessagesConfig extends YamlSerializable {
             public String totpTimeout;
             public String totpTooManyAttempts;
             public String totpBan;
+            public String authServerUnavailable;
+            public String backendServerUnavailable;
         }
 
         @NewLine
@@ -236,10 +239,15 @@ public class MessagesConfig extends YamlSerializable {
         }
 
         public static class Title {
-            public String title;
-            public String subTitle;
+            public Stage login = new Stage();
+            public Stage register = new Stage();
             public String onAuthTitle;
             public String onAuthSubTitle;
+
+            public static class Stage {
+                public String title;
+                public String subTitle;
+            }
         }
 
         public static class ActionBar {
@@ -295,6 +303,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.changePassword.usage = "{prefix} &fИспользование: &#8833EC/changepassword <старый пароль> <новый пароль>";
                 player.changePassword.success = "{prefix} &fВы успешно изменили пароль";
                 player.logout.logoutByPremium = "{prefix} &fВы не можете разлогиниться из-за &#8833ECпремиум режима";
+                player.logout.success = "{prefix} &fВы успешно вышли из аккаунта";
                 player.totp.usage = "{prefix} &fИспользование: &#8833EC/2fa enable [пароль]&f, &#8833EC/2fa verify <код>&f или &#8833EC/2fa disable <код>";
                 player.totp.enableUsage = "{prefix} &fИспользование: &#8833EC/2fa enable [пароль]";
                 player.totp.verifyUsage = "{prefix} &fИспользование: &#8833EC/2fa verify <код>";
@@ -322,6 +331,8 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.totpTimeout = "{prefix} &fВы не успели ввести 2FA код";
                 player.kick.totpTooManyAttempts = "{prefix} &fВы превысили количество попыток для ввода 2FA кода";
                 player.kick.totpBan = "{prefix} &fВаш аккаунт заблокирован на &#8833EC{time} &fсекунд за превышение попыток ввода 2FA кода";
+                player.kick.authServerUnavailable = "{prefix} &fСервер авторизации не отвечает. Сообщите администратору сервера";
+                player.kick.backendServerUnavailable = "{prefix} &fОсновной сервер не отвечает. Сообщите администратору сервера";
                 player.reminder.login = "{prefix} &fАвторизируйтесь командой &#8833EC/login <пароль>";
                 player.reminder.register = "{prefix} &fЗарегистрируйтесь командой &#8833EC/register <пароль> <пароль>";
                 player.dialog.register.title = "Регистрация";
@@ -337,8 +348,10 @@ public class MessagesConfig extends YamlSerializable {
                 player.dialog.notifications.mismatch = "&cПароли не совпадают";
                 player.dialog.notifications.passwordEmpty = "&cПароль не может быть пустым";
                 player.bossBar.message = "{prefix} &fОсталось &#8833EC{time} &fсекунд";
-                player.title.title = "{prefix}";
-                player.title.subTitle = "&fОсталось &#8833EC{time} &fсекунд";
+                player.title.login.title = "{prefix}";
+                player.title.login.subTitle = "&fАвторизируйтесь, осталось &#8833EC{time} &fсекунд";
+                player.title.register.title = "{prefix}";
+                player.title.register.subTitle = "&fЗарегистрируйтесь, осталось &#8833EC{time} &fсекунд";
                 player.title.onAuthTitle = "{prefix}";
                 player.title.onAuthSubTitle = "&fВы &#8833ECуспешно &fавторизовались";
                 player.actionBar.message = "{prefix} &fОсталось &#8833EC{time} &fсекунд";
@@ -389,6 +402,7 @@ public class MessagesConfig extends YamlSerializable {
                 player.changePassword.usage = "{prefix} &fUsage: &#8833EC/changepassword <old password> <new password>";
                 player.changePassword.success = "{prefix} &fYou have successfully changed your password";
                 player.logout.logoutByPremium = "{prefix} &fYou cannot log out due to &#8833ECpremium mode";
+                player.logout.success = "{prefix} &fYou have successfully logged out";
                 player.totp.usage = "{prefix} &fUsage: &#8833EC/2fa enable [password]&f, &#8833EC/2fa verify <code>&f or &#8833EC/2fa disable <code>";
                 player.totp.enableUsage = "{prefix} &fUsage: &#8833EC/2fa enable [password]";
                 player.totp.verifyUsage = "{prefix} &fUsage: &#8833EC/2fa verify <code>";
@@ -416,6 +430,8 @@ public class MessagesConfig extends YamlSerializable {
                 player.kick.totpTimeout = "{prefix} &fYou did not enter the 2FA code in time";
                 player.kick.totpTooManyAttempts = "{prefix} &fYou exceeded the number of 2FA attempts";
                 player.kick.totpBan = "{prefix} &fYour account has been locked for &#8833EC{time} &fseconds due to exceeding 2FA attempts";
+                player.kick.authServerUnavailable = "{prefix} &fThe authentication server is not responding. Please contact the server administrator";
+                player.kick.backendServerUnavailable = "{prefix} &fThe backend server is not responding. Please contact the server administrator";
                 player.reminder.login = "{prefix} &fAuthenticate using &#8833EC/login <password>";
                 player.reminder.register = "{prefix} &fRegister using &#8833EC/register <password> <password>";
                 player.dialog.register.title = "Registration";
@@ -431,8 +447,10 @@ public class MessagesConfig extends YamlSerializable {
                 player.dialog.notifications.mismatch = "&cPasswords do not match";
                 player.dialog.notifications.passwordEmpty = "&cPassword cannot be empty";
                 player.bossBar.message = "{prefix} &fTime remaining: &#8833EC{time} &fseconds";
-                player.title.title = "{prefix}";
-                player.title.subTitle = "&fTime remaining: &#8833EC{time} &fseconds";
+                player.title.login.title = "{prefix}";
+                player.title.login.subTitle = "&fLog in, &#8833EC{time} &fseconds remaining";
+                player.title.register.title = "{prefix}";
+                player.title.register.subTitle = "&fRegister, &#8833EC{time} &fseconds remaining";
                 player.title.onAuthTitle = "{prefix}";
                 player.title.onAuthSubTitle = "&fYou have &#8833ECsuccessfully &flogged in";
                 player.actionBar.message = "{prefix} &fTime remaining: &#8833EC{time} &fseconds";

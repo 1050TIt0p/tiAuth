@@ -36,6 +36,5 @@ public class LogoutCommand implements SimpleCommand {
         }
 
         authManager.logoutPlayer(player);
-        authManager.forceAuth(player, null, null);
     }
 }

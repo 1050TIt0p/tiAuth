@@ -1,6 +1,7 @@
 package ru.matveylegenda.tiauth.velocity.manager;
 
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import lombok.Getter;
@@ -21,6 +22,7 @@ import ru.matveylegenda.tiauth.velocity.api.event.PlayerAuthEvent;
 import ru.matveylegenda.tiauth.velocity.api.event.PlayerRegisterEvent;
 import ru.matveylegenda.tiauth.util.PasswordCheck;
 import ru.matveylegenda.tiauth.util.PlayerLock;
+import ru.matveylegenda.tiauth.util.ServerAvailabilityChecker;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
@@ -213,6 +215,7 @@ public class AuthManager {
         taskManager.cancelTasks(player);
         AuthCache.logout(player.getUsername());
         SessionCache.removePlayer(player.getUsername());
+        player.disconnect(CachedComponents.IMP.player.logout.success);
     }
 
     public void togglePremium(Player player) {
@@ -241,46 +244,43 @@ public class AuthManager {
 
         database.getAuthUserRepository().getUser(name)
                 .whenComplete((user, throwable) -> {
-                    try {
-                        if (throwable != null) {
-                            player.disconnect(CachedComponents.IMP.queryError);
-                            return;
-                        }
+                    if (throwable != null) {
+                        player.disconnect(CachedComponents.IMP.queryError);
+                        completeInitialServerSelection(future);
+                        return;
+                    }
 
-                        if (user != null && !player.getUsername().equals(user.getRealName())) {
-                            player.disconnect(CachedComponents.IMP.player.kick.realname
-                                    .replaceText(builder -> builder
-                                            .match(VelocityUtils.REAL_NAME)
-                                            .replacement(user.getRealName()))
-                                    .replaceText(builder -> builder
-                                            .match(VelocityUtils.NAME)
-                                            .replacement(player.getUsername())));
-                            return;
-                        }
+                    if (user != null && !player.getUsername().equals(user.getRealName())) {
+                        player.disconnect(CachedComponents.IMP.player.kick.realname
+                                .replaceText(builder -> builder
+                                        .match(VelocityUtils.REAL_NAME)
+                                        .replacement(user.getRealName()))
+                                .replaceText(builder -> builder
+                                        .match(VelocityUtils.NAME)
+                                        .replacement(player.getUsername())));
+                        completeInitialServerSelection(future);
+                        return;
+                    }
 
-                        String sessionIP = SessionCache.getIP(name);
-                        String remoteIp = VelocityUtils.getIp(player);
+                    String sessionIP = SessionCache.getIP(name);
+                    String remoteIp = VelocityUtils.getIp(player);
 
-                        if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
-                            AuthCache.setAuthenticated(name);
-                            if (event != null) {
-                                plugin.getServer().getServer(MainConfig.IMP.servers.backend).ifPresent(event::setInitialServer);
-                            } else {
-                                connectToBackend(player);
-                            }
-                            return;
+                    if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
+                        AuthCache.setAuthenticated(name);
+                        if (event != null) {
+                            Optional<RegisteredServer> backend = plugin.getServer().getServer(MainConfig.IMP.servers.backend);
+                            setInitialServer(player, event, future, backend, CachedComponents.IMP.player.kick.backendServerUnavailable);
+                        } else {
+                            connectToBackend(player);
                         }
+                        return;
+                    }
 
-                        if (event == null && future == null) {
-                            connectToAuthServer(player);
-                        } else if (event != null) {
-                            Optional<RegisteredServer> authOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
-                            authOpt.ifPresent(event::setInitialServer);
-                        }
-                    } finally {
-                        if (event != null && future != null) {
-                            future.complete(null);
-                        }
+                    if (event == null && future == null) {
+                        connectToAuthServer(player);
+                    } else if (event != null) {
+                        Optional<RegisteredServer> authServer = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
+                        setInitialServer(player, event, future, authServer, CachedComponents.IMP.player.kick.authServerUnavailable);
                     }
                 });
     }
@@ -317,6 +317,7 @@ public class AuthManager {
                     AuthCache.setAuthenticated(name);
                     SessionCache.addPlayer(name, ip);
                     taskManager.cancelTasks(player);
+                    showAuthTitle(player);
 
                     PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
                     plugin.getServer().getEventManager().fire(playerRegisterEvent).thenAccept(firedEvent -> {
@@ -352,24 +353,8 @@ public class AuthManager {
     }
 
     private CompletableFuture<Void> processSuccessfulLoginAsync(Player player, String name) {
-        String lowerName = name.toLowerCase(Locale.ROOT);
-
         player.sendMessage(CachedComponents.IMP.player.login.success);
-
-        return authenticatePlayer(player, name, false)
-                .thenRun(() -> {
-                    if (MainConfig.IMP.title.enabledOnAuth) {
-                        Title componentTitle = Title.title(
-                                CachedComponents.IMP.player.title.onAuthTitle,
-                                CachedComponents.IMP.player.title.onAuthSubTitle,
-                                0,
-                                21,
-                                6);
-                        player.showTitle(componentTitle);
-                    }
-
-                    AuthCache.resetLoginAttempts(lowerName);
-                });
+        return authenticatePlayer(player, name, false);
     }
 
     private CompletableFuture<Void> authenticatePlayer(Player player, String name, boolean forceLogin) {
@@ -382,6 +367,7 @@ public class AuthManager {
         SessionCache.addPlayer(name, ip);
         AuthCache.resetLoginAttempts(lowerName);
         taskManager.cancelTasks(player);
+        showAuthTitle(player);
 
         PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player, forceLogin);
         return plugin.getServer().getEventManager().fire(playerAuthEvent)
@@ -393,19 +379,70 @@ public class AuthManager {
                 });
     }
 
-    private void connectToAuthServer(Player player) {
-        Optional<RegisteredServer> serverOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
-        if (serverOpt.isEmpty()) {
+    private void showAuthTitle(Player player) {
+        if (!MainConfig.IMP.title.enabledOnAuth) {
             return;
         }
 
-        connect(player, serverOpt.get());
+        Title componentTitle = Title.title(
+                CachedComponents.IMP.player.title.onAuthTitle,
+                CachedComponents.IMP.player.title.onAuthSubTitle,
+                0,
+                21,
+                6);
+        player.showTitle(componentTitle);
+    }
+
+    private void connectToAuthServer(Player player) {
+        Optional<RegisteredServer> serverOpt = plugin.getServer().getServer(MainConfig.IMP.servers.auth);
+        if (serverOpt.isEmpty()) {
+            player.disconnect(CachedComponents.IMP.player.kick.authServerUnavailable);
+            return;
+        }
+
+        connect(player, serverOpt.get(), CachedComponents.IMP.player.kick.authServerUnavailable);
+    }
+
+    private void setInitialServer(
+            Player player,
+            PlayerChooseInitialServerEvent event,
+            CompletableFuture<Void> future,
+            Optional<RegisteredServer> target,
+            Component unavailableMessage
+    ) {
+        if (target.isEmpty()) {
+            player.disconnect(unavailableMessage);
+            completeInitialServerSelection(future);
+            return;
+        }
+
+        RegisteredServer server = target.get();
+        ServerAvailabilityChecker.isReachable(server.getServerInfo().getAddress()).whenComplete((reachable, throwable) -> {
+            try {
+                if (throwable != null || !reachable) {
+                    player.disconnect(unavailableMessage);
+                } else {
+                    event.setInitialServer(server);
+                }
+            } finally {
+                completeInitialServerSelection(future);
+            }
+        });
+    }
+
+    private void completeInitialServerSelection(CompletableFuture<Void> future) {
+        if (future != null) {
+            future.complete(null);
+        }
     }
 
     private CompletableFuture<Void> connectToBackend(Player player) {
         return getBackend(player)
-                .map(backend -> connect(player, backend))
-                .orElseGet(() -> CompletableFuture.completedFuture(null));
+                .map(backend -> connect(player, backend, CachedComponents.IMP.player.kick.backendServerUnavailable))
+                .orElseGet(() -> {
+                    player.disconnect(CachedComponents.IMP.player.kick.backendServerUnavailable);
+                    return CompletableFuture.completedFuture(null);
+                });
     }
 
     private Optional<RegisteredServer> getBackend(Player player) {
@@ -423,17 +460,18 @@ public class AuthManager {
         return plugin.getServer().getServer(MainConfig.IMP.servers.backend);
     }
 
-    private CompletableFuture<Void> connect(Player player, RegisteredServer target) {
-        return player.getCurrentServer()
-                .map(current -> {
-                    if (!current.getServer().equals(target)) {
-                        return player.createConnectionRequest(target).connect();
+    private CompletableFuture<Void> connect(Player player, RegisteredServer target, Component unavailableMessage) {
+        if (player.getCurrentServer().map(current -> current.getServer().equals(target)).orElse(false)) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        return player.createConnectionRequest(target).connect()
+                .handle((result, throwable) -> {
+                    if (throwable != null || result.getStatus() == ConnectionRequestBuilder.Status.SERVER_DISCONNECTED) {
+                        player.disconnect(unavailableMessage);
                     }
-                    return CompletableFuture.completedFuture(true);
-                })
-                .orElseGet(() -> player.createConnectionRequest(target).connect())
-                .exceptionally(throwable -> null)
-                .thenRun(() -> {});
+                    return null;
+                });
     }
 
     private Optional<String> getForcedHost(InetSocketAddress virtualHost) {

@@ -19,11 +19,23 @@ import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
 import java.io.File;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class TiAuthCommand implements SimpleCommand {
     private static final Pattern FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9._-]+$");
+    private static final List<Subcommand> SUBCOMMANDS = List.of(
+            new Subcommand("reload", "tiauth.admin.commands.reload"),
+            new Subcommand("unregister", "tiauth.admin.commands.unregister"),
+            new Subcommand("unreg", "tiauth.admin.commands.unregister"),
+            new Subcommand("changepassword", "tiauth.admin.commands.changepassword"),
+            new Subcommand("changepass", "tiauth.admin.commands.changepassword"),
+            new Subcommand("forcelogin", "tiauth.admin.commands.forcelogin"),
+            new Subcommand("forceregister", "tiauth.admin.commands.forceregister"),
+            new Subcommand("forcepremium", "tiauth.admin.commands.forcepremium"),
+            new Subcommand("migrate", "tiauth.admin.commands.migrate")
+    );
 
     private final TiAuth plugin;
     private final ProxyServer proxy;
@@ -355,5 +367,24 @@ public class TiAuthCommand implements SimpleCommand {
 
     public boolean isValidFileName(String fileName) {
         return FILE_NAME_PATTERN.matcher(fileName).matches() && !fileName.contains("..");
+    }
+
+    @Override
+    public List<String> suggest(Invocation invocation) {
+        String[] args = invocation.arguments();
+        if (args.length > 1) {
+            return List.of();
+        }
+
+        CommandSource sender = invocation.source();
+        String prefix = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
+        return SUBCOMMANDS.stream()
+                .filter(subcommand -> sender.hasPermission(subcommand.permission()))
+                .map(Subcommand::name)
+                .filter(name -> name.startsWith(prefix))
+                .toList();
+    }
+
+    private record Subcommand(String name, String permission) {
     }
 }

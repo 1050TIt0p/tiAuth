@@ -4,6 +4,7 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
+import net.md_5.bungee.api.plugin.TabExecutor;
 import ru.matveylegenda.tiauth.bungee.TiAuth;
 import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
 import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
@@ -19,11 +20,23 @@ import ru.matveylegenda.tiauth.database.DatabaseType;
 import ru.matveylegenda.tiauth.hash.HashFactory;
 
 import java.io.File;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-public class TiAuthCommand extends Command {
+public class TiAuthCommand extends Command implements TabExecutor {
     private static final Pattern FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9._-]+$");
+    private static final List<Subcommand> SUBCOMMANDS = List.of(
+            new Subcommand("reload", "tiauth.admin.commands.reload"),
+            new Subcommand("unregister", "tiauth.admin.commands.unregister"),
+            new Subcommand("unreg", "tiauth.admin.commands.unregister"),
+            new Subcommand("changepassword", "tiauth.admin.commands.changepassword"),
+            new Subcommand("changepass", "tiauth.admin.commands.changepassword"),
+            new Subcommand("forcelogin", "tiauth.admin.commands.forcelogin"),
+            new Subcommand("forceregister", "tiauth.admin.commands.forceregister"),
+            new Subcommand("forcepremium", "tiauth.admin.commands.forcepremium"),
+            new Subcommand("migrate", "tiauth.admin.commands.migrate")
+    );
 
     private final TiAuth plugin;
     private final Database database;
@@ -406,5 +419,22 @@ public class TiAuthCommand extends Command {
 
     public boolean isValidFileName(String fileName) {
         return FILE_NAME_PATTERN.matcher(fileName).matches() && !fileName.contains("..");
+    }
+
+    @Override
+    public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
+        if (args.length != 1) {
+            return List.of();
+        }
+
+        String prefix = args[0].toLowerCase(Locale.ROOT);
+        return SUBCOMMANDS.stream()
+                .filter(subcommand -> sender.hasPermission(subcommand.permission()))
+                .map(Subcommand::name)
+                .filter(name -> name.startsWith(prefix))
+                .toList();
+    }
+
+    private record Subcommand(String name, String permission) {
     }
 }
