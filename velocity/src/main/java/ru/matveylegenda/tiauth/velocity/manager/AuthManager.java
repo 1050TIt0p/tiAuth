@@ -1,6 +1,7 @@
 package ru.matveylegenda.tiauth.velocity.manager;
 
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -20,6 +21,8 @@ import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.api.event.PlayerAuthEvent;
 import ru.matveylegenda.tiauth.velocity.api.event.PlayerRegisterEvent;
+import ru.matveylegenda.tiauth.velocity.dialog.VelocityDialogService;
+import ru.matveylegenda.tiauth.velocity.dialog.VelocityDialogServiceFactory;
 import ru.matveylegenda.tiauth.util.PasswordCheck;
 import ru.matveylegenda.tiauth.util.PlayerLock;
 import ru.matveylegenda.tiauth.util.ServerAvailabilityChecker;
@@ -27,8 +30,10 @@ import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -41,6 +46,7 @@ public class AuthManager {
     private final TiAuth plugin;
     private final Database database;
     private final TaskManager taskManager;
+    private final VelocityDialogService dialogService;
 
     @Setter
     private Pattern passwordPattern;
@@ -52,6 +58,7 @@ public class AuthManager {
         this.plugin = plugin;
         this.database = plugin.getDatabase();
         this.taskManager = plugin.getTaskManager();
+        this.dialogService = VelocityDialogServiceFactory.create(plugin, this);
         this.passwordPattern = Pattern.compile(MainConfig.IMP.auth.passwordPattern);
         this.hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
     }
@@ -286,9 +293,51 @@ public class AuthManager {
     }
 
     public void showLoginDialog(Player player) {
+        showLoginDialog(player, null);
     }
 
-    public void showLoginDialog(Player player, Object noticeComponent) {
+    public void showLoginDialog(Player player, Component noticeComponent) {
+        if (!MainConfig.IMP.auth.useDialogs || !supportsDialog(player)) {
+            return;
+        }
+
+        database.getAuthUserRepository().getUser(player.getUsername())
+                .thenAccept(user -> {
+                    List<VelocityDialogService.TextInput> inputs = new ArrayList<>();
+                    Component title;
+                    Component confirmButton;
+                    String actionId;
+
+                    if (user != null) {
+                        title = CachedComponents.IMP.player.dialog.login.title;
+                        confirmButton = CachedComponents.IMP.player.dialog.login.confirmButton;
+                        actionId = "minecraft:tiauth_login";
+                        inputs.add(new VelocityDialogService.TextInput(
+                                "password",
+                                CachedComponents.IMP.player.dialog.login.passwordField
+                        ));
+                    } else {
+                        title = CachedComponents.IMP.player.dialog.register.title;
+                        confirmButton = CachedComponents.IMP.player.dialog.register.confirmButton;
+                        actionId = "minecraft:tiauth_register";
+                        inputs.add(new VelocityDialogService.TextInput(
+                                "password",
+                                CachedComponents.IMP.player.dialog.register.passwordField
+                        ));
+                        if (MainConfig.IMP.auth.repeatPasswordWhenRegister) {
+                            inputs.add(new VelocityDialogService.TextInput(
+                                    "repeatPassword",
+                                    CachedComponents.IMP.player.dialog.register.repeatPasswordField
+                            ));
+                        }
+                    }
+
+                    dialogService.show(player, title, inputs, confirmButton, actionId, noticeComponent);
+                })
+                .exceptionally(throwable -> {
+                    player.disconnect(CachedComponents.IMP.queryError);
+                    return null;
+                });
     }
 
     private CompletableFuture<Void> registerUserAsync(String username, String password, String ip) {
@@ -317,6 +366,7 @@ public class AuthManager {
                     AuthCache.setAuthenticated(name);
                     SessionCache.addPlayer(name, ip);
                     taskManager.cancelTasks(player);
+                    clearAuthDialog(player);
                     showAuthTitle(player);
 
                     PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
@@ -367,6 +417,7 @@ public class AuthManager {
         SessionCache.addPlayer(name, ip);
         AuthCache.resetLoginAttempts(lowerName);
         taskManager.cancelTasks(player);
+        clearAuthDialog(player);
         showAuthTitle(player);
 
         PlayerAuthEvent playerAuthEvent = new PlayerAuthEvent(player, forceLogin);
@@ -479,7 +530,18 @@ public class AuthManager {
     }
 
     private boolean supportsDialog(Player player) {
-        return false;
+        return dialogService.isAvailable()
+                && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_6);
+    }
+
+    private void clearAuthDialog(Player player) {
+        if (MainConfig.IMP.auth.useDialogs && supportsDialog(player)) {
+            dialogService.clear(player);
+        }
+    }
+
+    public void closeDialogs() {
+        dialogService.close();
     }
 
     boolean reject(

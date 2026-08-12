@@ -231,7 +231,7 @@ public class MainConfig extends YamlSerializable {
 
         @Comment({
                 @CommentValue("Использовать ли диалоговое окно для регистрации/авторизации"),
-                @CommentValue("Работает только на BungeeCord (его форках в том числе) и клиентах 1.21.6+")
+                @CommentValue("Работает только на клиентах 1.21.6+")
         })
         public boolean useDialogs = true;
 

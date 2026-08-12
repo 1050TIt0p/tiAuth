@@ -12,6 +12,7 @@ allprojects {
     repositories {
         mavenCentral()
         maven("https://libraries.minecraft.net")
+        maven("https://repo.codemc.io/repository/maven-releases/")
         maven("https://jitpack.io")
         maven("https://repo.alessiodp.com/releases/")
         maven("https://repo.papermc.io/repository/maven-public/")

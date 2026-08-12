@@ -3,9 +3,11 @@ package ru.matveylegenda.tiauth.velocity;
 import com.google.inject.Inject;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.ScheduledTask;
@@ -41,7 +43,8 @@ import java.nio.file.Path;
         id = "tiauth",
         name = "tiAuth",
         version = "1.4.2",
-        authors = {"1050TI_top", "OverwriteMC"}
+        authors = {"1050TI_top", "OverwriteMC"},
+        dependencies = {@Dependency(id = "packetevents", optional = true)}
 )
 public final class TiAuth {
 
@@ -69,7 +72,7 @@ public final class TiAuth {
         this.metricsFactory = metricsFactory;
     }
 
-    @Subscribe
+    @Subscribe(order = PostOrder.LAST)
     public void onProxyInitialize(ProxyInitializeEvent event) {
         MainConfig.IMP.reload();
         MessagesConfig.IMP.reload();
@@ -108,8 +111,12 @@ public final class TiAuth {
         }
     }
 
-    @Subscribe
+    @Subscribe(order = PostOrder.FIRST)
     public void onProxyShutdown(ProxyShutdownEvent event) {
+        if (authManager != null) {
+            authManager.closeDialogs();
+        }
+
         if (database != null) {
             try {
                 database.close();
