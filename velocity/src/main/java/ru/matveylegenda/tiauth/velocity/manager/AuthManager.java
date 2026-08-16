@@ -468,7 +468,18 @@ public class AuthManager {
         }
 
         RegisteredServer server = target.get();
-        ServerAvailabilityChecker.isReachable(server.getServerInfo().getAddress()).whenComplete((reachable, throwable) -> {
+        MainConfig.Servers.AvailabilityCheck settings = MainConfig.IMP.servers.availabilityCheck;
+        if (!settings.enabled) {
+            event.setInitialServer(server);
+            completeInitialServerSelection(future);
+            return;
+        }
+
+        ServerAvailabilityChecker.isReachable(
+                server.getServerInfo().getAddress(),
+                settings.timeoutSeconds,
+                settings.cacheSeconds
+        ).whenComplete((reachable, throwable) -> {
             try {
                 if (throwable != null || !reachable) {
                     player.disconnect(unavailableMessage);

@@ -10,24 +10,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public final class ServerAvailabilityChecker {
-    private static final long CONNECT_TIMEOUT_MILLIS = 3000;
-    private static final long CACHE_TTL_NANOS = TimeUnit.SECONDS.toNanos(3);
     private static final Map<SocketAddress, CacheEntry> CACHE = new ConcurrentHashMap<>();
 
     private ServerAvailabilityChecker() {
     }
 
-    public static CompletableFuture<Boolean> isReachable(SocketAddress address) {
+    public static CompletableFuture<Boolean> isReachable(SocketAddress address, long timeoutSeconds, long cacheSeconds) {
         long now = System.nanoTime();
+        long timeoutMillis = TimeUnit.SECONDS.toMillis(Math.max(1, timeoutSeconds));
+        long cacheTtlNanos = TimeUnit.SECONDS.toNanos(Math.max(0, cacheSeconds));
+
         return CACHE.compute(address, (key, cached) -> {
-            if (cached == null || cached.isExpired(now)) {
-                return new CacheEntry(probe(key));
+            if (cached == null || cached.hasDifferentSettings(timeoutMillis, cacheTtlNanos) || cached.isExpired(now)) {
+                return new CacheEntry(probe(key, timeoutMillis), timeoutMillis, cacheTtlNanos);
             }
             return cached;
         }).result;
     }
 
-    private static CompletableFuture<Boolean> probe(SocketAddress address) {
+    private static CompletableFuture<Boolean> probe(SocketAddress address, long timeoutMillis) {
         AsynchronousSocketChannel channel;
         try {
             channel = AsynchronousSocketChannel.open();
@@ -53,7 +54,7 @@ public final class ServerAvailabilityChecker {
         }
 
         return result
-                .completeOnTimeout(false, CONNECT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+                .completeOnTimeout(false, timeoutMillis, TimeUnit.MILLISECONDS)
                 .whenComplete((reachable, throwable) -> close(channel));
     }
 
@@ -66,17 +67,26 @@ public final class ServerAvailabilityChecker {
 
     private static final class CacheEntry {
         private final CompletableFuture<Boolean> result = new CompletableFuture<>();
+        private final long timeoutMillis;
+        private final long cacheTtlNanos;
         private volatile long expiresAtNanos;
 
-        private CacheEntry(CompletableFuture<Boolean> probe) {
+        private CacheEntry(CompletableFuture<Boolean> probe, long timeoutMillis, long cacheTtlNanos) {
+            this.timeoutMillis = timeoutMillis;
+            this.cacheTtlNanos = cacheTtlNanos;
+
             probe.whenComplete((reachable, throwable) -> {
-                expiresAtNanos = System.nanoTime() + CACHE_TTL_NANOS;
+                expiresAtNanos = System.nanoTime() + cacheTtlNanos;
                 if (throwable == null) {
                     result.complete(reachable);
                 } else {
                     result.completeExceptionally(throwable);
                 }
             });
+        }
+
+        private boolean hasDifferentSettings(long timeoutMillis, long cacheTtlNanos) {
+            return this.timeoutMillis != timeoutMillis || this.cacheTtlNanos != cacheTtlNanos;
         }
 
         private boolean isExpired(long now) {
