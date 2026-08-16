@@ -275,7 +275,7 @@ public class AuthManager {
                     if (PremiumCache.isPremium(name) || (sessionIP != null && sessionIP.equals(remoteIp))) {
                         AuthCache.setAuthenticated(name);
                         if (event != null) {
-                            Optional<RegisteredServer> backend = plugin.getServer().getServer(MainConfig.IMP.servers.backend);
+                            Optional<RegisteredServer> backend = getBackend(player);
                             setInitialServer(player, event, future, backend, CachedComponents.IMP.player.kick.backendServerUnavailable);
                         } else {
                             connectToBackend(player);
