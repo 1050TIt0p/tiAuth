@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -27,6 +28,7 @@ public final class DatabaseBackup {
     private final Database database;
     private final BackupStorage storage = new BackupStorage();
     private final Map<String, AddonHandler<?>> addons = new ConcurrentHashMap<>();
+    private final AtomicBoolean operationInProgress = new AtomicBoolean();
 
     public DatabaseBackup(Database database) {
         this.database = Objects.requireNonNull(database, "database");
@@ -61,31 +63,50 @@ public final class DatabaseBackup {
         if (compressionLevel < Deflater.NO_COMPRESSION || compressionLevel > Deflater.BEST_COMPRESSION) {
             throw new IllegalArgumentException("Compression level must be between 0 and 9");
         }
-        CompletableFuture<List<AuthUser>> users = database.getAuthUserRepository().getUsers();
-        CompletableFuture<List<RecoveryCode>> recoveryCodes = database.getRecoveryCodeRepository().getCodes();
-        CompletableFuture<Map<String, JsonElement>> addonData = createAddonData();
+        if (!operationInProgress.compareAndSet(false, true)) {
+            return CompletableFuture.completedFuture(false);
+        }
 
-        return CompletableFuture.allOf(users, recoveryCodes, addonData)
-                .thenApply(ignored -> new BackupData(
-                        BackupData.CURRENT_VERSION,
-                        users.join(),
-                        recoveryCodes.join(),
-                        addonData.join()
-                ))
-                .thenApplyAsync(data -> {
-                    storage.write(outputFile.toPath(), data, compressionLevel);
-                    return true;
-                })
-                .exceptionally(throwable -> fail("Error during database backup creation", throwable));
+        try {
+            CompletableFuture<List<AuthUser>> users = database.getAuthUserRepository().getUsers();
+            CompletableFuture<List<RecoveryCode>> recoveryCodes = database.getRecoveryCodeRepository().getCodes();
+            CompletableFuture<Map<String, JsonElement>> addonData = createAddonData();
+
+            return CompletableFuture.allOf(users, recoveryCodes, addonData)
+                    .thenApply(ignored -> new BackupData(
+                            BackupData.CURRENT_VERSION,
+                            users.join(),
+                            recoveryCodes.join(),
+                            addonData.join()
+                    ))
+                    .thenApplyAsync(data -> {
+                        storage.write(outputFile.toPath(), data, compressionLevel);
+                        return true;
+                    })
+                    .exceptionally(throwable -> fail("Error during database backup creation", throwable))
+                    .whenComplete((success, throwable) -> operationInProgress.set(false));
+        } catch (RuntimeException exception) {
+            operationInProgress.set(false);
+            throw exception;
+        }
     }
 
     public CompletableFuture<Boolean> restoreBackup(File backupFile) {
         Objects.requireNonNull(backupFile, "backupFile");
+        if (!operationInProgress.compareAndSet(false, true)) {
+            return CompletableFuture.completedFuture(false);
+        }
 
-        return CompletableFuture.supplyAsync(() -> storage.read(backupFile.toPath()))
-                .thenCompose(this::restoreData)
-                .thenApply(unused -> true)
-                .exceptionally(throwable -> fail("Error during database backup restore", throwable));
+        try {
+            return CompletableFuture.supplyAsync(() -> storage.read(backupFile.toPath()))
+                    .thenCompose(this::restoreData)
+                    .thenApply(unused -> true)
+                    .exceptionally(throwable -> fail("Error during database backup restore", throwable))
+                    .whenComplete((success, throwable) -> operationInProgress.set(false));
+        } catch (RuntimeException exception) {
+            operationInProgress.set(false);
+            throw exception;
+        }
     }
 
     private CompletableFuture<Void> restoreData(BackupData data) {

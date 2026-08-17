@@ -28,6 +28,7 @@ public class ReloadCommand implements AdminSubcommand {
         MessagesConfig.IMP.reload();
         plugin.getAuthManager().setPasswordPattern(Pattern.compile(MainConfig.IMP.auth.passwordPattern));
         plugin.getAuthManager().setHash(HashFactory.create(MainConfig.IMP.auth.hashAlgorithm));
+        plugin.getAutoBackupManager().restart();
         CachedMessages.IMP = new CachedMessages(MessagesConfig.IMP);
         BungeeUtils.sendMessage(sender, CachedMessages.IMP.admin.config.reload);
     }

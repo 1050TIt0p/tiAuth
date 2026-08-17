@@ -136,6 +136,33 @@ public class MainConfig extends YamlSerializable {
 
         @NewLine
         @Comment({
+                @CommentValue("Настройки автоматического создания бекапов базы данных"),
+                @CommentValue("Бекапы сохраняются в plugins/tiAuth/backups")
+        })
+        public Backup backup = new Backup();
+
+        public static class Backup {
+            @Comment(
+                    value = @CommentValue("Создавать ли автоматические бекапы базы данных"),
+                    at = Comment.At.SAME_LINE
+            )
+            public boolean enabled = false;
+
+            @Comment(
+                    value = @CommentValue("Интервал между бекапами в минутах (минимум 1)"),
+                    at = Comment.At.SAME_LINE
+            )
+            public int intervalMinutes = 1440;
+
+            @Comment(
+                    value = @CommentValue("Степень сжатия автоматических бекапов от 0 до 9"),
+                    at = Comment.At.SAME_LINE
+            )
+            public int compressionLevel = 0;
+        }
+
+        @NewLine
+        @Comment({
                 @CommentValue("Параметры пула соединений (H2, MySQL, PostgreSQL")
         })
         @Comment(

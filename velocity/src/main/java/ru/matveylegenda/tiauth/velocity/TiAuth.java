@@ -30,6 +30,7 @@ import ru.matveylegenda.tiauth.velocity.command.player.*;
 import ru.matveylegenda.tiauth.velocity.listener.AuthListener;
 import ru.matveylegenda.tiauth.velocity.listener.ChatListener;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
+import ru.matveylegenda.tiauth.velocity.manager.AutoBackupManager;
 import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
 import ru.matveylegenda.tiauth.velocity.manager.TotpManager;
 
@@ -60,6 +61,7 @@ public final class TiAuth {
     private AuthManager authManager;
     private TotpManager totpManager;
     private DatabaseBackup databaseBackup;
+    private AutoBackupManager autoBackupManager;
 
     private byte[] secretKey;
 
@@ -82,6 +84,8 @@ public final class TiAuth {
         loadLibraries();
         initializeDatabase(dataFolder.toFile());
         databaseBackup = new DatabaseBackup(database);
+        autoBackupManager = new AutoBackupManager(this);
+        autoBackupManager.restart();
         startLimboServer(dataFolder.toFile());
 
         Utils.initializeColorizer(MainConfig.IMP.serializer);
@@ -116,6 +120,10 @@ public final class TiAuth {
 
     @Subscribe(order = PostOrder.FIRST)
     public void onProxyShutdown(ProxyShutdownEvent event) {
+        if (autoBackupManager != null) {
+            autoBackupManager.stop();
+        }
+
         if (authManager != null) {
             authManager.closeDialogs();
         }
