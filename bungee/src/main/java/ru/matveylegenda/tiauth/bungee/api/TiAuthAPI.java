@@ -4,6 +4,7 @@ import lombok.Getter;
 import ru.matveylegenda.tiauth.bungee.TiAuth;
 import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.database.backup.DatabaseBackup;
 
 @Getter
 public class TiAuthAPI {
@@ -22,5 +23,9 @@ public class TiAuthAPI {
 
     public AuthManager getAuthManager() {
         return plugin.getAuthManager();
+    }
+
+    public DatabaseBackup getDatabaseBackup() {
+        return plugin.getDatabaseBackup();
     }
 }

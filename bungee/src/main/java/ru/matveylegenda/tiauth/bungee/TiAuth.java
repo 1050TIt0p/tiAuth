@@ -19,6 +19,7 @@ import ru.matveylegenda.tiauth.bungee.manager.TotpManager;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.database.backup.DatabaseBackup;
 import ru.matveylegenda.tiauth.picolimbo.LibraryLoader;
 import ru.matveylegenda.tiauth.picolimbo.PicoLimboRunner;
 import ru.matveylegenda.tiauth.util.KeyLoader;
@@ -39,6 +40,7 @@ public final class TiAuth extends Plugin {
     private TaskManager taskManager;
     private AuthManager authManager;
     private TotpManager totpManager;
+    private DatabaseBackup databaseBackup;
 
     private byte[] secretKey;
 
@@ -64,6 +66,7 @@ public final class TiAuth extends Plugin {
             dataFolder.mkdir();
         }
         initializeDatabase(dataFolder);
+        databaseBackup = new DatabaseBackup(database);
         startLimboServer(dataFolder);
         Utils.initializeColorizer(MainConfig.IMP.serializer);
         taskManager = new TaskManager(this);

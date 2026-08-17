@@ -79,4 +79,13 @@ public class AuthCache {
     public void removeTotpEnableSecret(String playerName) {
         totpEnableSecrets.remove(playerName.toLowerCase(Locale.ROOT));
     }
+
+    public void clearAll() {
+        authenticated.clear();
+        pendingVerifications.clear();
+        totpPending.clear();
+        loginAttempts.clear();
+        totpAttempts.clear();
+        totpEnableSecrets.clear();
+    }
 }

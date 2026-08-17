@@ -2,6 +2,7 @@ package ru.matveylegenda.tiauth.velocity.api;
 
 import lombok.Getter;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.database.backup.DatabaseBackup;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 
@@ -22,5 +23,9 @@ public class TiAuthAPI {
 
     public AuthManager getAuthManager() {
         return plugin.getAuthManager();
+    }
+
+    public DatabaseBackup getDatabaseBackup() {
+        return plugin.getDatabaseBackup();
     }
 }

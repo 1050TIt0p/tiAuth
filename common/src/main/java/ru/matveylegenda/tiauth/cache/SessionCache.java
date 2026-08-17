@@ -25,4 +25,8 @@ public class SessionCache {
     public String getIP(String name) {
         return sessions.getIfPresent(name.toLowerCase(Locale.ROOT));
     }
+
+    public void clear() {
+        sessions.invalidateAll();
+    }
 }

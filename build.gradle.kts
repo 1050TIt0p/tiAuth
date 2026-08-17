@@ -44,6 +44,8 @@ subprojects {
         annotationProcessor("org.projectlombok:lombok:1.18.46")
 
         implementation("net.java.dev.jna:jna:5.19.1")
+
+        compileOnly("com.google.code.gson:gson:2.14.0")
     }
 
     extensions.configure<JavaPluginExtension> {
