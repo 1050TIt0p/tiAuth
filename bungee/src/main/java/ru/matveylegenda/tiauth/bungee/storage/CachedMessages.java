@@ -30,6 +30,7 @@ public class CachedMessages {
         public ForceRegister forceRegister;
         public ForcePremium forcePremium;
         public Migrate migrate;
+        public Backup backup;
 
         public static class Config {
             public String reload;
@@ -68,6 +69,20 @@ public class CachedMessages {
             public String error;
             public String invalidFileName;
             public String success;
+        }
+
+        public static class Backup {
+            public String usage;
+            public String invalidFileName;
+            public String invalidCompression;
+            public String alreadyExists;
+            public String notFound;
+            public String creating;
+            public String createSuccess;
+            public String createError;
+            public String restoring;
+            public String restoreSuccess;
+            public String restoreError;
         }
     }
 
@@ -257,6 +272,19 @@ public class CachedMessages {
         admin.migrate.error = COLORIZER.colorize(getPrefixed(config.admin.migrate.error, prefix));
         admin.migrate.invalidFileName = COLORIZER.colorize(getPrefixed(config.admin.migrate.invalidFileName, prefix));
         admin.migrate.success = COLORIZER.colorize(getPrefixed(config.admin.migrate.success, prefix));
+
+        admin.backup = new Admin.Backup();
+        admin.backup.usage = COLORIZER.colorize(getPrefixed(config.admin.backup.usage, prefix));
+        admin.backup.invalidFileName = COLORIZER.colorize(getPrefixed(config.admin.backup.invalidFileName, prefix));
+        admin.backup.invalidCompression = COLORIZER.colorize(getPrefixed(config.admin.backup.invalidCompression, prefix));
+        admin.backup.alreadyExists = COLORIZER.colorize(getPrefixed(config.admin.backup.alreadyExists, prefix));
+        admin.backup.notFound = COLORIZER.colorize(getPrefixed(config.admin.backup.notFound, prefix));
+        admin.backup.creating = COLORIZER.colorize(getPrefixed(config.admin.backup.creating, prefix));
+        admin.backup.createSuccess = COLORIZER.colorize(getPrefixed(config.admin.backup.createSuccess, prefix));
+        admin.backup.createError = COLORIZER.colorize(getPrefixed(config.admin.backup.createError, prefix));
+        admin.backup.restoring = COLORIZER.colorize(getPrefixed(config.admin.backup.restoring, prefix));
+        admin.backup.restoreSuccess = COLORIZER.colorize(getPrefixed(config.admin.backup.restoreSuccess, prefix));
+        admin.backup.restoreError = COLORIZER.colorize(getPrefixed(config.admin.backup.restoreError, prefix));
 
         player = new Player();
 

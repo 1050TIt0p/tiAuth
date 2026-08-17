@@ -17,6 +17,7 @@ public class VelocityUtils {
     public final Pattern REAL_NAME = Pattern.compile("\\{realname}");
     public final Pattern TIME = Pattern.compile("\\{time}");
     public final Pattern ATTEMPTS = Pattern.compile("\\{attempts}");
+    public final Pattern BACKUP = Pattern.compile("\\{backup}");
 
     public void sendMessage(Audience sender, Component message) {
         if (message.equals(Component.empty())) {

@@ -51,6 +51,7 @@ public class MessagesConfig extends YamlSerializable {
         public ForceRegister forceRegister = new ForceRegister();
         public ForcePremium forcePremium = new ForcePremium();
         public Migrate migrate = new Migrate();
+        public Backup backup = new Backup();
 
         @NewLine
         public static class Config {
@@ -96,6 +97,21 @@ public class MessagesConfig extends YamlSerializable {
             public String error;
             public String invalidFileName;
             public String success;
+        }
+
+        @NewLine
+        public static class Backup {
+            public String usage;
+            public String invalidFileName;
+            public String invalidCompression;
+            public String alreadyExists;
+            public String notFound;
+            public String creating;
+            public String createSuccess;
+            public String createError;
+            public String restoring;
+            public String restoreSuccess;
+            public String restoreError;
         }
     }
 
@@ -265,7 +281,7 @@ public class MessagesConfig extends YamlSerializable {
                 playerNotFound = "{prefix} &fИгрок не найден";
                 noPermission = "{prefix} &fНедостаточно прав";
 
-                admin.usage = "{prefix} &fИспользование: &#8833EC/tiauth <reload|unregister|changepassword|forcelogin|forcepremium>";
+                admin.usage = "{prefix} &fИспользование: &#8833EC/tiauth <reload|unregister|changepassword|forcelogin|forceregister|forcepremium|migrate|backup>";
                 admin.config.reload = "{prefix} &fКонфиги перезагружены";
                 admin.unregister.usage = "{prefix} &fИспользование: &#8833EC/tiauth unregister";
                 admin.unregister.success = "{prefix} &fВы успешно удалили аккаунт игрока &#8833EC{player}";
@@ -280,6 +296,17 @@ public class MessagesConfig extends YamlSerializable {
                 admin.forcePremium.usage = "{prefix} &fИспользование: &#8833EC/tiauth forcepremium <ник>";
                 admin.forcePremium.enabled = "{prefix} &fВы успешно включили премиум-режим для игрока &#8833EC{player}";
                 admin.forcePremium.disabled = "{prefix} &fВы успешно выключили премиум-режим для игрока &#8833EC{player}";
+                admin.backup.usage = "{prefix} &fИспользование: &#8833EC/tiauth backup create [название] [сжатие 0-9] &fили &#8833EC/tiauth backup restore <название>";
+                admin.backup.invalidFileName = "{prefix} &fНедопустимое название бэкапа";
+                admin.backup.invalidCompression = "{prefix} &fСтепень сжатия должна быть числом от &#8833EC0 &fдо &#8833EC9";
+                admin.backup.alreadyExists = "{prefix} &fБэкап &#8833EC{backup} &fуже существует";
+                admin.backup.notFound = "{prefix} &fБэкап &#8833EC{backup} &fне найден";
+                admin.backup.creating = "{prefix} &fСоздание бэкапа &#8833EC{backup}&f...";
+                admin.backup.createSuccess = "{prefix} &fБэкап &#8833EC{backup} &fуспешно создан";
+                admin.backup.createError = "{prefix} &fПроизошла ошибка при создании бэкапа";
+                admin.backup.restoring = "{prefix} &fВосстановление бэкапа &#8833EC{backup}&f...";
+                admin.backup.restoreSuccess = "{prefix} &fБэкап &#8833EC{backup} &fуспешно восстановлен";
+                admin.backup.restoreError = "{prefix} &fПроизошла ошибка при восстановлении бэкапа";
                 admin.migrate.usage = "{prefix} &fИспользование: &#8833EC/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]";
                 admin.migrate.error = "{prefix} &fПроизошла ошибка при миграции базы данных";
                 admin.migrate.invalidFileName = "{prefix} &fНедопустимое имя файла";
@@ -364,7 +391,7 @@ public class MessagesConfig extends YamlSerializable {
                 playerNotFound = "{prefix} &fPlayer not found";
                 noPermission = "{prefix} &fInsufficient permissions";
 
-                admin.usage = "{prefix} &fUsage: &#8833EC/tiauth <reload|unregister|changepassword|forcelogin|forcepremium>";
+                admin.usage = "{prefix} &fUsage: &#8833EC/tiauth <reload|unregister|changepassword|forcelogin|forceregister|forcepremium|migrate|backup>";
                 admin.config.reload = "{prefix} &fConfigs reloaded";
                 admin.unregister.usage = "{prefix} &fUsage: &#8833EC/tiauth unregister";
                 admin.unregister.success = "{prefix} &fYou have successfully deleted the account of player &#8833EC{player}";
@@ -379,6 +406,17 @@ public class MessagesConfig extends YamlSerializable {
                 admin.forcePremium.usage = "{prefix} &fUsage: &#8833EC/tiauth forcepremium <player>";
                 admin.forcePremium.enabled = "{prefix} &fYou have successfully enabled premium mode for player &#8833EC{player}";
                 admin.forcePremium.disabled = "{prefix} &fYou have successfully disabled premium mode for player &#8833EC{player}";
+                admin.backup.usage = "{prefix} &fUsage: &#8833EC/tiauth backup create [name] [compression 0-9] &for &#8833EC/tiauth backup restore <name>";
+                admin.backup.invalidFileName = "{prefix} &fInvalid backup name";
+                admin.backup.invalidCompression = "{prefix} &fCompression level must be a number between &#8833EC0 &fand &#8833EC9";
+                admin.backup.alreadyExists = "{prefix} &fBackup &#8833EC{backup} &falready exists";
+                admin.backup.notFound = "{prefix} &fBackup &#8833EC{backup} &fwas not found";
+                admin.backup.creating = "{prefix} &fCreating backup &#8833EC{backup}&f...";
+                admin.backup.createSuccess = "{prefix} &fBackup &#8833EC{backup} &fhas been successfully created";
+                admin.backup.createError = "{prefix} &fAn error occurred while creating the backup";
+                admin.backup.restoring = "{prefix} &fRestoring backup &#8833EC{backup}&f...";
+                admin.backup.restoreSuccess = "{prefix} &fBackup &#8833EC{backup} &fhas been successfully restored";
+                admin.backup.restoreError = "{prefix} &fAn error occurred while restoring the backup";
                 admin.migrate.usage = "{prefix} &fUsage: &#8833EC/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]";
                 admin.migrate.error = "{prefix} &fAn error occurred during database migration";
                 admin.migrate.invalidFileName = "{prefix} &fInvalid file name";

@@ -2,51 +2,28 @@ package ru.matveylegenda.tiauth.velocity.command.admin;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
-import ru.matveylegenda.tiauth.cache.AuthCache;
-import ru.matveylegenda.tiauth.cache.PremiumCache;
-import ru.matveylegenda.tiauth.cache.SessionCache;
-import ru.matveylegenda.tiauth.config.MainConfig;
-import ru.matveylegenda.tiauth.config.MessagesConfig;
-import ru.matveylegenda.tiauth.database.Database;
-import ru.matveylegenda.tiauth.database.DatabaseMigrator;
-import ru.matveylegenda.tiauth.database.DatabaseType;
-import ru.matveylegenda.tiauth.hash.HashFactory;
 import ru.matveylegenda.tiauth.velocity.TiAuth;
-import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
 
-import java.io.File;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 public class TiAuthCommand implements SimpleCommand {
-    private static final Pattern FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9._-]+$");
-    private static final List<Subcommand> SUBCOMMANDS = List.of(
-            new Subcommand("reload", "tiauth.admin.commands.reload"),
-            new Subcommand("unregister", "tiauth.admin.commands.unregister"),
-            new Subcommand("unreg", "tiauth.admin.commands.unregister"),
-            new Subcommand("changepassword", "tiauth.admin.commands.changepassword"),
-            new Subcommand("changepass", "tiauth.admin.commands.changepassword"),
-            new Subcommand("forcelogin", "tiauth.admin.commands.forcelogin"),
-            new Subcommand("forceregister", "tiauth.admin.commands.forceregister"),
-            new Subcommand("forcepremium", "tiauth.admin.commands.forcepremium"),
-            new Subcommand("migrate", "tiauth.admin.commands.migrate")
-    );
-
-    private final TiAuth plugin;
-    private final ProxyServer proxy;
-    private final Database database;
-    private final AuthManager authManager;
+    private final Map<String, AdminSubcommand> subcommands = new LinkedHashMap<>();
 
     public TiAuthCommand(TiAuth plugin) {
-        this.plugin = plugin;
-        this.proxy = plugin.getServer();
-        this.database = plugin.getDatabase();
-        this.authManager = plugin.getAuthManager();
+        register(new ReloadCommand(plugin), "reload");
+        register(new UnregisterCommand(plugin), "unregister", "unreg");
+        register(new ChangePasswordCommand(plugin), "changepassword", "changepass");
+        register(new ForceLoginCommand(plugin), "forcelogin");
+        register(new ForceRegisterCommand(plugin), "forceregister");
+        register(new ForcePremiumCommand(plugin), "forcepremium");
+        register(new MigrateCommand(plugin), "migrate");
+        register(new BackupCommand(plugin), "backup");
     }
 
     @Override
@@ -59,332 +36,44 @@ public class TiAuthCommand implements SimpleCommand {
             return;
         }
 
-        switch (args[0].toLowerCase()) {
-            case "reload" -> {
-                if (!sender.hasPermission("tiauth.admin.commands.reload")) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.noPermission);
-                    return;
-                }
-
-                MainConfig.IMP.reload();
-                MessagesConfig.IMP.reload();
-                plugin.getAuthManager().setPasswordPattern(Pattern.compile(MainConfig.IMP.auth.passwordPattern));
-                plugin.getAuthManager().setHash(HashFactory.create(MainConfig.IMP.auth.hashAlgorithm));
-                CachedComponents.IMP = new CachedComponents(MessagesConfig.IMP);
-                VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.config.reload);
-            }
-
-            case "unregister", "unreg" -> {
-                if (!sender.hasPermission("tiauth.admin.commands.unregister")) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.noPermission);
-                    return;
-                }
-
-                if (args.length < 2) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.unregister.usage);
-                    return;
-                }
-
-                String playerName = args[1];
-                authManager.unregisterUser(playerName)
-                        .thenAccept(success -> {
-                            if (!success) {
-                                VelocityUtils.sendMessage(sender, CachedComponents.IMP.queryError);
-                                return;
-                            }
-
-                            proxy.getPlayer(playerName).ifPresent(player -> {
-                                SessionCache.removePlayer(playerName);
-                                player.disconnect(CachedComponents.IMP.player.unregister.success);
-                            });
-
-                            VelocityUtils.sendMessage(
-                                    sender,
-                                    CachedComponents.IMP.admin.unregister.success
-                                            .replaceText(builder -> builder
-                                                    .match(VelocityUtils.PLAYER)
-                                                    .replacement(playerName))
-                            );
-                        });
-            }
-
-            case "changepassword", "changepass" -> {
-                if (!sender.hasPermission("tiauth.admin.commands.changepassword")) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.noPermission);
-                    return;
-                }
-
-                if (args.length < 3) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.changePassword.usage);
-                    return;
-                }
-
-                String playerName = args[1];
-                String password = args[2];
-                authManager.changePasswordUser(playerName, password)
-                        .thenAccept(success -> {
-                            if (!success) {
-                                VelocityUtils.sendMessage(sender, CachedComponents.IMP.queryError);
-                                return;
-                            }
-
-                            VelocityUtils.sendMessage(
-                                    sender,
-                                    CachedComponents.IMP.admin.changePassword.success
-                                            .replaceText(builder -> builder
-                                                    .match(VelocityUtils.PLAYER)
-                                                    .replacement(playerName))
-                            );
-                        });
-            }
-
-            case "forcelogin" -> {
-                if (!sender.hasPermission("tiauth.admin.commands.forcelogin")) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.noPermission);
-                    return;
-                }
-
-                if (args.length < 2) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.forceLogin.usage);
-                    return;
-                }
-
-                Player player = proxy.getPlayer(args[1]).orElse(null);
-                if (player == null) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.playerNotFound);
-                    return;
-                }
-
-                if (AuthCache.isAuthenticated(player.getUsername())) {
-                    VelocityUtils.sendMessage(
-                            sender,
-                            CachedComponents.IMP.admin.forceLogin.isAuthenticated
-                                    .replaceText(builder -> builder
-                                            .match(VelocityUtils.PLAYER)
-                                            .replacement(player.getUsername()))
-                    );
-                    return;
-                }
-
-                authManager.loginPlayer(player, true)
-                        .thenRun(() -> VelocityUtils.sendMessage(
-                                sender,
-                                CachedComponents.IMP.admin.forceLogin.success
-                                        .replaceText(builder -> builder
-                                                .match(VelocityUtils.PLAYER)
-                                                .replacement(player.getUsername()))
-                        ));
-            }
-
-            case "forceregister" -> {
-                if (!sender.hasPermission("tiauth.admin.commands.forceregister")) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.noPermission);
-                    return;
-                }
-
-                if (args.length < 3) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.forceRegister.usage);
-                    return;
-                }
-
-                String playerName = args[1];
-                String password = args[2];
-
-                database.getAuthUserRepository().getUser(playerName.toLowerCase(Locale.ROOT))
-                        .thenCompose(user -> {
-                            if (user != null) {
-                                VelocityUtils.sendMessage(
-                                        sender,
-                                        CachedComponents.IMP.admin.forceRegister.alreadyRegistered
-                                                .replaceText(builder -> builder
-                                                        .match(VelocityUtils.PLAYER)
-                                                        .replacement(playerName))
-                                );
-                                return null;
-                            }
-
-                            return authManager.registerUser(playerName, password, null)
-                                    .thenAccept(success -> {
-                                        if (!success) {
-                                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.queryError);
-                                            return;
-                                        }
-
-                                        VelocityUtils.sendMessage(
-                                                sender,
-                                                CachedComponents.IMP.admin.forceRegister.success
-                                                        .replaceText(builder -> builder
-                                                                .match(VelocityUtils.PLAYER)
-                                                                .replacement(playerName))
-                                        );
-                                    });
-                        });
-            }
-
-            case "forcepremium" -> {
-                if (!sender.hasPermission("tiauth.admin.commands.forcepremium")) {
-                    VelocityUtils.sendMessage(
-                            sender,
-                            CachedComponents.IMP.noPermission
-                    );
-                    return;
-                }
-
-                if (args.length < 2) {
-                    VelocityUtils.sendMessage(
-                            sender,
-                            CachedComponents.IMP.admin.forcePremium.usage
-                    );
-                    return;
-                }
-
-                database.getAuthUserRepository().getUser(args[1])
-                        .thenCompose(user -> {
-                            if (user == null) {
-                                VelocityUtils.sendMessage(
-                                        sender,
-                                        CachedComponents.IMP.playerNotFound
-                                );
-                                return null;
-                            }
-
-                            return database.getAuthUserRepository().setPremium(args[1], !user.isPremium())
-                                    .thenAccept(result -> {
-                                        if (user.isPremium()) {
-                                            PremiumCache.removePremium(args[1]);
-                                            VelocityUtils.sendMessage(
-                                                    sender,
-                                                    CachedComponents.IMP.admin.forcePremium.disabled
-                                                            .replaceText(builder -> builder
-                                                                    .match(VelocityUtils.PLAYER)
-                                                                    .replacement(args[1]))
-                                            );
-                                        } else {
-                                            PremiumCache.addPremium(args[1]);
-                                            VelocityUtils.sendMessage(
-                                                    sender,
-                                                    CachedComponents.IMP.admin.forcePremium.enabled
-                                                            .replaceText(builder -> builder
-                                                                    .match(VelocityUtils.PLAYER)
-                                                                    .replacement(args[1]))
-                                            );
-                                        }
-                                    });
-                        })
-                        .exceptionally(throwable -> {
-                            VelocityUtils.sendMessage(
-                                    sender,
-                                    CachedComponents.IMP.queryError
-                            );
-                            return null;
-                        });
-            }
-
-            case "migrate" -> {
-                if (!sender.hasPermission("tiauth.admin.commands.migrate")) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.noPermission);
-                    return;
-                }
-
-                if (args.length < 3) {
-                    VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.usage);
-                    return;
-                }
-
-                DatabaseMigrator.SourcePlugin sourcePlugin = DatabaseMigrator.SourcePlugin.valueOf(args[1].toUpperCase());
-                DatabaseType sourceDatabase = DatabaseType.valueOf(args[2].toUpperCase());
-
-                DatabaseMigrator databaseMigrator = new DatabaseMigrator(plugin.getDatabase());
-                databaseMigrator.setSourcePlugin(sourcePlugin);
-                databaseMigrator.setSourceDatabase(sourceDatabase);
-
-                switch (sourceDatabase) {
-                    case SQLITE -> {
-                        if (args.length < 4) {
-                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.usage);
-                            return;
-                        }
-
-                        String fileName = args[3];
-                        if (!isValidFileName(fileName)) {
-                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.invalidFileName);
-                            return;
-                        }
-
-                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder().toString(), fileName).getAbsolutePath());
-                    }
-
-                    case H2 -> {
-                        if (args.length < 6) {
-                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.usage);
-                            return;
-                        }
-
-                        String fileName = args[3];
-                        if (!isValidFileName(fileName)) {
-                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.invalidFileName);
-                            return;
-                        }
-
-                        databaseMigrator.setSourceDatabaseFile(new File(plugin.getDataFolder().toString(), fileName).getAbsolutePath());
-                        if (!args[4].equals("empty")) {
-                            databaseMigrator.setSourceDatabaseUser(args[4]);
-                        }
-                        if (!args[5].equals("empty")) {
-                            databaseMigrator.setSourceDatabasePassword(args[5]);
-                        }
-                    }
-
-                    case MYSQL, POSTGRESQL -> {
-                        if (args.length < 8) {
-                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.usage);
-                            return;
-                        }
-
-                        if (!args[3].equals("empty")) {
-                            databaseMigrator.setSourceDatabaseUser(args[3]);
-                        }
-                        if (!args[4].equals("empty")) {
-                            databaseMigrator.setSourceDatabasePassword(args[4]);
-                        }
-                        databaseMigrator.setSourceDatabaseHost(args[5]);
-                        databaseMigrator.setSourceDatabasePort(args[6]);
-                        databaseMigrator.setSourceDatabaseName(args[7]);
-                    }
-                }
-
-                databaseMigrator.migrate()
-                        .thenAccept(result -> VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.success))
-                        .exceptionally(throwable -> {
-                            VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.migrate.error);
-                            return null;
-                        });
-            }
-
-            default -> VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.usage);
+        AdminSubcommand subcommand = subcommands.get(args[0].toLowerCase(Locale.ROOT));
+        if (subcommand == null) {
+            VelocityUtils.sendMessage(sender, CachedComponents.IMP.admin.usage);
+            return;
         }
-    }
 
-    public boolean isValidFileName(String fileName) {
-        return FILE_NAME_PATTERN.matcher(fileName).matches() && !fileName.contains("..");
+        if (!sender.hasPermission(subcommand.permission())) {
+            VelocityUtils.sendMessage(sender, CachedComponents.IMP.noPermission);
+            return;
+        }
+
+        subcommand.execute(sender, Arrays.copyOfRange(args, 1, args.length));
     }
 
     @Override
     public List<String> suggest(Invocation invocation) {
         String[] args = invocation.arguments();
-        if (args.length > 1) {
+        CommandSource sender = invocation.source();
+        if (args.length <= 1) {
+            String prefix = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
+            return subcommands.entrySet().stream()
+                    .filter(entry -> sender.hasPermission(entry.getValue().permission()))
+                    .map(Map.Entry::getKey)
+                    .filter(name -> name.startsWith(prefix))
+                    .toList();
+        }
+
+        AdminSubcommand subcommand = subcommands.get(args[0].toLowerCase(Locale.ROOT));
+        if (subcommand == null || !sender.hasPermission(subcommand.permission())) {
             return List.of();
         }
 
-        CommandSource sender = invocation.source();
-        String prefix = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
-        return SUBCOMMANDS.stream()
-                .filter(subcommand -> sender.hasPermission(subcommand.permission()))
-                .map(Subcommand::name)
-                .filter(name -> name.startsWith(prefix))
-                .toList();
+        return subcommand.suggest(sender, Arrays.copyOfRange(args, 1, args.length));
     }
 
-    private record Subcommand(String name, String permission) {
+    private void register(AdminSubcommand subcommand, String... names) {
+        for (String name : names) {
+            subcommands.put(name, subcommand);
+        }
     }
 }
