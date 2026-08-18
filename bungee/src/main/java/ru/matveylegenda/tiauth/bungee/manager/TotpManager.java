@@ -45,7 +45,7 @@ public class TotpManager {
     public void clearTotpState(String playerName) {
         String lowerName = playerName.toLowerCase(Locale.ROOT);
         AuthCache.clearTotpPending(playerName);
-        AuthCache.clearPendingVerification(playerName);
+        AuthCache.endVerification(playerName);
         AuthCache.resetTotpAttempts(lowerName);
         playerLock.unlock(playerName);
     }

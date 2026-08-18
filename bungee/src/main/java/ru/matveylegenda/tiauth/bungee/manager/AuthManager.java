@@ -150,7 +150,7 @@ public class AuthManager {
             return;
         }
 
-        if (AuthCache.isPendingVerification(name)) {
+        if (AuthCache.isVerifying(name)) {
             BungeeUtils.sendMessage(player, CachedMessages.IMP.player.login.alreadyLogged);
             return;
         }
