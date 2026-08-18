@@ -14,11 +14,13 @@ import ru.matveylegenda.tiauth.bungee.listener.AuthListener;
 import ru.matveylegenda.tiauth.bungee.listener.ChatListener;
 import ru.matveylegenda.tiauth.bungee.listener.DialogListener;
 import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
+import ru.matveylegenda.tiauth.bungee.manager.AutoBackupManager;
 import ru.matveylegenda.tiauth.bungee.manager.TaskManager;
 import ru.matveylegenda.tiauth.bungee.manager.TotpManager;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.database.backup.DatabaseBackup;
 import ru.matveylegenda.tiauth.picolimbo.LibraryLoader;
 import ru.matveylegenda.tiauth.picolimbo.PicoLimboRunner;
 import ru.matveylegenda.tiauth.util.KeyLoader;
@@ -39,6 +41,8 @@ public final class TiAuth extends Plugin {
     private TaskManager taskManager;
     private AuthManager authManager;
     private TotpManager totpManager;
+    private DatabaseBackup databaseBackup;
+    private AutoBackupManager autoBackupManager;
 
     private byte[] secretKey;
 
@@ -64,6 +68,9 @@ public final class TiAuth extends Plugin {
             dataFolder.mkdir();
         }
         initializeDatabase(dataFolder);
+        databaseBackup = new DatabaseBackup(database);
+        autoBackupManager = new AutoBackupManager(this);
+        autoBackupManager.restart();
         startLimboServer(dataFolder);
         Utils.initializeColorizer(MainConfig.IMP.serializer);
         taskManager = new TaskManager(this);
@@ -97,6 +104,10 @@ public final class TiAuth extends Plugin {
 
     @Override
     public void onDisable() {
+        if (autoBackupManager != null) {
+            autoBackupManager.stop();
+        }
+
         if (database != null) {
             try {
                 database.close();

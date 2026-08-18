@@ -102,6 +102,39 @@ public class AuthUserRepository {
         return future;
     }
 
+    public CompletableFuture<List<AuthUser>> getUsers() {
+        CompletableFuture<List<AuthUser>> future = new CompletableFuture<>();
+        executor.submit(() -> {
+            try {
+                future.complete(authUserDao.queryForAll());
+            } catch (SQLException e) {
+                future.completeExceptionally(e);
+                Database.LOGGER.log(Level.WARNING, "Error during database query", e);
+            }
+        });
+        return future;
+    }
+
+    public CompletableFuture<Void> replaceUsers(List<AuthUser> users) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        executor.submit(() -> {
+            try {
+                authUserDao.callBatchTasks(() -> {
+                    authUserDao.deleteBuilder().delete();
+                    for (AuthUser user : users) {
+                        authUserDao.create(user);
+                    }
+                    return null;
+                });
+                future.complete(null);
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+                Database.LOGGER.log(Level.WARNING, "Error during database restore", e);
+            }
+        });
+        return future;
+    }
+
     public CompletableFuture<Integer> getUserCountByIp(String ip) {
         CompletableFuture<Integer> future = new CompletableFuture<>();
         executor.submit(() -> {

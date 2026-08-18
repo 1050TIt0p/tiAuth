@@ -34,6 +34,7 @@ public class CachedComponents {
         public ForceRegister forceRegister;
         public ForcePremium forcePremium;
         public Migrate migrate;
+        public Backup backup;
 
         public static class Config {
             public Component reload;
@@ -72,6 +73,20 @@ public class CachedComponents {
             public Component error;
             public Component invalidFileName;
             public Component success;
+        }
+
+        public static class Backup {
+            public Component usage;
+            public Component invalidFileName;
+            public Component invalidCompression;
+            public Component alreadyExists;
+            public Component notFound;
+            public Component creating;
+            public Component createSuccess;
+            public Component createError;
+            public Component restoring;
+            public Component restoreSuccess;
+            public Component restoreError;
         }
     }
 
@@ -263,6 +278,19 @@ public class CachedComponents {
         admin.migrate.error = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.migrate.error, prefixRaw)));
         admin.migrate.invalidFileName = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.migrate.invalidFileName, prefixRaw)));
         admin.migrate.success = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.migrate.success, prefixRaw)));
+
+        admin.backup = new Admin.Backup();
+        admin.backup.usage = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.usage, prefixRaw)));
+        admin.backup.invalidFileName = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.invalidFileName, prefixRaw)));
+        admin.backup.invalidCompression = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.invalidCompression, prefixRaw)));
+        admin.backup.alreadyExists = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.alreadyExists, prefixRaw)));
+        admin.backup.notFound = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.notFound, prefixRaw)));
+        admin.backup.creating = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.creating, prefixRaw)));
+        admin.backup.createSuccess = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.createSuccess, prefixRaw)));
+        admin.backup.createError = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.createError, prefixRaw)));
+        admin.backup.restoring = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.restoring, prefixRaw)));
+        admin.backup.restoreSuccess = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.restoreSuccess, prefixRaw)));
+        admin.backup.restoreError = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.admin.backup.restoreError, prefixRaw)));
 
         player = new Player();
 

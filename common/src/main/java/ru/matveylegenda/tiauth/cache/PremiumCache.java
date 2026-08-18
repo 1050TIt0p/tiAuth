@@ -21,4 +21,8 @@ public class PremiumCache {
     public void removePremium(String name) {
         premiumPlayers.remove(name.toLowerCase(Locale.ROOT));
     }
+
+    public void clear() {
+        premiumPlayers.clear();
+    }
 }

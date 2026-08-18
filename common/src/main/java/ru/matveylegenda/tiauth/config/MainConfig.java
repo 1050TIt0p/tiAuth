@@ -83,6 +83,33 @@ public class MainConfig extends YamlSerializable {
 
         @NewLine
         @Comment({
+                @CommentValue("Настройки предварительной проверки доступности auth/backend сервера при входе игрока на прокси"),
+                @CommentValue("Если проверка отключена, прокси сразу попытается подключить игрока к выбранному серверу")
+        })
+        public AvailabilityCheck availabilityCheck = new AvailabilityCheck();
+
+        public static class AvailabilityCheck {
+            @Comment(
+                    value = @CommentValue("Проверять ли доступность сервера перед первоначальным подключением игрока"),
+                    at = Comment.At.SAME_LINE
+            )
+            public boolean enabled = true;
+
+            @Comment(
+                    value = @CommentValue("Максимальное время ожидания ответа сервера в секундах (минимум 1)"),
+                    at = Comment.At.SAME_LINE
+            )
+            public int timeoutSeconds = 3;
+
+            @Comment(
+                    value = @CommentValue("Время хранения результата проверки в секундах (0 отключает кеш)"),
+                    at = Comment.At.SAME_LINE
+            )
+            public int cacheSeconds = 3;
+        }
+
+        @NewLine
+        @Comment({
                 @CommentValue("Если игрок подключается через указанный домен, после авторизации он направляется на соответствующий сервер"),
                 @CommentValue("Если домен не указан в списке, используется бэкенд-сервер")
         })
@@ -106,6 +133,33 @@ public class MainConfig extends YamlSerializable {
         public String database;
         public String user;
         public String password;
+
+        @NewLine
+        @Comment({
+                @CommentValue("Настройки автоматического создания бекапов базы данных"),
+                @CommentValue("Бекапы сохраняются в plugins/tiAuth/backups")
+        })
+        public Backup backup = new Backup();
+
+        public static class Backup {
+            @Comment(
+                    value = @CommentValue("Создавать ли автоматические бекапы базы данных"),
+                    at = Comment.At.SAME_LINE
+            )
+            public boolean enabled = false;
+
+            @Comment(
+                    value = @CommentValue("Интервал между бекапами в минутах (минимум 1)"),
+                    at = Comment.At.SAME_LINE
+            )
+            public int intervalMinutes = 1440;
+
+            @Comment(
+                    value = @CommentValue("Степень сжатия автоматических бекапов от 0 до 9"),
+                    at = Comment.At.SAME_LINE
+            )
+            public int compressionLevel = 0;
+        }
 
         @NewLine
         @Comment({
@@ -231,7 +285,7 @@ public class MainConfig extends YamlSerializable {
 
         @Comment({
                 @CommentValue("Использовать ли диалоговое окно для регистрации/авторизации"),
-                @CommentValue("Работает только на BungeeCord (его форках в том числе) и клиентах 1.21.6+")
+                @CommentValue("Работает только на клиентах 1.21.6+")
         })
         public boolean useDialogs = true;
 

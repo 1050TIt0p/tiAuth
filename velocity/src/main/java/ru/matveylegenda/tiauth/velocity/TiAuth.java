@@ -3,9 +3,11 @@ package ru.matveylegenda.tiauth.velocity;
 import com.google.inject.Inject;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.ScheduledTask;
@@ -17,6 +19,7 @@ import org.slf4j.Logger;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.config.MessagesConfig;
 import ru.matveylegenda.tiauth.database.Database;
+import ru.matveylegenda.tiauth.database.backup.DatabaseBackup;
 import ru.matveylegenda.tiauth.picolimbo.LibraryLoader;
 import ru.matveylegenda.tiauth.picolimbo.PicoLimboRunner;
 import ru.matveylegenda.tiauth.util.KeyLoader;
@@ -27,6 +30,7 @@ import ru.matveylegenda.tiauth.velocity.command.player.*;
 import ru.matveylegenda.tiauth.velocity.listener.AuthListener;
 import ru.matveylegenda.tiauth.velocity.listener.ChatListener;
 import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
+import ru.matveylegenda.tiauth.velocity.manager.AutoBackupManager;
 import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
 import ru.matveylegenda.tiauth.velocity.manager.TotpManager;
 
@@ -41,7 +45,8 @@ import java.nio.file.Path;
         id = "tiauth",
         name = "tiAuth",
         version = "1.4.2",
-        authors = {"1050TI_top", "OverwriteMC"}
+        authors = {"1050TI_top", "OverwriteMC"},
+        dependencies = {@Dependency(id = "packetevents", optional = true)}
 )
 public final class TiAuth {
 
@@ -55,6 +60,8 @@ public final class TiAuth {
     private TaskManager taskManager;
     private AuthManager authManager;
     private TotpManager totpManager;
+    private DatabaseBackup databaseBackup;
+    private AutoBackupManager autoBackupManager;
 
     private byte[] secretKey;
 
@@ -69,13 +76,16 @@ public final class TiAuth {
         this.metricsFactory = metricsFactory;
     }
 
-    @Subscribe
+    @Subscribe(order = PostOrder.LAST)
     public void onProxyInitialize(ProxyInitializeEvent event) {
         MainConfig.IMP.reload();
         MessagesConfig.IMP.reload();
         initializeSecretKey(dataFolder.toFile());
         loadLibraries();
         initializeDatabase(dataFolder.toFile());
+        databaseBackup = new DatabaseBackup(database);
+        autoBackupManager = new AutoBackupManager(this);
+        autoBackupManager.restart();
         startLimboServer(dataFolder.toFile());
 
         Utils.initializeColorizer(MainConfig.IMP.serializer);
@@ -108,8 +118,16 @@ public final class TiAuth {
         }
     }
 
-    @Subscribe
+    @Subscribe(order = PostOrder.FIRST)
     public void onProxyShutdown(ProxyShutdownEvent event) {
+        if (autoBackupManager != null) {
+            autoBackupManager.stop();
+        }
+
+        if (authManager != null) {
+            authManager.closeDialogs();
+        }
+
         if (database != null) {
             try {
                 database.close();

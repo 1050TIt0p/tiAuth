@@ -278,7 +278,7 @@ public class AuthManager {
                         AuthCache.setAuthenticated(name);
 
                         if (event != null) {
-                            ServerInfo backend = plugin.getProxy().getServerInfo(MainConfig.IMP.servers.backend);
+                            ServerInfo backend = getBackend(player).orElse(null);
                             setInitialServer(player, event, backend, CachedMessages.IMP.player.kick.backendServerUnavailable);
                         } else {
                             connectToBackend(player);
@@ -499,7 +499,18 @@ public class AuthManager {
             return;
         }
 
-        ServerAvailabilityChecker.isReachable(target.getSocketAddress()).whenComplete((reachable, throwable) -> {
+        MainConfig.Servers.AvailabilityCheck settings = MainConfig.IMP.servers.availabilityCheck;
+        if (!settings.enabled) {
+            event.setTarget(target);
+            completeIntent(event);
+            return;
+        }
+
+        ServerAvailabilityChecker.isReachable(
+                target.getSocketAddress(),
+                settings.timeoutSeconds,
+                settings.cacheSeconds
+        ).whenComplete((reachable, throwable) -> {
             try {
                 if (throwable != null || !reachable) {
                     player.disconnect(TextComponent.fromLegacy(unavailableMessage));

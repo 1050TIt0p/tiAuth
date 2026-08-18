@@ -9,6 +9,7 @@ import ru.matveylegenda.tiauth.database.Database;
 import ru.matveylegenda.tiauth.database.model.RecoveryCode;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -87,6 +88,39 @@ public class RecoveryCodeRepository {
             } catch (SQLException e) {
                 future.completeExceptionally(e);
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
+            }
+        });
+        return future;
+    }
+
+    public CompletableFuture<List<RecoveryCode>> getCodes() {
+        CompletableFuture<List<RecoveryCode>> future = new CompletableFuture<>();
+        executor.submit(() -> {
+            try {
+                future.complete(recoveryCodeDao.queryForAll());
+            } catch (SQLException e) {
+                future.completeExceptionally(e);
+                Database.LOGGER.log(Level.WARNING, "Error during database query", e);
+            }
+        });
+        return future;
+    }
+
+    public CompletableFuture<Void> replaceCodes(List<RecoveryCode> codes) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        executor.submit(() -> {
+            try {
+                recoveryCodeDao.callBatchTasks(() -> {
+                    recoveryCodeDao.deleteBuilder().delete();
+                    for (RecoveryCode code : codes) {
+                        recoveryCodeDao.create(code);
+                    }
+                    return null;
+                });
+                future.complete(null);
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+                Database.LOGGER.log(Level.WARNING, "Error during database restore", e);
             }
         });
         return future;
