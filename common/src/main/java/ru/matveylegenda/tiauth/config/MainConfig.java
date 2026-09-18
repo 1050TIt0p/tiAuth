@@ -32,6 +32,7 @@ public class MainConfig extends YamlSerializable {
         this.servers = new Servers();
         this.database = new Database();
         this.auth = new Auth();
+        this.reservedAiNames = new ReservedAiNames();
         this.premium = new Premium();
         this.bossBar = new BossBar();
         this.title = new Title();
@@ -147,6 +148,22 @@ public class MainConfig extends YamlSerializable {
     }
 
     public Auth auth;
+
+    public ReservedAiNames reservedAiNames;
+
+    @NewLine
+    public static class ReservedAiNames {
+        public boolean enabled = false;
+        public String redisHost = "127.0.0.1";
+        public int redisPort = 6379;
+        public String redisPassword = "";
+        public int redisDatabase = 0;
+        public boolean redisUseSsl = false;
+        public int timeoutMillis = 1500;
+        public String keyPrefix = "koroedge:reserved-ai-name:";
+        public boolean failClosed = true;
+        public String deniedMessage = "This username is reserved.";
+    }
 
     @NewLine
     public static class Auth {

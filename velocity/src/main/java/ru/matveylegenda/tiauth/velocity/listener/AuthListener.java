@@ -24,6 +24,7 @@ import ru.matveylegenda.tiauth.velocity.manager.TaskManager;
 import ru.matveylegenda.tiauth.velocity.manager.TotpManager;
 import ru.matveylegenda.tiauth.velocity.storage.CachedComponents;
 import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
+import ru.matveylegenda.tiauth.util.RedisNameReservation;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
@@ -72,20 +73,33 @@ public class AuthListener {
             return null;
         }
 
+        CompletableFuture<Void> future = RedisNameReservation.isReserved(username).thenCompose(reserved -> {
+            if (reserved) {
+                event.setResult(PreLoginEvent.PreLoginComponentResult.denied(
+                        Component.text(MainConfig.IMP.reservedAiNames.deniedMessage)));
+                return CompletableFuture.completedFuture(null);
+            }
+            return completeLoginCheck(event, username, ip);
+        }).exceptionally(throwable -> {
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.queryError));
+            return null;
+        });
+
+        return EventTask.resumeWhenComplete(future);
+    }
+
+    private CompletableFuture<Void> completeLoginCheck(PreLoginEvent event, String username, String ip) {
         if (MainConfig.IMP.premium.enabled && MainConfig.IMP.premium.forceOnlineMode && PremiumCache.isPremium(username)) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
-            return null;
+            return CompletableFuture.completedFuture(null);
         }
 
-        int count = getPlayersCountByIp(ip);
-        if (!MainConfig.IMP.excludedIps.contains(ip)) {
-            if (count >= MainConfig.IMP.maxOnlineAccountsPerIp) {
-                event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitOnlineReached));
-                return null;
-            }
+        if (!MainConfig.IMP.excludedIps.contains(ip) && getPlayersCountByIp(ip) >= MainConfig.IMP.maxOnlineAccountsPerIp) {
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.player.kick.ipLimitOnlineReached));
+            return CompletableFuture.completedFuture(null);
         }
 
-        CompletableFuture<Void> future = database.getAuthUserRepository().getUser(username)
+        return database.getAuthUserRepository().getUser(username)
                 .thenCompose(user -> {
                     if (user == null) {
                         if (!MainConfig.IMP.excludedIps.contains(ip)) {
@@ -111,13 +125,7 @@ public class AuthListener {
 
                         return CompletableFuture.completedFuture(null);
                     }
-                })
-                .exceptionally(throwable -> {
-                    event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CachedComponents.IMP.queryError));
-                    return null;
                 });
-
-        return EventTask.resumeWhenComplete(future);
     }
 
     @Subscribe

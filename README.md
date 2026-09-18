@@ -1,6 +1,10 @@
 # tiAuth [![CodeFactor](https://www.codefactor.io/repository/github/1050tit0p/tiauth/badge)](https://www.codefactor.io/repository/github/1050tit0p/tiauth)
 Authorization plugin for BungeeCord and Velocity
 
+## Reserved AI guide names
+
+The optional `reserved-ai-names` section checks Redis before premium-mode selection and before account lookup. Use the same Redis database and `koroedge:reserved-ai-name:` prefix published by KoroEdge. `fail-closed: true` prevents reservation bypass during a Redis outage, but also rejects logins until Redis is reachable again.
+
 ---
 
 ### Features:
