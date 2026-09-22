@@ -49,7 +49,6 @@ public final class PacketEventsDialogService implements VelocityDialogService {
 
         this.authManager = authManager;
         this.responseListener = api.getEventManager().registerListener(new DialogResponseListener());
-        plugin.getLogger().info("Velocity dialog support enabled through PacketEvents");
     }
 
     @Override
