@@ -93,7 +93,7 @@ public class MainConfig extends YamlSerializable {
                     value = @CommentValue("Проверять ли доступность сервера перед первоначальным подключением игрока"),
                     at = Comment.At.SAME_LINE
             )
-            public boolean enabled = true;
+            public boolean enabled = false;
 
             @Comment(
                     value = @CommentValue("Максимальное время ожидания ответа сервера в секундах (минимум 1)"),
