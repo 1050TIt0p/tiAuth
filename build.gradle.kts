@@ -7,7 +7,7 @@ val targetJavaVersion = 21
 
 allprojects {
     group = "ru.matveylegenda"
-    version = "1.5.0"
+    version = "1.5.1"
 
     repositories {
         mavenCentral()
