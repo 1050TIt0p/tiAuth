@@ -16,7 +16,6 @@ public class CachedComponents {
         load(messagesConfig);
     }
 
-    public Component prefix;
     public Component onlyPlayer;
     public Component queryError;
     public Component processing;
@@ -235,8 +234,7 @@ public class CachedComponents {
     }
 
     public void load(MessagesConfig config) {
-        String prefixRaw = COLORIZER.colorize(config.prefix);
-        prefix = LEGACY.deserialize(prefixRaw);
+        String prefixRaw = config.prefix;
 
         onlyPlayer = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.onlyPlayer, prefixRaw)));
         queryError = LEGACY.deserialize(COLORIZER.colorize(getPrefixed(config.queryError, prefixRaw)));

@@ -12,7 +12,6 @@ public class CachedMessages {
         load(messagesConfig);
     }
 
-    public String prefix;
     public String onlyPlayer;
     public String queryError;
     public String processing;
@@ -231,168 +230,169 @@ public class CachedMessages {
     }
 
     public void load(MessagesConfig config) {
-        prefix = COLORIZER.colorize(config.prefix);
-        onlyPlayer = COLORIZER.colorize(getPrefixed(config.onlyPlayer, prefix));
-        queryError = COLORIZER.colorize(getPrefixed(config.queryError, prefix));
-        processing = COLORIZER.colorize(getPrefixed(config.processing, prefix));
-        playerNotFound = COLORIZER.colorize(getPrefixed(config.playerNotFound, prefix));
-        noPermission = COLORIZER.colorize(getPrefixed(config.noPermission, prefix));
+        String prefixRaw = config.prefix;
+
+        onlyPlayer = COLORIZER.colorize(getPrefixed(config.onlyPlayer, prefixRaw));
+        queryError = COLORIZER.colorize(getPrefixed(config.queryError, prefixRaw));
+        processing = COLORIZER.colorize(getPrefixed(config.processing, prefixRaw));
+        playerNotFound = COLORIZER.colorize(getPrefixed(config.playerNotFound, prefixRaw));
+        noPermission = COLORIZER.colorize(getPrefixed(config.noPermission, prefixRaw));
 
         admin = new Admin();
-        admin.usage = COLORIZER.colorize(getPrefixed(config.admin.usage, prefix));
+        admin.usage = COLORIZER.colorize(getPrefixed(config.admin.usage, prefixRaw));
 
         admin.config = new Admin.Config();
-        admin.config.reload = COLORIZER.colorize(getPrefixed(config.admin.config.reload, prefix));
+        admin.config.reload = COLORIZER.colorize(getPrefixed(config.admin.config.reload, prefixRaw));
 
         admin.unregister = new Admin.Unregister();
-        admin.unregister.usage = COLORIZER.colorize(getPrefixed(config.admin.unregister.usage, prefix));
-        admin.unregister.success = COLORIZER.colorize(getPrefixed(config.admin.unregister.success, prefix));
+        admin.unregister.usage = COLORIZER.colorize(getPrefixed(config.admin.unregister.usage, prefixRaw));
+        admin.unregister.success = COLORIZER.colorize(getPrefixed(config.admin.unregister.success, prefixRaw));
 
         admin.changePassword = new Admin.ChangePassword();
-        admin.changePassword.usage = COLORIZER.colorize(getPrefixed(config.admin.changePassword.usage, prefix));
-        admin.changePassword.success = COLORIZER.colorize(getPrefixed(config.admin.changePassword.success, prefix));
+        admin.changePassword.usage = COLORIZER.colorize(getPrefixed(config.admin.changePassword.usage, prefixRaw));
+        admin.changePassword.success = COLORIZER.colorize(getPrefixed(config.admin.changePassword.success, prefixRaw));
 
         admin.forceLogin = new Admin.ForceLogin();
-        admin.forceLogin.usage = COLORIZER.colorize(getPrefixed(config.admin.forceLogin.usage, prefix));
-        admin.forceLogin.isAuthenticated = COLORIZER.colorize(getPrefixed(config.admin.forceLogin.isAuthenticated, prefix));
-        admin.forceLogin.success = COLORIZER.colorize(getPrefixed(config.admin.forceLogin.success, prefix));
+        admin.forceLogin.usage = COLORIZER.colorize(getPrefixed(config.admin.forceLogin.usage, prefixRaw));
+        admin.forceLogin.isAuthenticated = COLORIZER.colorize(getPrefixed(config.admin.forceLogin.isAuthenticated, prefixRaw));
+        admin.forceLogin.success = COLORIZER.colorize(getPrefixed(config.admin.forceLogin.success, prefixRaw));
 
         admin.forceRegister = new Admin.ForceRegister();
-        admin.forceRegister.usage = COLORIZER.colorize(getPrefixed(config.admin.forceRegister.usage, prefix));
-        admin.forceRegister.alreadyRegistered = COLORIZER.colorize(getPrefixed(config.admin.forceRegister.alreadyRegistered, prefix));
-        admin.forceRegister.success = COLORIZER.colorize(getPrefixed(config.admin.forceRegister.success, prefix));
+        admin.forceRegister.usage = COLORIZER.colorize(getPrefixed(config.admin.forceRegister.usage, prefixRaw));
+        admin.forceRegister.alreadyRegistered = COLORIZER.colorize(getPrefixed(config.admin.forceRegister.alreadyRegistered, prefixRaw));
+        admin.forceRegister.success = COLORIZER.colorize(getPrefixed(config.admin.forceRegister.success, prefixRaw));
 
         admin.forcePremium = new Admin.ForcePremium();
-        admin.forcePremium.usage = COLORIZER.colorize(getPrefixed(config.admin.forcePremium.usage, prefix));
-        admin.forcePremium.enabled = COLORIZER.colorize(getPrefixed(config.admin.forcePremium.enabled, prefix));
-        admin.forcePremium.disabled = COLORIZER.colorize(getPrefixed(config.admin.forcePremium.disabled, prefix));
+        admin.forcePremium.usage = COLORIZER.colorize(getPrefixed(config.admin.forcePremium.usage, prefixRaw));
+        admin.forcePremium.enabled = COLORIZER.colorize(getPrefixed(config.admin.forcePremium.enabled, prefixRaw));
+        admin.forcePremium.disabled = COLORIZER.colorize(getPrefixed(config.admin.forcePremium.disabled, prefixRaw));
 
         admin.migrate = new Admin.Migrate();
-        admin.migrate.usage = COLORIZER.colorize(getPrefixed(config.admin.migrate.usage, prefix));
-        admin.migrate.error = COLORIZER.colorize(getPrefixed(config.admin.migrate.error, prefix));
-        admin.migrate.invalidFileName = COLORIZER.colorize(getPrefixed(config.admin.migrate.invalidFileName, prefix));
-        admin.migrate.success = COLORIZER.colorize(getPrefixed(config.admin.migrate.success, prefix));
+        admin.migrate.usage = COLORIZER.colorize(getPrefixed(config.admin.migrate.usage, prefixRaw));
+        admin.migrate.error = COLORIZER.colorize(getPrefixed(config.admin.migrate.error, prefixRaw));
+        admin.migrate.invalidFileName = COLORIZER.colorize(getPrefixed(config.admin.migrate.invalidFileName, prefixRaw));
+        admin.migrate.success = COLORIZER.colorize(getPrefixed(config.admin.migrate.success, prefixRaw));
 
         admin.backup = new Admin.Backup();
-        admin.backup.usage = COLORIZER.colorize(getPrefixed(config.admin.backup.usage, prefix));
-        admin.backup.invalidFileName = COLORIZER.colorize(getPrefixed(config.admin.backup.invalidFileName, prefix));
-        admin.backup.invalidCompression = COLORIZER.colorize(getPrefixed(config.admin.backup.invalidCompression, prefix));
-        admin.backup.alreadyExists = COLORIZER.colorize(getPrefixed(config.admin.backup.alreadyExists, prefix));
-        admin.backup.notFound = COLORIZER.colorize(getPrefixed(config.admin.backup.notFound, prefix));
-        admin.backup.creating = COLORIZER.colorize(getPrefixed(config.admin.backup.creating, prefix));
-        admin.backup.createSuccess = COLORIZER.colorize(getPrefixed(config.admin.backup.createSuccess, prefix));
-        admin.backup.createError = COLORIZER.colorize(getPrefixed(config.admin.backup.createError, prefix));
-        admin.backup.restoring = COLORIZER.colorize(getPrefixed(config.admin.backup.restoring, prefix));
-        admin.backup.restoreSuccess = COLORIZER.colorize(getPrefixed(config.admin.backup.restoreSuccess, prefix));
-        admin.backup.restoreError = COLORIZER.colorize(getPrefixed(config.admin.backup.restoreError, prefix));
+        admin.backup.usage = COLORIZER.colorize(getPrefixed(config.admin.backup.usage, prefixRaw));
+        admin.backup.invalidFileName = COLORIZER.colorize(getPrefixed(config.admin.backup.invalidFileName, prefixRaw));
+        admin.backup.invalidCompression = COLORIZER.colorize(getPrefixed(config.admin.backup.invalidCompression, prefixRaw));
+        admin.backup.alreadyExists = COLORIZER.colorize(getPrefixed(config.admin.backup.alreadyExists, prefixRaw));
+        admin.backup.notFound = COLORIZER.colorize(getPrefixed(config.admin.backup.notFound, prefixRaw));
+        admin.backup.creating = COLORIZER.colorize(getPrefixed(config.admin.backup.creating, prefixRaw));
+        admin.backup.createSuccess = COLORIZER.colorize(getPrefixed(config.admin.backup.createSuccess, prefixRaw));
+        admin.backup.createError = COLORIZER.colorize(getPrefixed(config.admin.backup.createError, prefixRaw));
+        admin.backup.restoring = COLORIZER.colorize(getPrefixed(config.admin.backup.restoring, prefixRaw));
+        admin.backup.restoreSuccess = COLORIZER.colorize(getPrefixed(config.admin.backup.restoreSuccess, prefixRaw));
+        admin.backup.restoreError = COLORIZER.colorize(getPrefixed(config.admin.backup.restoreError, prefixRaw));
 
         player = new Player();
 
         player.checkPassword = new Player.CheckPassword();
-        player.checkPassword.wrongPassword = COLORIZER.colorize(getPrefixed(config.player.checkPassword.wrongPassword, prefix));
-        player.checkPassword.invalidLength = COLORIZER.colorize(getPrefixed(config.player.checkPassword.invalidLength, prefix));
-        player.checkPassword.invalidPattern = COLORIZER.colorize(getPrefixed(config.player.checkPassword.invalidPattern, prefix));
-        player.checkPassword.passwordEmpty = COLORIZER.colorize(getPrefixed(config.player.checkPassword.passwordEmpty, prefix));
+        player.checkPassword.wrongPassword = COLORIZER.colorize(getPrefixed(config.player.checkPassword.wrongPassword, prefixRaw));
+        player.checkPassword.invalidLength = COLORIZER.colorize(getPrefixed(config.player.checkPassword.invalidLength, prefixRaw));
+        player.checkPassword.invalidPattern = COLORIZER.colorize(getPrefixed(config.player.checkPassword.invalidPattern, prefixRaw));
+        player.checkPassword.passwordEmpty = COLORIZER.colorize(getPrefixed(config.player.checkPassword.passwordEmpty, prefixRaw));
 
         player.register = new Player.Register();
-        player.register.usage = COLORIZER.colorize(getPrefixed(config.player.register.usage, prefix));
-        player.register.mismatch = COLORIZER.colorize(getPrefixed(config.player.register.mismatch, prefix));
-        player.register.alreadyRegistered = COLORIZER.colorize(getPrefixed(config.player.register.alreadyRegistered, prefix));
-        player.register.success = COLORIZER.colorize(getPrefixed(config.player.register.success, prefix));
+        player.register.usage = COLORIZER.colorize(getPrefixed(config.player.register.usage, prefixRaw));
+        player.register.mismatch = COLORIZER.colorize(getPrefixed(config.player.register.mismatch, prefixRaw));
+        player.register.alreadyRegistered = COLORIZER.colorize(getPrefixed(config.player.register.alreadyRegistered, prefixRaw));
+        player.register.success = COLORIZER.colorize(getPrefixed(config.player.register.success, prefixRaw));
 
         player.unregister = new Player.Unregister();
-        player.unregister.usage = COLORIZER.colorize(getPrefixed(config.player.unregister.usage, prefix));
-        player.unregister.success = COLORIZER.colorize(getPrefixed(config.player.unregister.success, prefix));
+        player.unregister.usage = COLORIZER.colorize(getPrefixed(config.player.unregister.usage, prefixRaw));
+        player.unregister.success = COLORIZER.colorize(getPrefixed(config.player.unregister.success, prefixRaw));
 
         player.login = new Player.Login();
-        player.login.usage = COLORIZER.colorize(getPrefixed(config.player.login.usage, prefix));
-        player.login.notRegistered = COLORIZER.colorize(getPrefixed(config.player.login.notRegistered, prefix));
-        player.login.alreadyLogged = COLORIZER.colorize(getPrefixed(config.player.login.alreadyLogged, prefix));
-        player.login.wrongPassword = COLORIZER.colorize(getPrefixed(config.player.login.wrongPassword, prefix));
-        player.login.success = COLORIZER.colorize(getPrefixed(config.player.login.success, prefix));
+        player.login.usage = COLORIZER.colorize(getPrefixed(config.player.login.usage, prefixRaw));
+        player.login.notRegistered = COLORIZER.colorize(getPrefixed(config.player.login.notRegistered, prefixRaw));
+        player.login.alreadyLogged = COLORIZER.colorize(getPrefixed(config.player.login.alreadyLogged, prefixRaw));
+        player.login.wrongPassword = COLORIZER.colorize(getPrefixed(config.player.login.wrongPassword, prefixRaw));
+        player.login.success = COLORIZER.colorize(getPrefixed(config.player.login.success, prefixRaw));
 
         player.changePassword = new Player.ChangePassword();
-        player.changePassword.usage = COLORIZER.colorize(getPrefixed(config.player.changePassword.usage, prefix));
-        player.changePassword.success = COLORIZER.colorize(getPrefixed(config.player.changePassword.success, prefix));
+        player.changePassword.usage = COLORIZER.colorize(getPrefixed(config.player.changePassword.usage, prefixRaw));
+        player.changePassword.success = COLORIZER.colorize(getPrefixed(config.player.changePassword.success, prefixRaw));
 
         player.logout = new Player.Logout();
-        player.logout.logoutByPremium = COLORIZER.colorize(getPrefixed(config.player.logout.logoutByPremium, prefix));
-        player.logout.success = COLORIZER.colorize(getPrefixed(config.player.logout.success, prefix));
+        player.logout.logoutByPremium = COLORIZER.colorize(getPrefixed(config.player.logout.logoutByPremium, prefixRaw));
+        player.logout.success = COLORIZER.colorize(getPrefixed(config.player.logout.success, prefixRaw));
 
         player.premium = new Player.Premium();
-        player.premium.enabled = COLORIZER.colorize(getPrefixed(config.player.premium.enabled, prefix));
-        player.premium.disabled = COLORIZER.colorize(getPrefixed(config.player.premium.disabled, prefix));
+        player.premium.enabled = COLORIZER.colorize(getPrefixed(config.player.premium.enabled, prefixRaw));
+        player.premium.disabled = COLORIZER.colorize(getPrefixed(config.player.premium.disabled, prefixRaw));
 
         player.totp = new Player.Totp();
-        player.totp.usage = COLORIZER.colorize(getPrefixed(config.player.totp.usage, prefix));
-        player.totp.enableUsage = COLORIZER.colorize(getPrefixed(config.player.totp.enableUsage, prefix));
-        player.totp.verifyUsage = COLORIZER.colorize(getPrefixed(config.player.totp.verifyUsage, prefix));
-        player.totp.disableUsage = COLORIZER.colorize(getPrefixed(config.player.totp.disableUsage, prefix));
-        player.totp.successful = COLORIZER.colorize(getPrefixed(config.player.totp.successful, prefix));
-        player.totp.verified = COLORIZER.colorize(getPrefixed(config.player.totp.verified, prefix));
-        player.totp.disabled = COLORIZER.colorize(getPrefixed(config.player.totp.disabled, prefix));
-        player.totp.wrong = COLORIZER.colorize(getPrefixed(config.player.totp.wrong, prefix));
-        player.totp.alreadyEnabled = COLORIZER.colorize(getPrefixed(config.player.totp.alreadyEnabled, prefix));
-        player.totp.alreadyDisabled = COLORIZER.colorize(getPrefixed(config.player.totp.alreadyDisabled, prefix));
-        player.totp.qr = COLORIZER.colorize(getPrefixed(config.player.totp.qr, prefix));
-        player.totp.token = COLORIZER.colorize(getPrefixed(config.player.totp.token, prefix));
-        player.totp.recovery = COLORIZER.colorize(getPrefixed(config.player.totp.recovery, prefix));
-        player.totp.needPassword = COLORIZER.colorize(getPrefixed(config.player.totp.needPassword, prefix));
-        player.totp.prompt = COLORIZER.colorize(getPrefixed(config.player.totp.prompt, prefix));
+        player.totp.usage = COLORIZER.colorize(getPrefixed(config.player.totp.usage, prefixRaw));
+        player.totp.enableUsage = COLORIZER.colorize(getPrefixed(config.player.totp.enableUsage, prefixRaw));
+        player.totp.verifyUsage = COLORIZER.colorize(getPrefixed(config.player.totp.verifyUsage, prefixRaw));
+        player.totp.disableUsage = COLORIZER.colorize(getPrefixed(config.player.totp.disableUsage, prefixRaw));
+        player.totp.successful = COLORIZER.colorize(getPrefixed(config.player.totp.successful, prefixRaw));
+        player.totp.verified = COLORIZER.colorize(getPrefixed(config.player.totp.verified, prefixRaw));
+        player.totp.disabled = COLORIZER.colorize(getPrefixed(config.player.totp.disabled, prefixRaw));
+        player.totp.wrong = COLORIZER.colorize(getPrefixed(config.player.totp.wrong, prefixRaw));
+        player.totp.alreadyEnabled = COLORIZER.colorize(getPrefixed(config.player.totp.alreadyEnabled, prefixRaw));
+        player.totp.alreadyDisabled = COLORIZER.colorize(getPrefixed(config.player.totp.alreadyDisabled, prefixRaw));
+        player.totp.qr = COLORIZER.colorize(getPrefixed(config.player.totp.qr, prefixRaw));
+        player.totp.token = COLORIZER.colorize(getPrefixed(config.player.totp.token, prefixRaw));
+        player.totp.recovery = COLORIZER.colorize(getPrefixed(config.player.totp.recovery, prefixRaw));
+        player.totp.needPassword = COLORIZER.colorize(getPrefixed(config.player.totp.needPassword, prefixRaw));
+        player.totp.prompt = COLORIZER.colorize(getPrefixed(config.player.totp.prompt, prefixRaw));
 
         player.kick = new Player.Kick();
-        player.kick.timeout = COLORIZER.colorize(getPrefixed(config.player.kick.timeout, prefix));
-        player.kick.realname = COLORIZER.colorize(getPrefixed(config.player.kick.realname, prefix));
-        player.kick.tooManyAttempts = COLORIZER.colorize(getPrefixed(config.player.kick.tooManyAttempts, prefix));
-        player.kick.ban = COLORIZER.colorize(getPrefixed(config.player.kick.ban, prefix));
-        player.kick.invalidNickPattern = COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefix));
-        player.kick.ipLimitOnlineReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefix));
-        player.kick.ipLimitRegisteredReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefix));
-        player.kick.totpTimeout = COLORIZER.colorize(getPrefixed(config.player.kick.totpTimeout, prefix));
-        player.kick.totpTooManyAttempts = COLORIZER.colorize(getPrefixed(config.player.kick.totpTooManyAttempts, prefix));
-        player.kick.totpBan = COLORIZER.colorize(getPrefixed(config.player.kick.totpBan, prefix));
-        player.kick.authServerUnavailable = COLORIZER.colorize(getPrefixed(config.player.kick.authServerUnavailable, prefix));
-        player.kick.backendServerUnavailable = COLORIZER.colorize(getPrefixed(config.player.kick.backendServerUnavailable, prefix));
+        player.kick.timeout = COLORIZER.colorize(getPrefixed(config.player.kick.timeout, prefixRaw));
+        player.kick.realname = COLORIZER.colorize(getPrefixed(config.player.kick.realname, prefixRaw));
+        player.kick.tooManyAttempts = COLORIZER.colorize(getPrefixed(config.player.kick.tooManyAttempts, prefixRaw));
+        player.kick.ban = COLORIZER.colorize(getPrefixed(config.player.kick.ban, prefixRaw));
+        player.kick.invalidNickPattern = COLORIZER.colorize(getPrefixed(config.player.kick.invalidNickPattern, prefixRaw));
+        player.kick.ipLimitOnlineReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitOnlineReached, prefixRaw));
+        player.kick.ipLimitRegisteredReached = COLORIZER.colorize(getPrefixed(config.player.kick.ipLimitRegisteredReached, prefixRaw));
+        player.kick.totpTimeout = COLORIZER.colorize(getPrefixed(config.player.kick.totpTimeout, prefixRaw));
+        player.kick.totpTooManyAttempts = COLORIZER.colorize(getPrefixed(config.player.kick.totpTooManyAttempts, prefixRaw));
+        player.kick.totpBan = COLORIZER.colorize(getPrefixed(config.player.kick.totpBan, prefixRaw));
+        player.kick.authServerUnavailable = COLORIZER.colorize(getPrefixed(config.player.kick.authServerUnavailable, prefixRaw));
+        player.kick.backendServerUnavailable = COLORIZER.colorize(getPrefixed(config.player.kick.backendServerUnavailable, prefixRaw));
 
         player.reminder = new Player.Reminder();
-        player.reminder.login = COLORIZER.colorize(getPrefixed(config.player.reminder.login, prefix));
-        player.reminder.register = COLORIZER.colorize(getPrefixed(config.player.reminder.register, prefix));
+        player.reminder.login = COLORIZER.colorize(getPrefixed(config.player.reminder.login, prefixRaw));
+        player.reminder.register = COLORIZER.colorize(getPrefixed(config.player.reminder.register, prefixRaw));
 
         player.dialog = new Player.Dialog();
 
         player.dialog.register = new Player.Dialog.Register();
-        player.dialog.register.title = COLORIZER.colorize(getPrefixed(config.player.dialog.register.title, prefix));
-        player.dialog.register.passwordField = COLORIZER.colorize(getPrefixed(config.player.dialog.register.passwordField, prefix));
-        player.dialog.register.repeatPasswordField = COLORIZER.colorize(getPrefixed(config.player.dialog.register.repeatPasswordField, prefix));
-        player.dialog.register.confirmButton = COLORIZER.colorize(getPrefixed(config.player.dialog.register.confirmButton, prefix));
+        player.dialog.register.title = COLORIZER.colorize(getPrefixed(config.player.dialog.register.title, prefixRaw));
+        player.dialog.register.passwordField = COLORIZER.colorize(getPrefixed(config.player.dialog.register.passwordField, prefixRaw));
+        player.dialog.register.repeatPasswordField = COLORIZER.colorize(getPrefixed(config.player.dialog.register.repeatPasswordField, prefixRaw));
+        player.dialog.register.confirmButton = COLORIZER.colorize(getPrefixed(config.player.dialog.register.confirmButton, prefixRaw));
 
         player.dialog.login = new Player.Dialog.Login();
-        player.dialog.login.title = COLORIZER.colorize(getPrefixed(config.player.dialog.login.title, prefix));
-        player.dialog.login.passwordField = COLORIZER.colorize(getPrefixed(config.player.dialog.login.passwordField, prefix));
-        player.dialog.login.confirmButton = COLORIZER.colorize(getPrefixed(config.player.dialog.login.confirmButton, prefix));
+        player.dialog.login.title = COLORIZER.colorize(getPrefixed(config.player.dialog.login.title, prefixRaw));
+        player.dialog.login.passwordField = COLORIZER.colorize(getPrefixed(config.player.dialog.login.passwordField, prefixRaw));
+        player.dialog.login.confirmButton = COLORIZER.colorize(getPrefixed(config.player.dialog.login.confirmButton, prefixRaw));
 
         player.dialog.notifications = new Player.Dialog.Notifications();
-        player.dialog.notifications.wrongPassword = COLORIZER.colorize(getPrefixed(config.player.dialog.notifications.wrongPassword, prefix));
-        player.dialog.notifications.invalidLength = COLORIZER.colorize(getPrefixed(config.player.dialog.notifications.invalidLength, prefix));
-        player.dialog.notifications.invalidPattern = COLORIZER.colorize(getPrefixed(config.player.dialog.notifications.invalidPattern, prefix));
-        player.dialog.notifications.mismatch = COLORIZER.colorize(getPrefixed(config.player.dialog.notifications.mismatch, prefix));
-        player.dialog.notifications.passwordEmpty = COLORIZER.colorize(getPrefixed(config.player.dialog.notifications.passwordEmpty, prefix));
+        player.dialog.notifications.wrongPassword = COLORIZER.colorize(getPrefixed(config.player.dialog.notifications.wrongPassword, prefixRaw));
+        player.dialog.notifications.invalidLength = COLORIZER.colorize(getPrefixed(config.player.dialog.notifications.invalidLength, prefixRaw));
+        player.dialog.notifications.invalidPattern = COLORIZER.colorize(getPrefixed(config.player.dialog.notifications.invalidPattern, prefixRaw));
+        player.dialog.notifications.mismatch = COLORIZER.colorize(getPrefixed(config.player.dialog.notifications.mismatch, prefixRaw));
+        player.dialog.notifications.passwordEmpty = COLORIZER.colorize(getPrefixed(config.player.dialog.notifications.passwordEmpty, prefixRaw));
 
         player.bossBar = new Player.BossBar();
-        player.bossBar.message = COLORIZER.colorize(getPrefixed(config.player.bossBar.message, prefix));
+        player.bossBar.message = COLORIZER.colorize(getPrefixed(config.player.bossBar.message, prefixRaw));
 
         player.title = new Player.Title();
         player.title.login = new Player.Title.Stage();
-        player.title.login.title = COLORIZER.colorize(getPrefixed(config.player.title.login.title, prefix));
-        player.title.login.subTitle = COLORIZER.colorize(getPrefixed(config.player.title.login.subTitle, prefix));
+        player.title.login.title = COLORIZER.colorize(getPrefixed(config.player.title.login.title, prefixRaw));
+        player.title.login.subTitle = COLORIZER.colorize(getPrefixed(config.player.title.login.subTitle, prefixRaw));
         player.title.register = new Player.Title.Stage();
-        player.title.register.title = COLORIZER.colorize(getPrefixed(config.player.title.register.title, prefix));
-        player.title.register.subTitle = COLORIZER.colorize(getPrefixed(config.player.title.register.subTitle, prefix));
-        player.title.onAuthTitle = COLORIZER.colorize(getPrefixed(config.player.title.onAuthTitle, prefix));
-        player.title.onAuthSubTitle = COLORIZER.colorize(getPrefixed(config.player.title.onAuthSubTitle, prefix));
+        player.title.register.title = COLORIZER.colorize(getPrefixed(config.player.title.register.title, prefixRaw));
+        player.title.register.subTitle = COLORIZER.colorize(getPrefixed(config.player.title.register.subTitle, prefixRaw));
+        player.title.onAuthTitle = COLORIZER.colorize(getPrefixed(config.player.title.onAuthTitle, prefixRaw));
+        player.title.onAuthSubTitle = COLORIZER.colorize(getPrefixed(config.player.title.onAuthSubTitle, prefixRaw));
 
         player.actionBar = new Player.ActionBar();
-        player.actionBar.message = COLORIZER.colorize(getPrefixed(config.player.actionBar.message, prefix));
+        player.actionBar.message = COLORIZER.colorize(getPrefixed(config.player.actionBar.message, prefixRaw));
     }
 
     private String getPrefixed(String rawMessage, String prefix) {
