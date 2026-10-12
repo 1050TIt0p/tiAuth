@@ -38,7 +38,7 @@ subprojects {
         compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
         compileOnly("com.h2database:h2:2.4.240")
         compileOnly("com.mysql:mysql-connector-j:9.7.0")
-        compileOnly("org.postgresql:postgresql:42.7.11")
+        compileOnly("org.postgresql:postgresql:42.7.13")
 
         compileOnly("org.projectlombok:lombok:1.18.46")
         annotationProcessor("org.projectlombok:lombok:1.18.46")
