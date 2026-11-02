@@ -134,15 +134,13 @@ public class TotpManager {
         String lowerName = name.toLowerCase(Locale.ROOT);
         String hashedCode = RECOVERY_HASH.hashPassword(code);
 
-        return database.getRecoveryCodeRepository().getRecoveryCode(hashedCode)
-                .thenCompose(recoveryCode -> {
-                    if (recoveryCode != null && recoveryCode.getUsername().equalsIgnoreCase(lowerName)) {
-                        return database.getRecoveryCodeRepository().removeCode(hashedCode)
-                                .thenCompose(result -> completeTotpLoginAsync(player, name));
-                    } else {
-                        processFailedTotpAttempt(player, name);
-                        return CompletableFuture.completedFuture(null);
+        return database.getRecoveryCodeRepository().consumeCode(hashedCode, lowerName)
+                .thenCompose(consumed -> {
+                    if (consumed) {
+                        return completeTotpLoginAsync(player, name);
                     }
+                    processFailedTotpAttempt(player, name);
+                    return CompletableFuture.completedFuture(null);
                 });
     }
 }
