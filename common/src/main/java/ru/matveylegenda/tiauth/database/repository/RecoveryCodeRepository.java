@@ -63,6 +63,23 @@ public class RecoveryCodeRepository {
         return future;
     }
 
+    /** Atomically consumes a recovery code only when it belongs to the given account. */
+    public CompletableFuture<Boolean> consumeCode(String code, String username) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        executor.submit(() -> {
+            try {
+                DeleteBuilder<RecoveryCode, String> deleteBuilder = recoveryCodeDao.deleteBuilder();
+                deleteBuilder.where().eq("recoveryCode", code)
+                        .and().eq("username", username.toLowerCase(Locale.ROOT));
+                future.complete(deleteBuilder.delete() == 1);
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+                Database.LOGGER.log(Level.WARNING, "Error during database query", e);
+            }
+        });
+        return future;
+    }
+
     public CompletableFuture<Void> removeCodesByUsername(String username) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
