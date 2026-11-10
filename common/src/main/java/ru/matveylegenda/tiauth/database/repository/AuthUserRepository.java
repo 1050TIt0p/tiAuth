@@ -2,6 +2,7 @@ package ru.matveylegenda.tiauth.database.repository;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import ru.matveylegenda.tiauth.database.Database;
@@ -156,11 +157,7 @@ public class AuthUserRepository {
         CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
-                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
-                if (user != null) {
-                    user.setPassword(newPassword);
-                    authUserDao.update(user);
-                }
+                updateField(username, "password", newPassword);
                 future.complete(null);
             } catch (SQLException e) {
                 future.completeExceptionally(e);
@@ -173,11 +170,7 @@ public class AuthUserRepository {
     public void updateLastLogin(String username) {
         executor.submit(() -> {
             try {
-                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
-                if (user != null) {
-                    user.setLastLogin(System.currentTimeMillis());
-                    authUserDao.update(user);
-                }
+                updateField(username, "lastLogin", System.currentTimeMillis());
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
@@ -187,11 +180,7 @@ public class AuthUserRepository {
     public void updateLastIp(String username, String ip) {
         executor.submit(() -> {
             try {
-                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
-                if (user != null) {
-                    user.setLastIp(ip);
-                    authUserDao.update(user);
-                }
+                updateField(username, "lastIp", ip);
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error during database query", e);
             }
@@ -202,11 +191,7 @@ public class AuthUserRepository {
         CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
-                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
-                if (user != null) {
-                    user.setTotpToken(totpToken);
-                    authUserDao.update(user);
-                }
+                updateField(username, "totpToken", totpToken);
                 future.complete(null);
             } catch (SQLException e) {
                 future.completeExceptionally(e);
@@ -220,11 +205,7 @@ public class AuthUserRepository {
         CompletableFuture<Void> future = new CompletableFuture<>();
         executor.submit(() -> {
             try {
-                AuthUser user = authUserDao.queryForId(username.toLowerCase(Locale.ROOT));
-                if (user != null) {
-                    user.setPremium(enabled);
-                    authUserDao.update(user);
-                }
+                updateField(username, "premium", enabled);
                 future.complete(null);
             } catch (SQLException e) {
                 future.completeExceptionally(e);
@@ -232,5 +213,12 @@ public class AuthUserRepository {
             }
         });
         return future;
+    }
+
+    private void updateField(String username, String field, Object value) throws SQLException {
+        UpdateBuilder<AuthUser, String> updateBuilder = authUserDao.updateBuilder();
+        updateBuilder.updateColumnValue(field, value);
+        updateBuilder.where().eq("username", username.toLowerCase(Locale.ROOT));
+        updateBuilder.update();
     }
 }
