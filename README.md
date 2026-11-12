@@ -39,3 +39,5 @@ Authorization plugin for BungeeCord and Velocity
   - Permission: `tiauth.admin.commands.forcelogin`
 - `/tiauth migrate <sourceplugin> <sourcedatabase> [file] [user] [password] [host] [port] [name]` - Migrate database from other plugins/database type
   - Permission: `tiauth.admin.commands.migrate`
+  - Source plugins: `tiauth`, `mcauth`, `limboauth`, `authme`, `nlogin`, `baronessauth`
+  - BaronessAuth (H2): copy `plugins/BaronessAuth/internal/H2/BaronessAuth.mv.db` into the tiAuth folder and run `/tiauth migrate baronessauth h2 BaronessAuth SA empty`

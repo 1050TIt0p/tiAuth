@@ -1,6 +1,7 @@
 package ru.matveylegenda.tiauth.database;
 
 import lombok.Setter;
+import ru.matveylegenda.tiauth.database.migration.BaronessAuthReader;
 import ru.matveylegenda.tiauth.database.model.AuthUser;
 
 import java.sql.*;
@@ -128,6 +129,8 @@ public class DatabaseMigrator {
                         }
                     }
 
+                    case BARONESSAUTH -> authUsers.addAll(BaronessAuthReader.read(statement));
+
                     case NLOGIN -> {
                         ResultSet resultSet = statement.executeQuery("SELECT * FROM nlogin");
 
@@ -222,6 +225,7 @@ public class DatabaseMigrator {
         MCAUTH,
         LIMBOAUTH,
         AUTHME,
-        NLOGIN
+        NLOGIN,
+        BARONESSAUTH
     }
 }
