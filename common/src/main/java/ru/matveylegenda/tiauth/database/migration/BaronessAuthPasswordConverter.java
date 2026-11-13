@@ -3,6 +3,7 @@ package ru.matveylegenda.tiauth.database.migration;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import at.favre.lib.crypto.bcrypt.BCryptFormatter;
 import at.favre.lib.crypto.bcrypt.Radix64Encoder;
+import ru.matveylegenda.tiauth.hash.HashType;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -23,6 +24,7 @@ public final class BaronessAuthPasswordConverter {
             StandardCharsets.UTF_8
     );
 
+    private static final int MAX_PASSWORD_LENGTH = 255;
     private static final int LEGACY_HEADER_LENGTH = 8;
     private static final int SHORT_HEADER_LENGTH = 2;
     private static final int RAW_BCRYPT_SALT_LENGTH = 16;
@@ -64,9 +66,10 @@ public final class BaronessAuthPasswordConverter {
             default -> null;
         };
 
-        if (converted == null) {
-            return new Result(format, UNSUPPORTED_PREFIX + format.name().toLowerCase(Locale.ROOT) + ":"
-                    + Base64.getEncoder().encodeToString(data), false);
+        if (converted == null || converted.length() > MAX_PASSWORD_LENGTH) {
+            String marker = UNSUPPORTED_PREFIX + format.name().toLowerCase(Locale.ROOT);
+            String withData = marker + ":" + Base64.getEncoder().encodeToString(data);
+            return new Result(format, withData.length() <= MAX_PASSWORD_LENGTH ? withData : marker, false);
         }
 
         return new Result(format, converted);
@@ -118,7 +121,7 @@ public final class BaronessAuthPasswordConverter {
 
     private static String convertArgon2(byte[] payload) {
         String hash = new String(payload, StandardCharsets.UTF_8);
-        return hash.startsWith("$argon2") ? hash : null;
+        return hash.startsWith("$argon2id$") ? hash : null;
     }
 
     public record Result(Format format, String password, boolean supported) {
@@ -147,6 +150,17 @@ public final class BaronessAuthPasswordConverter {
 
         Format(int id) {
             this.id = id;
+        }
+
+        public boolean isVerifiableBy(HashType hashType) {
+            return switch (this) {
+                case GENERIC_BCRYPT, INTERNAL_BCRYPT_V1, INTERNAL_BCRYPT_V2, INTERNAL_BCRYPT_V4, INTERNAL_BCRYPT_V5 ->
+                        hashType == HashType.BCRYPT;
+                case PLAIN_SHA256 -> hashType == HashType.SHA256 || hashType == HashType.SHA256_DEFAULT;
+                case GENERIC_SALTED_SHA256 -> hashType == HashType.SHA256;
+                case GENERIC_ARGON2 -> hashType == HashType.ARGON2;
+                default -> false;
+            };
         }
 
         private static Format byLegacyId(long id) {

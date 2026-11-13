@@ -41,3 +41,4 @@ Authorization plugin for BungeeCord and Velocity
   - Permission: `tiauth.admin.commands.migrate`
   - Source plugins: `tiauth`, `mcauth`, `limboauth`, `authme`, `nlogin`, `baronessauth`
   - BaronessAuth (H2): copy `plugins/BaronessAuth/internal/H2/BaronessAuth.mv.db` into the tiAuth folder and run `/tiauth migrate baronessauth h2 BaronessAuth SA empty`
+  - BaronessAuth premium players keep their Mojang UUIDs by default, tiAuth gives premium players offline-mode UUIDs, so data bound to UUIDs on backend servers may need to be converted
